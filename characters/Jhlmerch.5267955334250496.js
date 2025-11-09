@@ -31,10 +31,11 @@ async function restockPotions() {
 	if (currentHp >= POT_BUFFER && currentMp >= POT_BUFFER) {
 		// Move back to leader
 		console.log("Potion levels sufficient, returning to leader...");
+
+		// Reset flags and wait for leader or member to call
 		restocking = false;
-
-		await returnToLeader();
-
+		transferingPotions = false;
+		returningToGroup = false;
 	}
 }
 
@@ -42,14 +43,22 @@ restockPotions();
 setInterval(restockPotions, 5 * 60 * 1000);
 
 setInterval(function () {
+	console.log(`States: restocking: ${restocking}, returningToGroup: ${returningToGroup}, transferingPotions: ${transferingPotions}`);
+
 	if (restocking) { return; }
 
 	if (!transferingPotions) {
+		recoverOutOfCombat();
+		loot();
 		useHealthPotion();
+		reviveSelf();
+
+		returnToLeader();
 	}
 
-}, 1000 / 2);
+}, 1000 / 1.5);
 
+// Need_pots x,y
 character.on("cm", async (sender, data) => {
 	console.log(`Received cm from ${sender.message}..`, sender);
 
@@ -63,7 +72,6 @@ character.on("cm", async (sender, data) => {
 	const x = parseInt(xy[0]);
 	const y = parseInt(xy[1]);
 
-	// Move to player location
 	if (restocking) { return; }
 
 	transferingPotions = true;
@@ -82,9 +90,11 @@ character.on("cm", async (sender, data) => {
 		set_message(`Delivered 100 HP & MP potions to ${player.name}`);
 
 		transferingPotions = false;
+		await returnToLeader();
 	}
 });
 
+// Come_to_me x,y
 character.on("cm", async (sender, data) => {
 	console.log(`Received cm from ${sender.message}..`, sender);
 
@@ -93,11 +103,7 @@ character.on("cm", async (sender, data) => {
 	if (!sender.name.startsWith(("Jhl"))) { return; }
 	if (restocking) { return; }
 
-	returningToGroup = true;
-
 	const splitMsg = sender.message.split(' ');
-
-	console.log(restocking, '    ', splitMsg);
 
 	if (splitMsg[0].trim() != "come_to_me") return;
 
@@ -106,11 +112,14 @@ character.on("cm", async (sender, data) => {
 	const y = parseInt(xy[1]);
 
 	// Move to player location
-	await xmove(x, y);
+	xmove(x, y);
+	returningToGroup = true;
 
 	if (character.x == x && character.y == y) {
 		set_message(`Arrived at group location (${x}, ${y})`);
 		returningToGroup = false;
-	}
 
+		await returnToLeader();
+	}
 });
+
