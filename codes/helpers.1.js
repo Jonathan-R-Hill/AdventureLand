@@ -1,17 +1,33 @@
 
 function startSharedTasks() {
     setInterval(manageParty, 1000);
-    setInterval(sendGoldToMerchant, 10000);
-    setInterval(checkPotions, 10 * 1000);
+    setInterval(reviveSelf, 5000);
+    if (character.name != "Jhlmerch") {
+        setInterval(sendGoldToMerchant, 5 * 60 * 1000);
+        setInterval(checkPotions, 10 * 1000);
+    }
+}
+
+function reviveSelf() {
+    if (character.rip) {
+        respawn();
+        set_message("Auto-reviving...");
+
+        returnToLeader()
+    }
 }
 
 function useHealthPotion() {
+    if (is_on_cooldown("regen_mp")) { return; }
+
     if (character.hp < character.max_hp * 0.50) {
         return use_skill('use_hp');
     }
 }
 
 function useManaPotion() {
+    if (is_on_cooldown("regen_mp")) { return; }
+
     if (character.mp < character.max_mp * 0.35) {
         use_skill('use_mp');
     }
@@ -25,11 +41,12 @@ function getPartyHealth() {
 }
 
 function recoverOutOfCombat() {
-    if (character.mp < character.max_mp * 0.80 && can_use("regen_mp")) {
+    if (is_on_cooldown("regen_mp")) { return; }
+
+    if (character.mp < character.max_mp * 0.8) {
         use_skill("regen_mp");
     }
-
-    if (character.hp < character.max_hp && can_use("regen_hp")) {
+    else if (character.hp < character.max_hp) {
         use_skill("regen_hp");
     }
 }
@@ -48,11 +65,17 @@ function manageParty() {
     }
     else {
         if (!character.party) {
-            accept_party_invite("Jhlwarrior"); // ✅ Corrected name
+            accept_party_invite("Jhlwarrior");
             set_message("Accepting invite");
         }
 
     }
+}
+
+function nearTank() {
+    const player = get_player("Jhlwarrior");
+
+    return player != null;
 }
 
 function sendGoldToMerchant() {
@@ -61,8 +84,8 @@ function sendGoldToMerchant() {
 
     // Only send if merchant is close enough and exists
     if (merchant && parent.distance(character, merchant) < 400) {
-        if (character.gold > 2000) { // keep a little for yourself
-            send_gold(merchantName, character.gold - 1000);
+        if (character.gold > 10000) {
+            send_gold(merchantName, character.gold - 10000);
             game_log(`💸 Sent gold to ${merchantName}`);
         }
     } else {
@@ -94,7 +117,14 @@ function checkPotions() {
 async function returnToLeader() {
     console.log("Potion levels sufficient, returning to leader...");
 
-    const leader = get_player("Jhlwarrior");
+    let leader;
+
+    if (character.name === "Jhlmerch") {
+        leader = get_player("Jhlpriest");
+    } else {
+        leader = get_player("Jhlwarrior");
+    }
+
     console.log("Leader info:", leader);
 
     if (leader) {
@@ -128,7 +158,6 @@ function getItemSlot(name) {
     return -1;
 }
 
-// Send items to a player
 function sendPotionsTo(name, hpPotion, mpPotion, hpAmount = 200, mpAmount = 200) {
     const player = get_player(name);
     if (!player || parent.distance(character, player) > 400) {
