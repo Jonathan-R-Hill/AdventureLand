@@ -27,7 +27,7 @@ myChar.returningToGroup = false;
 myChar.waitForCoords = false;
 myChar.attackMode = true;
 
-setInterval(myChar.sendWhitelistedItemsToMerchant(), 3 * 60 * 1000);
+setInterval(myChar.sendWhitelistedItemsToMerchant(), 1 * 60 * 1000);
 
 setInterval(function () {
     loot();
@@ -67,6 +67,7 @@ setInterval(function () {
         }
 
         // attack
+        returnToLeader();
         myChar.attack(target);
     }
 

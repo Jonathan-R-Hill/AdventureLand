@@ -27,9 +27,7 @@ class BaseClass {
 
         this.sendItems = true;
         this.merchantName = "Jhlmerch";
-        /**
-         * gem0 = Raw Emerald
-         */
+
         this.whitelist = [
             // Keep
             "spores", "seashell", "beewings", "gem0", "whiteegg", "monstertoken", "spidersilk",

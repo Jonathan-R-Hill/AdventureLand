@@ -59,7 +59,7 @@ function recoverOutOfCombat() {
     }
 }
 
-function manageParty() {
+async function manageParty() {
     const partyMembers = ["Jhlpriest", "Jhlranger", "Jhlmerch", "Jhlwarrior"];
 
     if (character.name === "Jhlwarrior") {
@@ -69,6 +69,7 @@ function manageParty() {
                 send_party_invite(name);
                 set_message(`Inviting ${name}`);
             }
+            await sleep(100);
         }
     } else {
         if (!character.party) {
@@ -79,14 +80,13 @@ function manageParty() {
             if (character.party !== "Jhlwarrior") {
                 // Wrong leader, leave
                 leave_party();
-                set_message("Warrior not leader, leaving...");
             }
 
             return;
         } else {
             // Not in a party at all, accept warrior’s invite
             accept_party_invite("Jhlwarrior");
-            set_message("Accepting invite from warrior");
+            await sleep(50);
         }
     }
 }

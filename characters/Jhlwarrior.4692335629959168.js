@@ -36,9 +36,9 @@ setInterval(() => {
     if (get_player("Jhlmerch") == null) {
         send_cm("Jhlmerch", `come_to_me ${player.x},${player.y}`);
     }
-}, 45 * 1000);
+}, 25 * 1000);
 
-setInterval(myChar.sendWhitelistedItemsToMerchant(), 3 * 60 * 1000);
+setInterval(myChar.sendWhitelistedItemsToMerchant(), 1 * 60 * 1000);
 
 setInterval(function () {
     loot();

@@ -141,6 +141,8 @@ class Merchant {
 					await sleep(4200);
 				}
 
+				this.sellItem();
+
 				await smart_move({ to: "potions" });
 
 				// Step 3: Custom offsets
@@ -162,11 +164,11 @@ class Merchant {
 			}
 
 			this.atSpotFish();
-			setInterval(() => this.atSpotFish(), 18 * 1000);
+			this.goFishingInterval = setInterval(() => this.atSpotFish(), 18 * 1000);
 		}
 	}
 
-	atSpotFish() {
+	async atSpotFish() {
 		if (this.atFishingSpot) {
 			clearInterval(this.fishingInterval);
 
@@ -176,8 +178,15 @@ class Merchant {
 		}
 
 		if (is_on_cooldown("fishing")) {
+			clearInterval(this.goFishingInterval);
 			this.fishingInterval = setInterval(() => this.goFishing(), 45 * 1000);
 			this.resetFlags();
+
+			if (!is_on_cooldown("use_town")) {
+				use_skill("use_town");
+				// Give time for teleport animation
+				await sleep(4200);
+			}
 		}
 	}
 
@@ -198,7 +207,9 @@ class Merchant {
 		this.restocking = false;
 		this.transferingPotions = false;
 		this.returningToGroup = false;
+
 		this.fishing = false;
+		this.movingToFishingPoint = false;
 		this.atFishingSpot = false;
 	}
 
@@ -242,10 +253,14 @@ class Merchant {
 
 			await xmove(x, y);
 
-			if (character.x === x && character.y === y) {
-				set_message(`Arrived at group location (${x}, ${y})`);
+			const dx = character.x - x;
+			const dy = character.y - y;
+			const dist = Math.sqrt(dx * dx + dy * dy);
 
-				resetFlags();
+			if (dist <= 10) {
+				set_message(`Arrived at group location (${x}, ${y})`);
+				this.resetFlags();
+				returnToLeader();
 			}
 		}
 	}
