@@ -53,6 +53,9 @@ function recoverOutOfCombat() {
     else if (character.hp < character.max_hp) {
         use_skill("regen_hp");
     }
+    else if (character.mp < character.max_mp) {
+        use_skill("regen_mp");
+    }
 }
 
 function manageParty() {
@@ -121,7 +124,6 @@ function checkPotions() {
 
     if (hpCount < MIN_POTIONS || mpCount < MIN_POTIONS) {
         send_cm("Jhlmerch", `need_pots ${player.x},${player.y}`);
-        console.log(`Sent potion request to merchant..  need_pots ${player.x}, ${player.y}`);
     }
 }
 
@@ -169,8 +171,8 @@ async function returnToLeader() {
     const safeX = leader.x + offsetX;
     const safeY = leader.y + offsetY;
 
-    console.log(`Moving to safe position at (${safeX.toFixed(1)}, ${safeY.toFixed(1)})`);
-    await xmove(safeX, safeY);
+    move(safeX, safeY);
+
     set_message("Returned to safe position near leader");
 }
 
@@ -198,7 +200,6 @@ function getItemSlot(name) {
 function sendPotionsTo(name, hpPotion, mpPotion, hpAmount = 200, mpAmount = 200) {
     const player = get_player(name);
     if (!player || parent.distance(character, player) > 400) {
-        console.log(`Player ${name} not found or too far away.`);
         return;
     }
 

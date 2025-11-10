@@ -6,7 +6,6 @@ class MyChar extends BaseClass {
     markTarget(target) {
         if (!is_on_cooldown("huntersmark") && target.hp > 1100 && this.getMP() > 600) {
             use_skill("huntersmark", target);
-            console.log(`${this.name} used 'hunters mark' on ${target.name}`);
             this.attack(target);
         }
         else {
@@ -66,8 +65,6 @@ setInterval(function () {
 }, 1000 / 4);
 
 character.on("cm", async (sender, data) => {
-    console.log(`Received cm from ${sender.message}..`, sender);
-
     if (myChar.returningToGroup) return;
     if (!sender.name.startsWith("Jhl")) return;
 
@@ -89,8 +86,6 @@ character.on("cm", async (sender, data) => {
 
 // Out of range retrun to leader
 character.on("cm", async (sender, data) => {
-    console.log(`Received cm from ${sender.message}..`, sender);
-
     if (myChar.returningToGroup) return;
     if (!sender.name.startsWith("Jhl")) return;
 
@@ -112,8 +107,6 @@ character.on("cm", async (sender, data) => {
 
 // update farm target
 character.on("cm", async (sender, data) => {
-    console.log(`Received cm from ${sender.message}..`, sender);
-
     if (myChar.returningToGroup) return;
     if (!sender.name.startsWith("Jhl")) return;
 

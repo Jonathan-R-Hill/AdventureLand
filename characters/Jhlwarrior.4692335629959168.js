@@ -5,7 +5,6 @@ class MyChar extends BaseClass {
     taunt(target) {
         if (!is_on_cooldown("taunt") && distance(character, target) < G.skills.taunt.range && target.target != character.name) {
             use_skill("taunt", target);
-            console.log(`${this.name} used 'taunt' on ${target.name}`);
         }
         else {
             this.attack(target);
@@ -51,7 +50,6 @@ setInterval(function () {
 
         let target = get_targeted_monster();
         if (target && target.name != myChar.currentMobFarm) {
-            console.log(`Dropping target ${target.name}, not my farm`);
             target = null;
         }
 

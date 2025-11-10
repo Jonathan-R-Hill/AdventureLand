@@ -12,15 +12,10 @@ class MyChar extends BaseClass {
         if (lowMembers.length >= 2 && !is_on_cooldown("partyheal")) {
             set_message("Using Party Heal");
             use_skill("partyheal");
-
-            console.log("Party Heal used on:", lowMembers.map(m => m.name).join(", "));
-
         }
         else if (lowMembers.length > 0 && !is_on_cooldown("heal")) {
             set_message(`Healing ${lowMembers[0].name}`);
             use_skill("heal", lowMembers[0].name);
-
-            console.log(`Healed ${lowMembers[0].name}`);
 
             return;
         }
@@ -79,8 +74,6 @@ setInterval(function () {
 }, 1000 / 4);
 
 character.on("cm", async (sender, data) => {
-    console.log(`Received cm from ${sender.message}..`, sender);
-
     if (returningToGroup) return;
     if (!sender.name.startsWith("Jhl")) return;
 

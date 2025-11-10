@@ -72,33 +72,24 @@ class BaseClass {
         return this.char.rip;
     }
 
-    logStatus() {
-        console.log(`${this.name}: HP ${this.getHP()}/${this.getMaxHP()} | MP ${this.getMP()}/${this.getMaxMP()}`);
-    }
-
     toggleAttackMode() {
         this.attackMode = !this.attackMode;
-        console.log(`${this.name} Attack Mode: ${this.attackMode}`);
     }
 
     toggleFollowLeaderMode() {
         this.followLeaderMode = !this.followLeaderMode;
-        console.log(`${this.name} Follow Leader Mode: ${this.followLeaderMode}`);
     }
 
     toggleWaitForCoords() {
         this.waitForCoords = !this.waitForCoords;
-        console.log(`${this.name} Wait For Coords: ${this.waitForCoords}`);
     }
 
     toggleReturningToGroup() {
         this.returningToGroup = !this.returningToGroup;
-        console.log(`${this.name} Returning To Group: ${this.returningToGroup}`);
     }
 
     setCurrentMobFarm(mobFarmName) {
         this.currentMobFarm = mobFarmName;
-        console.log(`${this.name} Current Mob Farm: ${this.currentMobFarm}`);
     }
 
     sendWhitelistedItemsToMerchant() {
@@ -106,7 +97,6 @@ class BaseClass {
 
         const merchant = get_player(this.merchantName);
         if (!merchant || parent.distance(character, merchant) > 200) {
-            console.log(`Merchant ${this.merchantName} not nearby or not found!`);
             return;
         }
 
@@ -155,7 +145,6 @@ class BaseClass {
 
     findTarget(target) {
         if (target && target.name != myChar.currentMobFarm) {
-            console.log(`Dropping target ${target.name}, not my farm`);
             target = null;
         }
 

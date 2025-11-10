@@ -18,10 +18,10 @@ class Merchant {
 		this.goFishing();
 		this.restockPotions();
 		this.manageInventory();
-		setInterval(() => this.goFishing(), 1 * 60 * 1000);
+		setInterval(() => this.goFishing(), 15 * 1000);
 		setInterval(() => this.restockPotions(), 5 * 60 * 1000);
 		setInterval(() => this.manageInventory(), 2 * 60 * 1000);
-		setInterval(() => this.mainLoop(), 1000 / 1.5);
+		setInterval(() => this.mainLoop(), 1000);
 
 		// Listen for cm events
 		character.on("cm", async (sender, data) => {
@@ -46,8 +46,6 @@ class Merchant {
 		if (used >= 30) {
 			this.restocking = true;
 
-			console.log("Inventory threshold reached, moving to potion NPC to sell...");
-
 			smart_move({ to: "potions" }).then(() => {
 				sellItem();
 			});
@@ -55,8 +53,6 @@ class Merchant {
 	}
 
 	sellItem() {
-		console.log(`Checking for items to sell..`);
-
 		for (let i = 0; i < character.items.length; i++) {
 			const item = character.items[i];
 
@@ -70,8 +66,6 @@ class Merchant {
 	}
 
 	async restockPotions() {
-		console.log("Checking potion levels...");
-
 		const currentHp = countItem(HP_POTION);
 		const currentMp = countItem(MP_POTION);
 
@@ -87,8 +81,6 @@ class Merchant {
 		}
 
 		if (currentHp >= POT_BUFFER && currentMp >= POT_BUFFER) {
-			console.log("Potion levels sufficient, returning to leader...");
-
 			resetFlags();
 		}
 	}
@@ -141,13 +133,9 @@ class Merchant {
 
 				if (!this.atFishingSpot) {
 					await smart_move({ to: "fisherman" });
-
-					await xmove(character.x - 50, character.y);
+					move(character.x - 50, character.y);
 					this.atFishingSpot = true;
 				}
-
-				// Wait 5 seconds before casting
-				await sleep(5000);
 
 				if (this.atFishingSpot) {
 					use_skill("fishing");
@@ -163,7 +151,6 @@ class Merchant {
 	}
 
 	mainLoop() {
-		console.log(`States: restocking: ${this.restocking}, returningToGroup: ${this.returningToGroup}, transferingPotions: ${this.transferingPotions}`);
 		manageParty();
 		recoverOutOfCombat();
 		this.buffPartyWithMLuck();
