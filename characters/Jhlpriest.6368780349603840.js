@@ -5,7 +5,6 @@ class MyChar extends BaseClass {
 
     healParty() {
         let partyHealth = getPartyHealth();
-        let myMana = character.mp;
 
         // Filter members below 75% HP
         let lowMembers = partyHealth.filter(m => m.hp < m.max_hp * 0.75);

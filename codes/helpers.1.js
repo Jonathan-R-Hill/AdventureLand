@@ -1,7 +1,8 @@
 
 function startSharedTasks() {
-    setInterval(manageParty, 750);
+    setInterval(manageParty, 1100);
     setInterval(reviveSelf, 5000);
+
     if (character.name != "Jhlmerch") {
         setInterval(sendGoldToMerchant, 5 * 60 * 1000);
         setInterval(checkPotions, 10 * 1000);
@@ -59,32 +60,31 @@ function recoverOutOfCombat() {
 }
 
 function manageParty() {
-    const party = get_party() || {};
     const partyMembers = ["Jhlpriest", "Jhlranger", "Jhlmerch", "Jhlwarrior"];
 
-    // If I'm the warrior, invite everyone else
     if (character.name === "Jhlwarrior") {
+        // Leader invites everyone
         for (const name of partyMembers) {
-            if (!party.hasOwnProperty(name)) {
+            if (!get_party()?.[name]) {
                 send_party_invite(name);
                 set_message(`Inviting ${name}`);
             }
         }
     } else {
-        // If warrior is not in the party, leave
-        if (character.party && !party.hasOwnProperty("Jhlwarrior")) {
-            leave_party();
-            set_message("Warrior not in party, leaving...");
-            return;
-        }
-
-        // If I'm not in a party but warrior exists, accept invite
-        if (!character.party) {
-            accept_party_invite("Jhlwarrior");
-            set_message("Accepting invite from warrior");
+        if (character.party !== "Jhlwarrior") {
+            // If in a party but warrior isn’t leader, leave
+            if (character.party) {
+                leave_party();
+                set_message("Warrior not leader, leaving...");
+            } else {
+                // Not in a party at all, accept warrior’s invite
+                accept_party_invite("Jhlwarrior");
+                set_message("Accepting invite from warrior");
+            }
         }
     }
 }
+
 
 function nearTank() {
     const player = get_player("Jhlwarrior");
@@ -131,14 +131,7 @@ async function returnToLeader() {
     console.log("Potion levels sufficient, returning to leader...");
 
     let leader;
-    if (character.name === "Jhlmerch") {
-        leader = get_player("Jhlpriest");
-    }
-    else if (character.name === "Jhlpriest") {
-        leader = get_player("Jhlranger");
-    } else {
-        leader = get_player("Jhlwarrior");
-    }
+    leader = get_player("Jhlwarrior");
 
     if (!leader) {
         set_message("Leader not found");
