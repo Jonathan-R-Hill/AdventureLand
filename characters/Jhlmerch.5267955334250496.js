@@ -11,7 +11,9 @@ class Merchant {
 		this.restocking = false;
 		this.transferingPotions = false;
 		this.returningToGroup = false;
+
 		this.fishing = false;
+		this.movingToFishingPoint = false;
 		this.atFishingSpot = false;
 
 		// Kick off periodic tasks
@@ -111,6 +113,7 @@ class Merchant {
 		if (is_on_cooldown("fishing")) {
 			this.atFishingSpot = false;
 			this.fishing = false;
+			this.movingToFishingPoint = false;
 
 			return;
 		}
@@ -121,6 +124,7 @@ class Merchant {
 		if (this.restocking || this.transferingPotions) {
 			this.fishing = false;
 			this.atFishingSpot = false;
+			this.movingToFishingPoint = false;
 
 			return;
 		}
@@ -132,12 +136,22 @@ class Merchant {
 				set_message("Moving to Tristan for fishing...");
 
 				if (!this.atFishingSpot) {
+					if (this.movingToFishingPoint) { return; }
+
+					if (!is_on_cooldown("use_town")) {
+						use_skill("use_town");
+						// Give time for teleport animation
+						await sleep(2200);
+					}
+
+					set_message("Moving to Tristan...");
 					await smart_move({ to: "fisherman" });
-					move(character.x - 50, character.y);
+
 					this.atFishingSpot = true;
 				}
 
 				if (this.atFishingSpot) {
+					move(character.x - 50, character.y);
 					use_skill("fishing");
 					set_message("Fishing...");
 				}
@@ -151,6 +165,7 @@ class Merchant {
 	}
 
 	mainLoop() {
+		reviveSelf();
 		manageParty();
 		recoverOutOfCombat();
 		this.buffPartyWithMLuck();
@@ -159,7 +174,6 @@ class Merchant {
 
 		loot();
 		useHealthPotion();
-		reviveSelf();
 		returnToLeader();
 	}
 
