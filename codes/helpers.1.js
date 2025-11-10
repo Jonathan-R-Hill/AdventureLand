@@ -1,11 +1,15 @@
 
 function startSharedTasks() {
-    setInterval(manageParty, 1000);
+    setInterval(manageParty, 750);
     setInterval(reviveSelf, 5000);
     if (character.name != "Jhlmerch") {
         setInterval(sendGoldToMerchant, 5 * 60 * 1000);
         setInterval(checkPotions, 10 * 1000);
     }
+}
+
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 function reviveSelf() {
@@ -52,23 +56,30 @@ function recoverOutOfCombat() {
 }
 
 function manageParty() {
-    let party = get_party() || {}; // Ensure it's an object even if null
-    let partyMembers = ["Jhlpriest", "Jhlranger", "Jhlmerch", "Jhlwarrior"];
+    const party = get_party() || {};
+    const partyMembers = ["Jhlpriest", "Jhlranger", "Jhlmerch", "Jhlwarrior"];
 
-    if (character.name == "Jhlwarrior") {
-        for (let name of partyMembers) {
+    // If I'm the warrior, invite everyone else
+    if (character.name === "Jhlwarrior") {
+        for (const name of partyMembers) {
             if (!party.hasOwnProperty(name)) {
                 send_party_invite(name);
                 set_message(`Inviting ${name}`);
             }
         }
-    }
-    else {
-        if (!character.party) {
-            accept_party_invite("Jhlwarrior");
-            set_message("Accepting invite");
+    } else {
+        // If warrior is not in the party, leave
+        if (character.party && !party.hasOwnProperty("Jhlwarrior")) {
+            leave_party();
+            set_message("Warrior not in party, leaving...");
+            return;
         }
 
+        // If I'm not in a party but warrior exists, accept invite
+        if (!character.party) {
+            accept_party_invite("Jhlwarrior");
+            set_message("Accepting invite from warrior");
+        }
     }
 }
 
@@ -118,23 +129,49 @@ async function returnToLeader() {
     console.log("Potion levels sufficient, returning to leader...");
 
     let leader;
-
     if (character.name === "Jhlmerch") {
         leader = get_player("Jhlpriest");
+    }
+    else if (character.name === "Jhlpriest") {
+        leader = get_player("Jhlranger");
     } else {
         leader = get_player("Jhlwarrior");
     }
 
-    console.log("Leader info:", leader);
-
-    if (leader) {
-        console.log(`Moving back to leader at (${leader.x}, ${leader.y})`);
-
-        await xmove(leader.x, leader.y);
-        set_message("Returned to leader");
-    } else {
+    if (!leader) {
         set_message("Leader not found");
+        return;
     }
+
+    const target = get_targeted_monster();
+    let offsetX = 0;
+    let offsetY = 0;
+
+    // Avoid both the mob and the leader
+    const avoidPoints = [];
+
+    if (target && !target.dead) {
+        avoidPoints.push({ x: target.x, y: target.y });
+    }
+
+    avoidPoints.push({ x: leader.x, y: leader.y });
+
+    for (const point of avoidPoints) {
+        const dx = character.x - point.x;
+        const dy = character.y - point.y;
+        const dist = Math.max(Math.sqrt(dx * dx + dy * dy), 1);
+
+        const awayFactor = 50;
+        offsetX += (dx / dist) * awayFactor;
+        offsetY += (dy / dist) * awayFactor;
+    }
+
+    const safeX = leader.x + offsetX;
+    const safeY = leader.y + offsetY;
+
+    console.log(`Moving to safe position at (${safeX.toFixed(1)}, ${safeY.toFixed(1)})`);
+    await xmove(safeX, safeY);
+    set_message("Returned to safe position near leader");
 }
 
 

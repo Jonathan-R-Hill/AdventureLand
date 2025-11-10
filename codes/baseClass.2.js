@@ -1,19 +1,54 @@
 load_code("helpers");
 
+// mobs mainland:
+/**
+ * 
+ * Goo
+ * Squig
+ * Tiny Crab
+ * Bee
+ * Froggie
+ * Snake
+ * Armadillo
+ * Croc
+ * 
+ * Huge Crab
+ * Tortoise
+ * Squigtoad
+ * Spider
+ * Scorpion
+ * 
+ */
+
 class BaseClass {
     constructor(name) {
         this.name = name;
         this.char = get_player(name);
 
+        this.sendItems = true;
+        this.merchantName = "Jhlmerch";
+        /**
+         * gem0 = Raw Emerald
+         */
+        this.whitelist = [
+            // Keep
+            "spores", "seashell", "beewings", "gem0", "whiteegg", "monstertoken", "spidersilk",
+            // Upgrade
+            "ringsj",
+            // Sell
+            "hpbelt", "hpamulet", "wshoes", "wcap",
+        ];
+
         this.attackMode = false;
         this.followLeaderMode = false;
         this.returningToGroup = false;
         this.waitForCoords = false;
+        this.fightTogeather = true;
 
         this.x = this.char.x;
         this.y = this.char.y;
 
-        this.currentMobFarm = "";
+        this.currentMobFarm = "Spider";
         startSharedTasks();
     }
 
@@ -66,6 +101,29 @@ class BaseClass {
         console.log(`${this.name} Current Mob Farm: ${this.currentMobFarm}`);
     }
 
+    sendWhitelistedItemsToMerchant() {
+        if (!this.sendItems) return;
+
+        const merchant = get_player(this.merchantName);
+        if (!merchant || parent.distance(character, merchant) > 200) {
+            console.log(`Merchant ${this.merchantName} not nearby or not found!`);
+            return;
+        }
+
+        for (let i = 0; i < character.items.length; i++) {
+            const item = character.items[i];
+            if (!item) continue;
+
+            if (this.whitelist.includes(item.name)) {
+                const quantity = item.q || 1; // stackable or single
+
+                send_item(this.merchantName, i, quantity);
+                console.log(`Sent ${quantity}x ${item.name} to ${this.merchantName}`);
+            }
+        }
+    }
+
+    // TARGETING
     getClosestMonsterByName(name) {
         let closest = null;
         let minDist = Infinity;
@@ -83,6 +141,59 @@ class BaseClass {
         }
 
         return closest;
+    }
+
+    getTankTarget() {
+        const tank = get_player("Jhlwarrior");
+        if (tank) {
+            return get_target_of(tank);
+        }
+
+        returnToLeader();
+        return null;
+    }
+
+    findTarget(target) {
+        if (target && target.name != myChar.currentMobFarm) {
+            console.log(`Dropping target ${target.name}, not my farm`);
+            target = null;
+        }
+
+        if (target != null) { return target; }
+
+        if (target == null || !target || target == undefined) {
+            target = myChar.getClosestMonsterByName(myChar.currentMobFarm);
+            if (target) {
+
+                if (target.name == myChar.currentMobFarm || myChar.currentMobFarm == "") {
+                    change_target(target);
+
+                    return target;
+                } else {
+                    return null
+                }
+
+            } else {
+                set_message(`Not my target ${myChar.currentMobFarm}`);
+
+                return null;
+            }
+        }
+    }
+
+    // ATTTACKING
+    attack(target) {
+        if (!is_in_range(target)) {
+            move(
+                character.x + (target.x - character.x) / 2,
+                character.y + (target.y - character.y) / 2
+            );
+
+            set_message("Moving to target");
+        } else if (can_attack(target)) {
+            set_message("Attacking");
+            attack(target);
+        }
     }
 
 

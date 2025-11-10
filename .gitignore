@@ -1,3 +1,6 @@
+clash/*
+libraries/*
+
 # Logs
 logs
 *.log

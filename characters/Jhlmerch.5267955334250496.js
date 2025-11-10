@@ -2,124 +2,234 @@ load_code("helpers");
 
 const HP_POTION = "hpot0";
 const MP_POTION = "mpot0";
-const potsMinStock = 600;
+const POTSMINSTOCK = 600;
 const POT_BUFFER = 300;
+const sellWhiteList = ["hpbelt", "hpamulet", "wshoes", "wcap"];
 
-let restocking = false;
-let transferingPotions = false;
-let returningToGroup = false;
+class Merchant {
+	constructor() {
+		this.restocking = false;
+		this.transferingPotions = false;
+		this.returningToGroup = false;
+		this.fishing = false;
+		this.atFishingSpot = false;
 
-async function restockPotions() {
-	console.log("Checking potion levels...");
+		// Kick off periodic tasks
+		this.goFishing();
+		this.restockPotions();
+		this.manageInventory();
+		setInterval(() => this.goFishing(), 1 * 60 * 1000);
+		setInterval(() => this.restockPotions(), 5 * 60 * 1000);
+		setInterval(() => this.manageInventory(), 2 * 60 * 1000);
+		setInterval(() => this.mainLoop(), 1000 / 1.5);
 
-	const currentHp = countItem(HP_POTION);
-	const currentMp = countItem(MP_POTION);
-
-	// Only go buy if below buffer
-	if (currentHp < POT_BUFFER || currentMp < POT_BUFFER) {
-		restocking = true;
-
-		set_message("Restocking potions...");
-		await smart_move({ to: "potions" }); // Go to potion NPC
-
-		if (currentHp < potsMinStock) buy(HP_POTION, potsMinStock - currentHp);
-		if (currentMp < potsMinStock) buy(MP_POTION, potsMinStock - currentMp);
-
-		set_message("Potions restocked!");
+		// Listen for cm events
+		character.on("cm", async (sender, data) => {
+			await this.handleCM(sender, data);
+		});
 	}
 
-	if (currentHp >= POT_BUFFER && currentMp >= POT_BUFFER) {
-		// Move back to leader
-		console.log("Potion levels sufficient, returning to leader...");
+	getInventoryUsage() {
+		let used = 0;
+		for (let i = 0; i < character.items.length; i++) {
+			if (character.items[i]) used++;
+		}
 
-		// Reset flags and wait for leader or member to call
-		restocking = false;
-		transferingPotions = false;
-		returningToGroup = false;
+		return { used, total: character.items.length };
 	}
-}
 
-restockPotions();
-setInterval(restockPotions, 5 * 60 * 1000);
+	manageInventory() {
+		const { used, total } = this.getInventoryUsage();
+		console.log(`Inventory: ${used}/${total}`);
 
-setInterval(function () {
-	console.log(`States: restocking: ${restocking}, returningToGroup: ${returningToGroup}, transferingPotions: ${transferingPotions}`);
+		// If inventory is getting full, go sell
+		if (used >= 30) {
+			this.restocking = true;
 
-	if (restocking) { return; }
+			console.log("Inventory threshold reached, moving to potion NPC to sell...");
 
-	if (!transferingPotions) {
+			smart_move({ to: "potions" }).then(() => {
+				sellItem();
+			});
+		}
+	}
+
+	sellItem() {
+		console.log(`Checking for items to sell..`);
+
+		for (let i = 0; i < character.items.length; i++) {
+			const item = character.items[i];
+
+			if (item && sellWhiteList.includes(item.name)) {
+				sell(i, item.q || 1);
+				console.log(`Sold ${item.q || 1}x ${item.name} from slot ${i}`);
+			}
+		}
+
+		this.restocking = false;
+	}
+
+	async restockPotions() {
+		console.log("Checking potion levels...");
+
+		const currentHp = countItem(HP_POTION);
+		const currentMp = countItem(MP_POTION);
+
+		if (currentHp < POT_BUFFER || currentMp < POT_BUFFER) {
+			this.restocking = true;
+			set_message("Restocking potions...");
+			await smart_move({ to: "potions" });
+
+			if (currentHp < POTSMINSTOCK) buy(HP_POTION, POTSMINSTOCK - currentHp);
+			if (currentMp < POTSMINSTOCK) buy(MP_POTION, POTSMINSTOCK - currentMp);
+
+			set_message("Potions restocked!");
+		}
+
+		if (currentHp >= POT_BUFFER && currentMp >= POT_BUFFER) {
+			console.log("Potion levels sufficient, returning to leader...");
+
+			resetFlags();
+		}
+	}
+
+	buffPartyWithMLuck() {
+		for (const id in parent.party) {
+			const memberName = id;
+			const member = get_player(memberName);
+			if (!member) continue;
+
+			// Check if they already have mluck
+			const hasBuff = member.s && member.s.mluck;
+			const remaining = hasBuff ? member.s.mluck.ms : 0;
+
+			if (
+				!is_on_cooldown("mluck") &&
+				distance(character, member) < G.skills.mluck.range &&
+				(!hasBuff || remaining < 60000)
+			) {
+				use_skill("mluck", member);
+				console.log(`Casting mluck on ${member.name}`);
+				return; // cast once per loop
+			}
+		}
+	}
+
+	async goFishing() {
+		if (is_on_cooldown("fishing")) {
+			this.atFishingSpot = false;
+			this.fishing = false;
+
+			return;
+		}
+
+		const usedSlots = character.items.filter(i => i).length;
+		const totalSlots = character.items.length;
+
+		if (this.restocking || this.transferingPotions) {
+			this.fishing = false;
+			this.atFishingSpot = false;
+
+			return;
+		}
+
+		if (usedSlots < totalSlots) {
+			// Only attempt if not on cooldown
+			if (!is_on_cooldown("fishing")) {
+				this.fishing = true;
+				set_message("Moving to Tristan for fishing...");
+
+				if (!this.atFishingSpot) {
+					await smart_move({ to: "fisherman" });
+
+					await xmove(character.x - 50, character.y);
+					this.atFishingSpot = true;
+				}
+
+				// Wait 5 seconds before casting
+				await sleep(5000);
+
+				if (this.atFishingSpot) {
+					use_skill("fishing");
+					set_message("Fishing...");
+				}
+			}
+		} else {
+			this.fishing = false;
+			this.manageInventory();
+
+			set_message("Inventory full, go sell!");
+		}
+	}
+
+	mainLoop() {
+		console.log(`States: restocking: ${this.restocking}, returningToGroup: ${this.returningToGroup}, transferingPotions: ${this.transferingPotions}`);
+		manageParty();
 		recoverOutOfCombat();
+		this.buffPartyWithMLuck();
+
+		if (this.restocking || this.returningToGroup || this.transferingPotions || this.fishing) return;
+
 		loot();
 		useHealthPotion();
 		reviveSelf();
-
 		returnToLeader();
 	}
 
-}, 1000 / 1.5);
-
-// Need_pots x,y
-character.on("cm", async (sender, data) => {
-	console.log(`Received cm from ${sender.message}..`, sender);
-
-	const splitMsg = sender.message.split(' ');
-
-	console.log(restocking, '    ', splitMsg);
-
-	if (splitMsg[0].trim() != "need_pots") return;
-
-	const xy = splitMsg[1].split(',');
-	const x = parseInt(xy[0]);
-	const y = parseInt(xy[1]);
-
-	if (restocking) { return; }
-
-	transferingPotions = true;
-	set_message(`Moving to ${x}, ${y} to deliver potions...`);
-
-	await xmove(x, y);
-
-	const player = get_player(sender.name);
-	if (!player) return;
-
-	if (player.name.startsWith("Jhl")) {
-		await restockPotions();
-
-		// Trade potions
-		sendPotionsTo(player.name, HP_POTION, MP_POTION, 100, 100);
-		set_message(`Delivered 100 HP & MP potions to ${player.name}`);
-
-		transferingPotions = false;
-		await returnToLeader();
+	resetFlags() {
+		this.restocking = false;
+		this.transferingPotions = false;
+		this.returningToGroup = false;
+		this.fishing = false;
+		this.atFishingSpot = false;
 	}
-});
 
-// Come_to_me x,y
-character.on("cm", async (sender, data) => {
-	console.log(`Received cm from ${sender.message}..`, sender);
+	async handleCM(sender, data) {
+		const splitMsg = sender.message.split(' ');
+		const command = splitMsg[0].trim();
 
-	if (returningToGroup) { return; }
+		if (command === "need_pots") {
+			const [x, y] = splitMsg[1].split(',').map(Number);
+			if (this.restocking || this.returningToGroup) return;
 
-	if (!sender.name.startsWith(("Jhl"))) { return; }
-	if (restocking) { return; }
+			this.transferingPotions = true;
+			set_message(`Moving to ${x}, ${y} to deliver potions...`);
+			await xmove(x, y);
 
-	const splitMsg = sender.message.split(' ');
+			const player = get_player(sender.name);
+			if (!player) return;
 
-	if (splitMsg[0].trim() != "come_to_me") return;
+			if (player.name.startsWith("Jhl")) {
+				await this.restockPotions();
 
-	const xy = splitMsg[1].split(',');
-	const x = parseInt(xy[0]);
-	const y = parseInt(xy[1]);
+				sendPotionsTo(player.name, HP_POTION, MP_POTION, 100, 100);
+				set_message(`Delivered 100 HP & MP potions to ${player.name}`);
 
-	// Move to player location
-	xmove(x, y);
-	returningToGroup = true;
+				this.transferingPotions = false;
+				await returnToLeader();
+			}
+		}
 
-	if (character.x == x && character.y == y) {
-		set_message(`Arrived at group location (${x}, ${y})`);
-		returningToGroup = false;
+		if (command === "come_to_me") {
+			if (this.returningToGroup || this.restocking || this.transferingPotions || this.fishing) return;
+			if (!sender.name.startsWith("Jhl")) return;
 
-		await returnToLeader();
+			const [x, y] = splitMsg[1].split(',').map(Number);
+			if (isNaN(x) || isNaN(y)) return;
+			this.returningToGroup = true;
+
+			await xmove(x, y);
+
+			if (character.x === x && character.y === y) {
+				set_message(`Arrived at group location (${x}, ${y})`);
+
+				await this.returnToLeader();
+
+				resetFlags();
+			}
+		}
 	}
-});
+}
 
+// Instantiate manager
+const potionManager = new Merchant();

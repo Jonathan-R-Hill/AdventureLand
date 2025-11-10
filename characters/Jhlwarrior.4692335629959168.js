@@ -1,14 +1,23 @@
 load_code("baseClass");
 load_code("helpers");
 
-class MyChar extends BaseClass { }
+class MyChar extends BaseClass {
+    taunt(target) {
+        if (!is_on_cooldown("taunt") && distance(character, target) < G.skills.taunt.range && target.target != character.name) {
+            use_skill("taunt", target);
+            console.log(`${this.name} used 'taunt' on ${target.name}`);
+        }
+        else {
+            this.attack(target);
+        }
+    }
+}
 
 const myChar = new MyChar(character.name);
 
 myChar.returningToGroup = false;
 myChar.waitForCoords = false;
 myChar.attackMode = true;
-myChar.currentMobFarm = "Tiny Crab";
 
 setInterval(() => {
     const player = get_player("Jhlwarrior");
@@ -25,6 +34,8 @@ setInterval(() => {
         send_cm("Jhlpriest", `come_to_me ${player.x},${player.y}`);
     }
 }, 5000);
+
+setInterval(myChar.sendWhitelistedItemsToMerchant(), 3 * 60 * 1000);
 
 setInterval(function () {
     loot();
@@ -45,37 +56,17 @@ setInterval(function () {
         }
 
         if (target == null || !target || target == undefined) {
-            target = myChar.getClosestMonsterByName(myChar.currentMobFarm);
-            if (target) {
+            target = get_targeted_monster();
 
-                if (target.name == myChar.currentMobFarm || myChar.currentMobFarm == "") {
-                    change_target(target);
+            target = myChar.findTarget(target);
 
-                    return;
-                } else {
-                    target = null;
-
-                    return;
-                }
-
-            } else {
-                set_message(`Not my target ${myChar.currentMobFarm}`);
-
+            if (target == null || !target || target == undefined) {
                 return;
             }
         }
 
-        if (!is_in_range(target)) {
-            move(
-                character.x + (target.x - character.x) / 2,
-                character.y + (target.y - character.y) / 2
-            );
-
-            set_message("Moving to target");
-        } else if (can_attack(target)) {
-            set_message("Attacking");
-            attack(target);
-        }
+        myChar.taunt(target);
+        myChar.attack(target);
     }
 
 }, 1000 / 4);

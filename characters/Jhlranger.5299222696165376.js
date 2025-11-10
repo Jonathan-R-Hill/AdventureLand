@@ -1,14 +1,28 @@
 load_code("baseClass");
 load_code("helpers");
 
-class MyChar extends BaseClass { }
+class MyChar extends BaseClass {
+
+    markTarget(target) {
+        if (!is_on_cooldown("huntersmark") && target.hp > 1100 && this.getMP() > 600) {
+            use_skill("huntersmark", target);
+            console.log(`${this.name} used 'hunters mark' on ${target.name}`);
+            this.attack(target);
+        }
+        else {
+            this.attack(target);
+        }
+    }
+
+}
 
 const myChar = new MyChar(character.name);
 
 myChar.returningToGroup = false;
 myChar.waitForCoords = false;
 myChar.attackMode = true;
-myChar.currentMobFarm = "Tiny Crab";
+
+setInterval(myChar.sendWhitelistedItemsToMerchant(), 3 * 60 * 1000);
 
 setInterval(function () {
 
@@ -27,44 +41,26 @@ setInterval(function () {
 
     if (!myChar.waitForCoords) {
 
-        let target = get_targeted_monster();
-        if (target && target.name != myChar.currentMobFarm) {
-            console.log(`Dropping target ${target.name}, not my farm`);
-            target = null;
+        let target;
+        if (myChar.fightTogeather) {
+            target = myChar.getTankTarget();
+
+            if (target == null || !target || target == undefined) {
+                returnToLeader();
+                return;
+            }
         }
+        else {
+            target = get_targeted_monster();
 
-        if (target == null || !target || target == undefined) {
-            target = myChar.getClosestMonsterByName(myChar.currentMobFarm);
-            if (target) {
+            target = myChar.findTarget(target);
 
-                if (target.name == myChar.currentMobFarm || myChar.currentMobFarm == "") {
-                    change_target(target);
-
-                    return;
-                } else {
-                    target = null;
-
-                    return;
-                }
-
-            } else {
-                set_message(`Not my target ${myChar.currentMobFarm}`);
-
+            if (target == null || !target || target == undefined) {
                 return;
             }
         }
 
-        if (!is_in_range(target)) {
-            move(
-                character.x + (target.x - character.x) / 2,
-                character.y + (target.y - character.y) / 2
-            );
-
-            set_message("Moving to target");
-        } else if (can_attack(target)) {
-            set_message("Attacking");
-            attack(target);
-        }
+        myChar.markTarget(target);
     }
 
 }, 1000 / 4);
