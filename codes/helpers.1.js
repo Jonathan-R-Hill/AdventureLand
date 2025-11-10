@@ -71,16 +71,22 @@ function manageParty() {
             }
         }
     } else {
-        if (character.party !== "Jhlwarrior") {
-            // If in a party but warrior isn’t leader, leave
-            if (character.party) {
+        if (!character.party) {
+            leave_party();
+        }
+        // If I'm in a party
+        if (character.party) {
+            if (character.party !== "Jhlwarrior") {
+                // Wrong leader, leave
                 leave_party();
                 set_message("Warrior not leader, leaving...");
-            } else {
-                // Not in a party at all, accept warrior’s invite
-                accept_party_invite("Jhlwarrior");
-                set_message("Accepting invite from warrior");
             }
+
+            return;
+        } else {
+            // Not in a party at all, accept warrior’s invite
+            accept_party_invite("Jhlwarrior");
+            set_message("Accepting invite from warrior");
         }
     }
 }
@@ -130,9 +136,7 @@ function checkPotions() {
 async function returnToLeader() {
     console.log("Potion levels sufficient, returning to leader...");
 
-    let leader;
-    leader = get_player("Jhlwarrior");
-
+    const leader = get_player("Jhlwarrior");
     if (!leader) {
         set_message("Leader not found");
         return;
@@ -142,13 +146,11 @@ async function returnToLeader() {
     let offsetX = 0;
     let offsetY = 0;
 
-    // Avoid both the mob and the leader
+    // Collect points to avoid: mob + leader
     const avoidPoints = [];
-
     if (target && !target.dead) {
         avoidPoints.push({ x: target.x, y: target.y });
     }
-
     avoidPoints.push({ x: leader.x, y: leader.y });
 
     for (const point of avoidPoints) {
@@ -161,12 +163,24 @@ async function returnToLeader() {
         offsetY += (dy / dist) * awayFactor;
     }
 
-    const safeX = leader.x + offsetX;
-    const safeY = leader.y + offsetY;
+    let safeX = leader.x + offsetX;
+    let safeY = leader.y + offsetY;
+
+    // ✅ Enforce minimum 60 units separation from leader in at least one axis
+    const dxLeader = safeX - leader.x;
+    const dyLeader = safeY - leader.y;
+
+    if (Math.abs(dxLeader) < 60 && Math.abs(dyLeader) < 60) {
+        // Push further along whichever axis has more room
+        if (Math.abs(dxLeader) >= Math.abs(dyLeader)) {
+            safeX = leader.x + (dxLeader >= 0 ? 60 : -60);
+        } else {
+            safeY = leader.y + (dyLeader >= 0 ? 60 : -60);
+        }
+    }
 
     move(safeX, safeY);
-
-    set_message("Returned to safe position near leader");
+    set_message(`Returned to safe position near leader (${safeX.toFixed(0)}, ${safeY.toFixed(0)})`);
 }
 
 

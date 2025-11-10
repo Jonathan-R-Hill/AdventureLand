@@ -20,7 +20,7 @@ class Merchant {
 		this.goFishing();
 		this.restockPotions();
 		this.manageInventory();
-		setInterval(() => this.goFishing(), 15 * 1000);
+		this.fishingInterval = setInterval(() => this.goFishing(), 45 * 1000);
 		setInterval(() => this.restockPotions(), 5 * 60 * 1000);
 		setInterval(() => this.manageInventory(), 2 * 60 * 1000);
 		setInterval(() => this.mainLoop(), 1000);
@@ -110,6 +110,7 @@ class Merchant {
 	}
 
 	async goFishing() {
+		console.log(`X: ${character.x}, Y: ${character.y} - Map: ${character.map} - Checking fishing status...`);
 		if (is_on_cooldown("fishing")) {
 			this.atFishingSpot = false;
 			this.fishing = false;
@@ -117,9 +118,6 @@ class Merchant {
 
 			return;
 		}
-
-		const usedSlots = character.items.filter(i => i).length;
-		const totalSlots = character.items.length;
 
 		if (this.restocking || this.transferingPotions) {
 			this.fishing = false;
@@ -129,42 +127,61 @@ class Merchant {
 			return;
 		}
 
-		if (usedSlots < totalSlots) {
-			// Only attempt if not on cooldown
-			if (!is_on_cooldown("fishing")) {
-				this.fishing = true;
-				set_message("Moving to Tristan for fishing...");
+		// Only attempt if not on cooldown
+		if (!is_on_cooldown("fishing")) {
+			this.fishing = true;
+			set_message("Moving to Tristan for fishing...");
 
-				if (!this.atFishingSpot) {
-					if (this.movingToFishingPoint) { return; }
+			if (!this.atFishingSpot) {
+				if (this.movingToFishingPoint) { return; }
 
-					if (!is_on_cooldown("use_town")) {
-						use_skill("use_town");
-						// Give time for teleport animation
-						await sleep(2200);
-					}
-
-					set_message("Moving to Tristan...");
-					await smart_move({ to: "fisherman" });
-
-					this.atFishingSpot = true;
+				if (!is_on_cooldown("use_town")) {
+					use_skill("use_town");
+					// Give time for teleport animation
+					await sleep(4200);
 				}
 
-				if (this.atFishingSpot) {
-					move(character.x - 50, character.y);
-					use_skill("fishing");
-					set_message("Fishing...");
-				}
+				await smart_move({ to: "potions" });
+
+				// Step 3: Custom offsets
+				set_message("Walking custom path...");
+
+				// Down
+				move(character.x, character.y + 50);
+
+				// Left
+				await move(character.x - 60, character.y);
+
+				// Down a bit
+				await move(character.x, character.y + 70);
+
+				// Left a lot more
+				await move(character.x - 1700, character.y);
+
+				this.atFishingSpot = true;
 			}
-		} else {
-			this.fishing = false;
-			this.manageInventory();
 
-			set_message("Inventory full, go sell!");
+			this.atSpotFish();
+			setInterval(() => this.atSpotFish(), 18 * 1000);
 		}
 	}
 
-	mainLoop() {
+	atSpotFish() {
+		if (this.atFishingSpot) {
+			clearInterval(this.fishingInterval);
+
+			move(character.x - 50, character.y);
+			use_skill("fishing");
+			set_message("Fishing...");
+		}
+
+		if (is_on_cooldown("fishing")) {
+			this.fishingInterval = setInterval(() => this.goFishing(), 45 * 1000);
+			this.resetFlags();
+		}
+	}
+
+	async mainLoop() {
 		reviveSelf();
 		manageParty();
 		recoverOutOfCombat();
@@ -174,7 +191,7 @@ class Merchant {
 
 		loot();
 		useHealthPotion();
-		returnToLeader();
+		await returnToLeader();
 	}
 
 	resetFlags() {
@@ -190,6 +207,10 @@ class Merchant {
 		const command = splitMsg[0].trim();
 
 		if (command === "need_pots") {
+			if (this.restocking || this.transferingPotions || this.fishing) {
+				return;
+			}
+
 			const [x, y] = splitMsg[1].split(',').map(Number);
 			if (this.restocking || this.returningToGroup) return;
 
@@ -201,18 +222,18 @@ class Merchant {
 			if (!player) return;
 
 			if (player.name.startsWith("Jhl")) {
-				await this.restockPotions();
-
 				sendPotionsTo(player.name, HP_POTION, MP_POTION, 100, 100);
 				set_message(`Delivered 100 HP & MP potions to ${player.name}`);
 
 				this.transferingPotions = false;
-				await returnToLeader();
+				returnToLeader();
 			}
 		}
 
 		if (command === "come_to_me") {
-			if (this.returningToGroup || this.restocking || this.transferingPotions || this.fishing) return;
+			if (this.returningToGroup || this.restocking || this.transferingPotions || this.fishing || this.movingToFishingPoint) {
+				return;
+			}
 			if (!sender.name.startsWith("Jhl")) return;
 
 			const [x, y] = splitMsg[1].split(',').map(Number);
@@ -223,8 +244,6 @@ class Merchant {
 
 			if (character.x === x && character.y === y) {
 				set_message(`Arrived at group location (${x}, ${y})`);
-
-				await this.returnToLeader();
 
 				resetFlags();
 			}

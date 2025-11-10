@@ -21,10 +21,6 @@ myChar.attackMode = true;
 setInterval(() => {
     const player = get_player("Jhlwarrior");
 
-    if (get_player("Jhlmerch") == null) {
-        send_cm("Jhlmerch", `come_to_me ${player.x},${player.y}`);
-    }
-
     if (get_player("Jhlranger") == null) {
         send_cm("Jhlranger", `come_to_me ${player.x},${player.y}`);
     }
@@ -33,6 +29,14 @@ setInterval(() => {
         send_cm("Jhlpriest", `come_to_me ${player.x},${player.y}`);
     }
 }, 5000);
+
+setInterval(() => {
+    const player = get_player("Jhlwarrior");
+
+    if (get_player("Jhlmerch") == null) {
+        send_cm("Jhlmerch", `come_to_me ${player.x},${player.y}`);
+    }
+}, 45 * 1000);
 
 setInterval(myChar.sendWhitelistedItemsToMerchant(), 3 * 60 * 1000);
 

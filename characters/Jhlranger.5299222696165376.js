@@ -4,7 +4,7 @@ load_code("helpers");
 class MyChar extends BaseClass {
 
     markTarget(target) {
-        if (!is_on_cooldown("huntersmark") && target.hp > 1100 && this.getMP() > 600) {
+        if (!is_on_cooldown("huntersmark") && target.hp > 1500 && this.getMP() > 600) {
             use_skill("huntersmark", target);
             this.attack(target);
         }
@@ -36,53 +36,29 @@ setInterval(function () {
         myChar.waitForCoords = true;
     }
 
-    if (!myChar.attackMode || character.rip) return;
+    if (!myChar.attackMode || character.rip || myChar.waitForCoords) return;
 
-    if (!myChar.waitForCoords) {
+    let target;
+    if (myChar.fightTogeather) {
+        target = myChar.getTankTarget();
 
-        let target;
-        if (myChar.fightTogeather) {
-            target = myChar.getTankTarget();
-
-            if (target == null || !target || target == undefined) {
-                returnToLeader();
-                return;
-            }
+        if (target == null || !target || target == undefined) {
+            returnToLeader();
+            return;
         }
-        else {
-            target = get_targeted_monster();
+    }
+    else {
+        target = get_targeted_monster();
 
-            target = myChar.findTarget(target);
+        target = myChar.findTarget(target);
 
-            if (target == null || !target || target == undefined) {
-                return;
-            }
+        if (target == null || !target || target == undefined) {
+            return;
         }
-
-        myChar.markTarget(target);
     }
 
+    myChar.markTarget(target);
 }, 1000 / 4);
-
-character.on("cm", async (sender, data) => {
-    if (myChar.returningToGroup) return;
-    if (!sender.name.startsWith("Jhl")) return;
-
-    const splitMsg = sender.message.split(" ");
-    if (splitMsg[0].trim() !== "come_to_me") return;
-
-    const [x, y] = splitMsg[1].split(",").map(Number);
-    myChar.returningToGroup = true;
-
-    await xmove(x, y);
-
-    if (character.x === x && character.y === y) {
-        set_message(`Arrived at group location (${x}, ${y})`);
-
-        myChar.toggleReturningToGroup();
-        myChar.toggleWaitForCoords();
-    }
-});
 
 // Out of range retrun to leader
 character.on("cm", async (sender, data) => {
