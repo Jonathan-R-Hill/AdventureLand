@@ -4,7 +4,13 @@ const HP_POTION = "hpot0";
 const MP_POTION = "mpot0";
 const POTSMINSTOCK = 600;
 const POT_BUFFER = 300;
-const sellWhiteList = ["hpbelt", "hpamulet", "wshoes", "wcap"];
+const sellWhiteList = [
+	"hpbelt", "hpamulet", "shoes", "coat", "pants", "strring", "intring", "vitring", "dexring", "wattire", "wshoes", "wcap", "cclaw",
+];
+const bankWhitelist = [
+	"spores", "seashell", "beewings", "gem0", "gem1", "whiteegg", "monstertoken", "spidersilk", "cscale", "spores",
+	"rattail", "crabclaw", "bfur", "feather0",
+];
 
 class Merchant {
 	constructor() {
@@ -21,10 +27,9 @@ class Merchant {
 		// Kick off periodic tasks
 		this.goFishing();
 		this.restockPotions();
-		this.manageInventory();
 		this.fishingInterval = setInterval(() => this.goFishing(), 45 * 1000);
 		setInterval(() => this.restockPotions(), 5 * 60 * 1000);
-		setInterval(() => this.manageInventory(), 2 * 60 * 1000);
+		setInterval(async () => await this.manageInventory(), 5 * 60 * 1000);
 		setInterval(() => this.mainLoop(), 1000);
 
 		// Listen for cm events
@@ -42,21 +47,78 @@ class Merchant {
 		return { used, total: character.items.length };
 	}
 
-	manageInventory() {
+	async manageInventory() {
 		const { used, total } = this.getInventoryUsage();
 		console.log(`Inventory: ${used}/${total}`);
+
+		if (this.restocking) { return; }
 
 		// If inventory is getting full, go sell
 		if (used >= 30) {
 			this.restocking = true;
 
-			smart_move({ to: "potions" }).then(() => {
-				sellItem();
-			});
+			await this.autoCombine();
+
+			await smart_move({ to: "potions" })
+			await this.sellItem()
 		}
+
 	}
 
-	sellItem() {
+	async bankItems() {
+		if (character.map !== "bank") {
+			await smart_move({ to: "bank" });
+		}
+
+		for (let i = 0; i < character.items.length; i++) {
+			const item = character.items[i];
+			if (!item) continue;
+
+			if (bankWhitelist.includes(item.name)) {
+				bank_store(i);
+			}
+		}
+
+		await smart_move({ to: "potions" });
+
+		this.restocking = false;
+	}
+
+	async autoCombine(itemName = "ringsj", itemLevel = 0) {
+		const slots = [];
+		for (let i = 0; i < character.items.length; i++) {
+			const item = character.items[i];
+
+			if (item && item.name === itemName && item.level === itemLevel) {
+				slots.push(i);
+
+				if (slots.length === 3) { break; }
+			}
+		}
+
+		if (slots.length === 3) {
+
+			let scrollSlot = locate_item("cscroll0");
+			if (scrollSlot === -1) {
+				await smart_move({ to: "scrolls" });
+				buy("cscroll0", 1);
+				scrollSlot = locate_item("cscroll0");
+
+				if (scrollSlot === -1) {
+					game_log("Failed to acquire compound scroll");
+					return;
+				}
+			}
+
+			compound(slots[0], slots[1], slots[2], scrollSlot);
+
+			await sleep(2000);
+		}
+
+		await this.bankItems();
+	}
+
+	async sellItem() {
 		for (let i = 0; i < character.items.length; i++) {
 			const item = character.items[i];
 
@@ -66,7 +128,7 @@ class Merchant {
 			}
 		}
 
-		this.restocking = false;
+		await this.autoCombine();
 	}
 
 	async restockPotions() {
@@ -102,7 +164,7 @@ class Merchant {
 			if (
 				!is_on_cooldown("mluck") &&
 				distance(character, member) < G.skills.mluck.range &&
-				(!hasBuff || remaining < 60000)
+				(!hasBuff || remaining < 2600000)
 			) {
 				use_skill("mluck", member);
 				console.log(`Casting mluck on ${member.name}`);

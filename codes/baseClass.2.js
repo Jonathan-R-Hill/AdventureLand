@@ -39,10 +39,11 @@ class BaseClass {
             // Upgrade
             "ringsj", "intbelt", "intamulet",
             // Sell
-            "hpbelt", "hpamulet", "wshoes", "wcap", "shoes", "coat", "pants",
+            "hpbelt", "hpamulet", "shoes", "coat", "pants", "strring", "intring", "vitring", "dexring",
+            "wattire", "wshoes", "wcap", "cclaw"
         ];
 
-        this.currentMobFarm = "Arctic Bee";
+        this.currentMobFarm = "Croc";
         this.attackMode = true;
         this.fightTogeather = true;
         this.followLeaderMode = false;
@@ -56,7 +57,7 @@ class BaseClass {
             await this.handleCM(sender, data);
         });
 
-        setInterval(this.sendWhitelistedItemsToMerchant(), 30 * 1000);
+        setInterval(() => this.sendWhitelistedItemsToMerchant(), 15 * 1000);
         startSharedTasks();
     }
 
