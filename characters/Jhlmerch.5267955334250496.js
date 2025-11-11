@@ -85,7 +85,7 @@ class Merchant {
 		}
 
 		if (currentHp >= POT_BUFFER && currentMp >= POT_BUFFER) {
-			resetFlags();
+			this.resetFlags();
 		}
 	}
 
@@ -216,55 +216,55 @@ class Merchant {
 		this.atFishingSpot = false;
 	}
 
-	async handleCM(sender, data) {
-		const splitMsg = sender.message.split(' ');
-		const command = splitMsg[0].trim();
+	async handleCM(sender, payload) {
+		if (this.restocking || this.transferingPotions || this.fishing || this.returningToGroup) return;
+		if (!sender.name.startsWith("Jhl")) return;
 
-		if (command === "need_pots") {
-			if (this.restocking || this.transferingPotions || this.fishing) {
-				return;
+		const [command, data] = sender.message.split(" ");
+
+		switch (command.trim()) {
+			case "need_pots": {
+				const [x, y] = data.split(",").map(Number);
+				this.transferingPotions = true;
+
+				set_message(`Moving to ${x}, ${y} to deliver potions...`);
+				await xmove(x, y);
+
+				const player = get_player(sender.name);
+				if (player?.name.startsWith("Jhl")) {
+					sendPotionsTo(player.name, HP_POTION, MP_POTION, 100, 100);
+					set_message(`Delivered 100 HP & MP potions to ${player.name}`);
+					this.transferingPotions = false;
+
+					returnToLeader();
+				}
+				break;
 			}
 
-			const [x, y] = splitMsg[1].split(',').map(Number);
-			if (this.restocking || this.returningToGroup) return;
+			case "come_to_me": {
+				const [xStr, yStr, map] = data.split(",");
+				const x = Number(xStr);
+				const y = Number(yStr);
 
-			this.transferingPotions = true;
-			set_message(`Moving to ${x}, ${y} to deliver potions...`);
-			await xmove(x, y);
+				this.returningToGroup = true;
 
-			const player = get_player(sender.name);
-			if (!player) return;
+				console.log(xStr, yStr, map)
+				if (map && character.map !== map) {
+					await smart_move({ to: map });
+				}
+				await xmove(x, y);
 
-			if (player.name.startsWith("Jhl")) {
-				sendPotionsTo(player.name, HP_POTION, MP_POTION, 100, 100);
-				set_message(`Delivered 100 HP & MP potions to ${player.name}`);
-
-				this.transferingPotions = false;
-				returnToLeader();
+				if (character.x === x && character.y === y) {
+					set_message(`Arrived at group location (${x}, ${y})`);
+					this.returningToGroup = false;
+					this.waitForCoords = false;
+				}
+				break;
 			}
-		}
 
-		if (command === "come_to_me") {
-			if (this.returningToGroup || this.restocking || this.transferingPotions || this.fishing || this.movingToFishingPoint) {
-				return;
-			}
-			if (!sender.name.startsWith("Jhl")) return;
-
-			const [x, y] = splitMsg[1].split(',').map(Number);
-			if (isNaN(x) || isNaN(y)) return;
-			this.returningToGroup = true;
-
-			await xmove(x, y);
-
-			const dx = character.x - x;
-			const dy = character.y - y;
-			const dist = Math.sqrt(dx * dx + dy * dy);
-
-			if (dist <= 10) {
-				set_message(`Arrived at group location (${x}, ${y})`);
-				this.resetFlags();
-				returnToLeader();
-			}
+			default:
+				// Unknown command — ignore
+				break;
 		}
 	}
 }

@@ -18,7 +18,8 @@ load_code("helpers");
  * Spider
  * Scorpion
  * 
- * 
+ * osnake - Snake
+ * Rat
  * Porcupine
  * Pom Pom
  */
@@ -33,60 +34,83 @@ class BaseClass {
 
         this.whitelist = [
             // Keep
-            "spores", "seashell", "beewings", "gem0", "whiteegg", "monstertoken", "spidersilk", "cscale", "spores",
+            "spores", "seashell", "beewings", "gem0", "gem1", "whiteegg", "monstertoken", "spidersilk", "cscale", "spores",
+            "rattail", "crabclaw", "bfur", "feather0",
             // Upgrade
-            "ringsj", "intbelt",
+            "ringsj", "intbelt", "intamulet",
             // Sell
             "hpbelt", "hpamulet", "wshoes", "wcap", "shoes", "coat", "pants",
         ];
 
+        this.currentMobFarm = "Arctic Bee";
         this.attackMode = true;
+        this.fightTogeather = true;
         this.followLeaderMode = false;
         this.returningToGroup = false;
         this.waitForCoords = false;
-        this.fightTogeather = true;
 
         this.x = this.char.x;
         this.y = this.char.y;
 
-        this.currentMobFarm = "Porcupine";
+        character.on("cm", async (sender, data) => {
+            await this.handleCM(sender, data);
+        });
+
+        setInterval(this.sendWhitelistedItemsToMerchant(), 30 * 1000);
         startSharedTasks();
     }
 
-    getHP() {
-        return this.char.hp || 0;
+    async handleCM() {
+        if (myChar.returningToGroup) return;
+        if (!sender.name.startsWith("Jhl")) return;
+
+        const [command, data] = sender.message.split(" ");
+
+        switch (command.trim()) {
+            case "come_to_me": {
+                const [xStr, yStr, map] = data.split(",");
+                const x = Number(xStr);
+                const y = Number(yStr);
+
+                this.returningToGroup = true;
+
+                console.log(xStr, yStr, map)
+                if (map && character.map !== map) {
+                    await smart_move({ to: map });
+                }
+                await xmove(x, y);
+
+                if (character.x === x && character.y === y) {
+                    set_message(`Arrived at group location (${x}, ${y})`);
+                    this.returningToGroup = false;
+                    this.waitForCoords = false;
+                }
+                break;
+            }
+
+            case "farm_update": {
+                myChar.currentMobFarm = data;
+                break;
+            }
+
+            default:
+                // Unknown command — ignore
+                break;
+        }
     }
 
-    getMP() {
-        return this.char.mp || 0;
-    }
+    callPlayers() {
+        const leader = get_player("Jhlpriest");
+        if (!leader) return;
 
-    getMaxHP() {
-        return this.char.max_hp || 0;
-    }
+        const partyMembers = ["Jhlranger", "Jhlmerch", "Jhlmage"];
 
-    getMaxMP() {
-        return this.char.max_mp || 0;
-    }
-
-    isAlive() {
-        return this.char.rip;
-    }
-
-    toggleAttackMode() {
-        this.attackMode = !this.attackMode;
-    }
-
-    toggleFollowLeaderMode() {
-        this.followLeaderMode = !this.followLeaderMode;
-    }
-
-    toggleWaitForCoords() {
-        this.waitForCoords = !this.waitForCoords;
-    }
-
-    toggleReturningToGroup() {
-        this.returningToGroup = !this.returningToGroup;
+        for (const name of partyMembers) {
+            const member = get_player(name);
+            if (!member) {
+                send_cm(name, `come_to_me ${leader.x},${leader.y},${leader.map}`);
+            }
+        }
     }
 
     setCurrentMobFarm(mobFarmName) {
@@ -186,5 +210,47 @@ class BaseClass {
         }
     }
 
+    targetLogicNonTank() {
+        useHealthPotion();
+        useManaPotion();
+        recoverOutOfCombat();
+        loot();
+
+        if (!nearTank()) {
+            myChar.waitForCoords = true;
+        }
+
+        if (!myChar.attackMode || character.rip || myChar.waitForCoords) return null;
+
+        const currentTarget = get_target_of(character.name);
+        let target = null;
+
+        if (myChar.fightTogeather) {
+            target = myChar.getTankTarget();
+
+            // Fallback to current target if tank target is invalid or a player
+            if (!target || target.name?.startsWith("Jhl")) {
+                target = currentTarget;
+            }
+
+            returnToLeader();
+
+            if (!target || target.name?.startsWith("Jhl")) {
+                return null;
+            }
+
+            return target;
+        } else {
+            target = get_targeted_monster();
+            target = myChar.findTarget(target);
+
+            if (!target) {
+                returnToLeader();
+                return null;
+            }
+
+            return target;
+        }
+    }
 
 }

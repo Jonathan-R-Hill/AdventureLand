@@ -23,23 +23,9 @@ class MyChar extends BaseClass {
 
 const myChar = new MyChar(character.name);
 
-myChar.returningToGroup = false;
-myChar.waitForCoords = false;
+setInterval(() => myChar.callPlayers(), 10 * 1000);
 
-setInterval(() => {
-    const player = get_player("Jhlpriest");
-
-    if (get_player("Jhlranger") == null) {
-        send_cm("Jhlranger", `come_to_me ${player.x},${player.y}`);
-    }
-
-    if (get_player("Jhlpriest") == null) {
-        send_cm("Jhlpriest", `come_to_me ${player.x},${player.y}`);
-    }
-}, 5000);
-
-setInterval(myChar.sendWhitelistedItemsToMerchant(), 15 * 1000);
-
+// Combat
 setInterval(function () {
     loot();
 
@@ -47,10 +33,6 @@ setInterval(function () {
     useManaPotion();
 
     recoverOutOfCombat();
-
-    if (!nearTank()) {
-        waitForCoords = true;
-    }
 
     if (!myChar.attackMode || character.rip) return;
 
@@ -79,23 +61,3 @@ setInterval(function () {
     }
 
 }, 1000 / 4);
-
-character.on("cm", async (sender, data) => {
-    if (returningToGroup) return;
-    if (!sender.name.startsWith("Jhl")) return;
-
-    const splitMsg = sender.message.split(" ");
-    if (splitMsg[0].trim() !== "come_to_me") return;
-
-    const [x, y] = splitMsg[1].split(",").map(Number);
-    returningToGroup = true;
-
-    await xmove(x, y);
-
-    if (character.x === x && character.y === y) {
-        set_message(`Arrived at group location (${x}, ${y})`);
-
-        returningToGroup = false;
-        waitForCoords = false;
-    }
-});
