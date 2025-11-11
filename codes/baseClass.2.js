@@ -61,7 +61,7 @@ class BaseClass {
         startSharedTasks();
     }
 
-    async handleCM() {
+    async handleCM(sender, payload) {
         if (myChar.returningToGroup) return;
         if (!sender.name.startsWith("Jhl")) return;
 
@@ -73,12 +73,15 @@ class BaseClass {
                 const x = Number(xStr);
                 const y = Number(yStr);
 
+                console.log(x, y, map);
+
                 this.returningToGroup = true;
 
                 console.log(xStr, yStr, map)
                 if (map && character.map !== map) {
                     await smart_move({ to: map });
                 }
+
                 await xmove(x, y);
 
                 if (character.x === x && character.y === y) {
