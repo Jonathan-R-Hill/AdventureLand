@@ -1,7 +1,7 @@
 
 function startSharedTasks() {
     setInterval(manageParty, 1100);
-    setInterval(reviveSelf, 5000);
+    setInterval(reviveSelf, 8000);
 
     if (character.name != "Jhlmerch") {
         setInterval(sendGoldToMerchant, 5 * 60 * 1000);
@@ -60,9 +60,17 @@ function recoverOutOfCombat() {
 }
 
 async function manageParty() {
-    const partyMembers = ["Jhlpriest", "Jhlranger", "Jhlmerch", "Jhlwarrior"];
+    const partyMembers = ["Jhlpriest", "Jhlranger", "Jhlmerch", "Jhlmage", "Jhlwarrior"];
+    const leaderName = "Jhlpriest"
 
-    if (character.name === "Jhlwarrior") {
+    const party = get_party() || {};
+    const currentSize = Object.keys(party).length;
+
+    if (currentSize >= 4) {
+        return;
+    }
+
+    if (character.name === leaderName) {
         // Leader invites everyone
         for (const name of partyMembers) {
             if (!get_party()?.[name]) {
@@ -77,7 +85,7 @@ async function manageParty() {
         }
         // If I'm in a party
         if (character.party) {
-            if (character.party !== "Jhlwarrior") {
+            if (character.party !== leaderName) {
                 // Wrong leader, leave
                 leave_party();
             }
@@ -85,7 +93,7 @@ async function manageParty() {
             return;
         } else {
             // Not in a party at all, accept warrior’s invite
-            accept_party_invite("Jhlwarrior");
+            accept_party_invite(leaderName);
             await sleep(50);
         }
     }
@@ -93,7 +101,7 @@ async function manageParty() {
 
 
 function nearTank() {
-    const player = get_player("Jhlwarrior");
+    let player = "Jhlpriest"
 
     return player != null;
 }
@@ -133,10 +141,9 @@ function checkPotions() {
     }
 }
 
-async function returnToLeader() {
-    console.log("Potion levels sufficient, returning to leader...");
+function returnToLeader() {
+    let leader = get_player("Jhlpriest");
 
-    const leader = get_player("Jhlwarrior");
     if (!leader) {
         set_message("Leader not found");
         return;
@@ -180,9 +187,41 @@ async function returnToLeader() {
     }
 
     move(safeX, safeY);
-    set_message(`Returned to safe position near leader (${safeX.toFixed(0)}, ${safeY.toFixed(0)})`);
 }
 
+function kiteTarget() {
+    const target = get_targeted_monster();
+    if (!target || target.dead) {
+        set_message("No valid target to kite");
+        return;
+    }
+
+    // Vector from mob to you
+    const dx = character.x - target.x;
+    const dy = character.y - target.y;
+    const dist = Math.max(Math.sqrt(dx * dx + dy * dy), 1);
+
+    // Step away from mob
+    const awayFactor = 30; // smaller step
+    let safeX = target.x + (dx / dist) * awayFactor;
+    let safeY = target.y + (dy / dist) * awayFactor;
+
+    const dxMob = safeX - target.x;
+    const dyMob = safeY - target.y;
+
+    const distReq = 90;
+    if (Math.abs(dxMob) < distReq && Math.abs(dyMob) < distReq) {
+        // Push further along whichever axis has more room
+        if (Math.abs(dxMob) >= Math.abs(dyMob)) {
+            safeX = target.x + (dxMob >= 0 ? distReq : -distReq);
+        } else {
+            safeY = target.y + (dyMob >= 0 ? distReq : -distReq);
+        }
+    }
+
+    move(safeX, safeY);
+    set_message(`Kiting: keeping ~30 units from mob (${safeX.toFixed(0)}, ${safeY.toFixed(0)})`);
+}
 
 // ----- Merchant Section
 function countItem(name) {

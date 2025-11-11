@@ -19,9 +19,8 @@ const myChar = new MyChar(character.name);
 
 myChar.returningToGroup = false;
 myChar.waitForCoords = false;
-myChar.attackMode = true;
 
-setInterval(myChar.sendWhitelistedItemsToMerchant(), 1 * 60 * 1000);
+setInterval(myChar.sendWhitelistedItemsToMerchant(), 15 * 1000);
 
 setInterval(function () {
 

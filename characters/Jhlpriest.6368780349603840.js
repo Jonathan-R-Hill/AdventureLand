@@ -25,9 +25,20 @@ const myChar = new MyChar(character.name);
 
 myChar.returningToGroup = false;
 myChar.waitForCoords = false;
-myChar.attackMode = true;
 
-setInterval(myChar.sendWhitelistedItemsToMerchant(), 1 * 60 * 1000);
+setInterval(() => {
+    const player = get_player("Jhlpriest");
+
+    if (get_player("Jhlranger") == null) {
+        send_cm("Jhlranger", `come_to_me ${player.x},${player.y}`);
+    }
+
+    if (get_player("Jhlpriest") == null) {
+        send_cm("Jhlpriest", `come_to_me ${player.x},${player.y}`);
+    }
+}, 5000);
+
+setInterval(myChar.sendWhitelistedItemsToMerchant(), 15 * 1000);
 
 setInterval(function () {
     loot();
@@ -47,16 +58,12 @@ setInterval(function () {
 
         myChar.healParty();
 
-        let target;
-        if (myChar.fightTogeather) {
-            target = myChar.getTankTarget();
-
-            if (target == null || !target || target == undefined) {
-                returnToLeader();
-                return;
-            }
+        let target = get_targeted_monster();
+        if (target && target.name != myChar.currentMobFarm) {
+            target = null;
         }
-        else {
+
+        if (target == null || !target || target == undefined) {
             target = get_targeted_monster();
 
             target = myChar.findTarget(target);
@@ -67,7 +74,7 @@ setInterval(function () {
         }
 
         // attack
-        returnToLeader();
+        // kiteTarget();
         myChar.attack(target);
     }
 

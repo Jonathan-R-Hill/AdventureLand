@@ -8,6 +8,8 @@ const sellWhiteList = ["hpbelt", "hpamulet", "wshoes", "wcap"];
 
 class Merchant {
 	constructor() {
+		this.fishingEnabled = false;
+
 		this.restocking = false;
 		this.transferingPotions = false;
 		this.returningToGroup = false;
@@ -110,7 +112,8 @@ class Merchant {
 	}
 
 	async goFishing() {
-		console.log(`X: ${character.x}, Y: ${character.y} - Map: ${character.map} - Checking fishing status...`);
+		if (!this.fishingEnabled) { return; }
+
 		if (is_on_cooldown("fishing")) {
 			this.atFishingSpot = false;
 			this.fishing = false;

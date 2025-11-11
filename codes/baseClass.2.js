@@ -18,6 +18,9 @@ load_code("helpers");
  * Spider
  * Scorpion
  * 
+ * 
+ * Porcupine
+ * Pom Pom
  */
 
 class BaseClass {
@@ -30,14 +33,14 @@ class BaseClass {
 
         this.whitelist = [
             // Keep
-            "spores", "seashell", "beewings", "gem0", "whiteegg", "monstertoken", "spidersilk",
+            "spores", "seashell", "beewings", "gem0", "whiteegg", "monstertoken", "spidersilk", "cscale", "spores",
             // Upgrade
-            "ringsj",
+            "ringsj", "intbelt",
             // Sell
-            "hpbelt", "hpamulet", "wshoes", "wcap",
+            "hpbelt", "hpamulet", "wshoes", "wcap", "shoes", "coat", "pants",
         ];
 
-        this.attackMode = false;
+        this.attackMode = true;
         this.followLeaderMode = false;
         this.returningToGroup = false;
         this.waitForCoords = false;
@@ -46,7 +49,7 @@ class BaseClass {
         this.x = this.char.x;
         this.y = this.char.y;
 
-        this.currentMobFarm = "Spider";
+        this.currentMobFarm = "Porcupine";
         startSharedTasks();
     }
 
@@ -94,7 +97,7 @@ class BaseClass {
         if (!this.sendItems) return;
 
         const merchant = get_player(this.merchantName);
-        if (!merchant || parent.distance(character, merchant) > 200) {
+        if (!merchant || parent.distance(character, merchant) > 400) {
             return;
         }
 
@@ -132,12 +135,12 @@ class BaseClass {
     }
 
     getTankTarget() {
-        const tank = get_player("Jhlwarrior");
+        const tank = get_player("Jhlpriest");
         if (tank) {
-            return get_target_of(tank);
+            if (get_nearest_monster({ target: "Jhlpriest" }) != null) { return get_nearest_monster({ target: "Jhlpriest" }); }
+            else { return get_target_of(tank); }
         }
 
-        returnToLeader();
         return null;
     }
 
