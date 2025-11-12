@@ -14,20 +14,22 @@ const bankWhitelist = [
 
 class Merchant {
 	constructor() {
+		this.fishingLocation = { map: "main", x: -1368, y: -82 };
+		this.miningLocation = { map: "tunnel", x: -279, y: -148 };
+
 		this.fishingEnabled = false;
 
-		this.restocking = false;
-		this.transferingPotions = false;
-		this.returningToGroup = false;
+		this.busy = false;
 
 		this.fishing = false;
-		this.movingToFishingPoint = false;
-		this.atFishingSpot = false;
+		this.mining = false;
 
 		// Kick off periodic tasks
-		this.goFishing();
 		this.restockPotions();
-		this.fishingInterval = setInterval(() => this.goFishing(), 45 * 1000);
+
+		this.fishingInterval = setInterval(() => this.goFishing(), 30 * 1000);
+		this.miningInterval = setInterval(async () => await this.goMining(), 30 * 1000);
+
 		setInterval(() => this.restockPotions(), 5 * 60 * 1000);
 		setInterval(async () => await this.manageInventory(), 5 * 60 * 1000);
 		setInterval(() => this.mainLoop(), 1000);
@@ -51,11 +53,11 @@ class Merchant {
 		const { used, total } = this.getInventoryUsage();
 		console.log(`Inventory: ${used}/${total}`);
 
-		if (this.restocking) { return; }
+		if (this.busy) { return; }
 
 		// If inventory is getting full, go sell
 		if (used >= 30) {
-			this.restocking = true;
+			this.busy = true;
 
 			await this.autoCombine();
 
@@ -81,7 +83,7 @@ class Merchant {
 
 		await smart_move({ to: "potions" });
 
-		this.restocking = false;
+		this.busy = false;
 	}
 
 	async autoCombine(itemName = "ringsj", itemLevel = 0) {
@@ -136,7 +138,7 @@ class Merchant {
 		const currentMp = countItem(MP_POTION);
 
 		if (currentHp < POT_BUFFER || currentMp < POT_BUFFER) {
-			this.restocking = true;
+			this.busy = true;
 			set_message("Restocking potions...");
 			await smart_move({ to: "potions" });
 
@@ -173,85 +175,75 @@ class Merchant {
 		}
 	}
 
+	// Fishing & Mining
+
 	async goFishing() {
-		if (!this.fishingEnabled) { return; }
+		if (this.fishing && is_on_cooldown("fishing")) {
+			unequip("mainhand");
+			unequip("offhand");
 
-		if (is_on_cooldown("fishing")) {
-			this.atFishingSpot = false;
 			this.fishing = false;
-			this.movingToFishingPoint = false;
-
 			return;
 		}
 
-		if (this.restocking || this.transferingPotions) {
-			this.fishing = false;
-			this.atFishingSpot = false;
-			this.movingToFishingPoint = false;
+		if (is_on_cooldown("fishing") || this.busy) { return; }
 
-			return;
-		}
+		const fishingRodName = "rod";
+		const rodSlot = locate_item(fishingRodName);
 
-		// Only attempt if not on cooldown
-		if (!is_on_cooldown("fishing")) {
+		if (character.slots.mainhand?.name !== fishingRodName && rodSlot === -1) { return; }
+
+		if ((character.real_x !== this.fishingLocation.x || character.real_y !== this.fishingLocation.y) && !this.fishing) {
 			this.fishing = true;
-			set_message("Moving to Tristan for fishing...");
 
-			if (!this.atFishingSpot) {
-				if (this.movingToFishingPoint) { return; }
-
-				if (!is_on_cooldown("use_town")) {
-					use_skill("use_town");
-					// Give time for teleport animation
-					await sleep(4200);
-				}
-
-				this.sellItem();
-
-				await smart_move({ to: "potions" });
-
-				// Step 3: Custom offsets
-				set_message("Walking custom path...");
-
-				// Down
-				move(character.x, character.y + 50);
-
-				// Left
-				await move(character.x - 60, character.y);
-
-				// Down a bit
-				await move(character.x, character.y + 70);
-
-				// Left a lot more
-				await move(character.x - 1700, character.y);
-
-				this.atFishingSpot = true;
-			}
-
-			this.atSpotFish();
-			this.goFishingInterval = setInterval(() => this.atSpotFish(), 18 * 1000);
+			await smart_move(this.fishingLocation);
+			clearInterval(this.fishingInterval);
+			this.fishingInterval = setInterval(() => this.goFishing(), 20 * 1000);
 		}
+
+		unequip("mainhand");
+		unequip("offhand");
+		await sleep(100);
+
+		equip(rodSlot);
+		use_skill("fishing");
+		set_message("Fishing...");
 	}
 
-	async atSpotFish() {
-		if (this.atFishingSpot) {
-			clearInterval(this.fishingInterval);
+	async goMining() {
+		if (this.mining && is_on_cooldown("mining")) {
+			unequip("mainhand");
+			unequip("offhand");
 
-			move(character.x - 50, character.y);
-			use_skill("fishing");
-			set_message("Fishing...");
+			this.mining = false;
+			return;
 		}
 
-		if (is_on_cooldown("fishing")) {
-			clearInterval(this.goFishingInterval);
-			this.fishingInterval = setInterval(() => this.goFishing(), 45 * 1000);
-			this.resetFlags();
+		if (is_on_cooldown("mining") || this.busy) { return; }
 
-			if (!is_on_cooldown("use_town")) {
-				use_skill("use_town");
-				// Give time for teleport animation
-				await sleep(4200);
-			}
+		const pickaxeItemId = "pickaxe";
+
+		if (character.slots.mainhand?.name !== pickaxeItemId && locate_item(pickaxeItemId) === -1) {
+			return;
+		}
+
+		if (character.real_x != this.miningLocation.x && character.real_y != this.miningLocation.y && !this.mining) {
+			this.mining = true;
+
+			await smart_move(this.miningLocation);
+
+			clearInterval(this.miningInterval);
+			this.miningInterval = setInterval(async () => await this.goMining(), 30 * 1000);
+		}
+
+		if (character.real_x == this.miningLocation.x && character.real_y == this.miningLocation.y && this.mining) {
+			unequip("mainhand");
+			unequip("offhand");
+			await sleep(100);
+
+			equip(locate_item(pickaxeItemId));
+
+			use_skill("mining");
 		}
 	}
 
@@ -259,27 +251,24 @@ class Merchant {
 		reviveSelf();
 		manageParty();
 		recoverOutOfCombat();
+
+		if (this.busy || this.fishing || this.mining) return;
+
 		this.buffPartyWithMLuck();
-
-		if (this.restocking || this.returningToGroup || this.transferingPotions || this.fishing) return;
-
 		loot();
 		useHealthPotion();
 		await returnToLeader();
 	}
 
 	resetFlags() {
-		this.restocking = false;
-		this.transferingPotions = false;
-		this.returningToGroup = false;
-
+		this.busy = false;
+		this.mining = false;
 		this.fishing = false;
-		this.movingToFishingPoint = false;
-		this.atFishingSpot = false;
 	}
 
 	async handleCM(sender, payload) {
-		if (this.restocking || this.transferingPotions || this.fishing || this.returningToGroup) return;
+
+		if (this.busy || this.fishing || this.mining) return;
 		if (!sender.name.startsWith("Jhl")) return;
 
 		const [command, data] = sender.message.split(" ");
@@ -287,7 +276,7 @@ class Merchant {
 		switch (command.trim()) {
 			case "need_pots": {
 				const [x, y] = data.split(",").map(Number);
-				this.transferingPotions = true;
+				this.busy = true;
 
 				set_message(`Moving to ${x}, ${y} to deliver potions...`);
 				await xmove(x, y);
@@ -296,7 +285,7 @@ class Merchant {
 				if (player?.name.startsWith("Jhl")) {
 					sendPotionsTo(player.name, HP_POTION, MP_POTION, 100, 100);
 					set_message(`Delivered 100 HP & MP potions to ${player.name}`);
-					this.transferingPotions = false;
+					this.busy = false;
 
 					returnToLeader();
 				}
@@ -308,7 +297,7 @@ class Merchant {
 				const x = Number(xStr);
 				const y = Number(yStr);
 
-				this.returningToGroup = true;
+				this.busy = true;
 
 				console.log(xStr, yStr, map)
 				if (map && character.map !== map) {
@@ -318,7 +307,7 @@ class Merchant {
 
 				if (character.x === x && character.y === y) {
 					set_message(`Arrived at group location (${x}, ${y})`);
-					this.returningToGroup = false;
+					this.busy = false;
 					this.waitForCoords = false;
 				}
 				break;

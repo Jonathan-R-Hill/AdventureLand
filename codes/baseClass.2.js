@@ -43,7 +43,7 @@ class BaseClass {
             "wattire", "wshoes", "wcap", "cclaw"
         ];
 
-        this.currentMobFarm = "Croc";
+        this.currentMobFarm = "Pom Pom";
         this.attackMode = true;
         this.fightTogeather = true;
         this.followLeaderMode = false;
