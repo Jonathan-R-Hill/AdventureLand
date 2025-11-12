@@ -1,4 +1,5 @@
 load_code("helpers");
+load_code("commCommands");
 
 const HP_POTION = "hpot0";
 const MP_POTION = "mpot0";
@@ -6,10 +7,12 @@ const POTSMINSTOCK = 600;
 const POT_BUFFER = 300;
 const sellWhiteList = [
 	"hpbelt", "hpamulet", "shoes", "coat", "pants", "strring", "intring", "vitring", "dexring", "wattire", "wshoes", "wcap", "cclaw",
+	"mushroomstaff", "dexamulet", "stramulet", "intamulet", "wbreeches"
 ];
+
 const bankWhitelist = [
 	"spores", "seashell", "beewings", "gem0", "gem1", "whiteegg", "monstertoken", "spidersilk", "cscale", "spores",
-	"rattail", "crabclaw", "bfur", "feather0",
+	"rattail", "crabclaw", "bfur", "feather0", "gslime"
 ];
 
 class Merchant {
@@ -186,7 +189,7 @@ class Merchant {
 			return;
 		}
 
-		if (is_on_cooldown("fishing") || this.busy) { return; }
+		if (is_on_cooldown("fishing") || this.busy || this.mining) { return; }
 
 		const fishingRodName = "rod";
 		const rodSlot = locate_item(fishingRodName);
@@ -219,7 +222,7 @@ class Merchant {
 			return;
 		}
 
-		if (is_on_cooldown("mining") || this.busy) { return; }
+		if (is_on_cooldown("mining") || this.busy || this.fishing) { return; }
 
 		const pickaxeItemId = "pickaxe";
 

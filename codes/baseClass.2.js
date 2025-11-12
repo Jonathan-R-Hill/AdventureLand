@@ -35,20 +35,23 @@ class BaseClass {
         this.whitelist = [
             // Keep
             "spores", "seashell", "beewings", "gem0", "gem1", "whiteegg", "monstertoken", "spidersilk", "cscale", "spores",
-            "rattail", "crabclaw", "bfur", "feather0",
+            "rattail", "crabclaw", "bfur", "feather0", "gslime",
             // Upgrade
-            "ringsj", "intbelt", "intamulet",
+            "ringsj", "intbelt",
             // Sell
             "hpbelt", "hpamulet", "shoes", "coat", "pants", "strring", "intring", "vitring", "dexring",
-            "wattire", "wshoes", "wcap", "cclaw"
+            "wattire", "wshoes", "wcap", "cclaw", "mushroomstaff", "dexamulet", "stramulet", "intamulet",
+            "wbreeches"
         ];
 
         this.currentMobFarm = "Pom Pom";
+
         this.attackMode = true;
         this.fightTogeather = true;
         this.followLeaderMode = false;
         this.returningToGroup = false;
-        this.waitForCoords = false;
+
+        this.movingToNewMob = false;
 
         this.x = this.char.x;
         this.y = this.char.y;
@@ -87,13 +90,19 @@ class BaseClass {
                 if (character.x === x && character.y === y) {
                     set_message(`Arrived at group location (${x}, ${y})`);
                     this.returningToGroup = false;
-                    this.waitForCoords = false;
                 }
+
                 break;
             }
 
-            case "farm_update": {
-                myChar.currentMobFarm = data;
+            case "set_new_target": {
+                const dataSplit = data.split(',');
+                this.currentMobFarm = dataSplit[1];
+
+                this.movingToNewMob = true;
+                await smart_move({ to: dataSplit[0] });
+                this.movingToNewMob = false;
+
                 break;
             }
 
@@ -220,11 +229,7 @@ class BaseClass {
         recoverOutOfCombat();
         loot();
 
-        if (!nearTank()) {
-            myChar.waitForCoords = true;
-        }
-
-        if (!myChar.attackMode || character.rip || myChar.waitForCoords) return null;
+        if (!this.attackMode || character.rip || this.movingToNewMob) return null;
 
         const currentTarget = get_target_of(character.name);
         let target = null;
