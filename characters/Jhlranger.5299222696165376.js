@@ -22,6 +22,7 @@ setInterval(function () {
     const target = myChar.targetLogicNonTank();
     if (target == null) { return; }
 
+    if (myChar.kite) { kiteTarget(); }
     myChar.markTarget(target);
 }, 1000 / 4);
 

@@ -1,18 +1,21 @@
 load_code("helpers");
 load_code("commCommands");
 
-const HP_POTION = "hpot0";
-const MP_POTION = "mpot0";
+const HP_POTION = "hpot1";
+const MP_POTION = "mpot1";
 const POTSMINSTOCK = 600;
 const POT_BUFFER = 300;
+
 const sellWhiteList = [
-	"hpbelt", "hpamulet", "shoes", "coat", "pants", "strring", "intring", "vitring", "dexring", "wattire", "wshoes", "wcap", "cclaw",
-	"mushroomstaff", "dexamulet", "stramulet", "intamulet", "wbreeches"
+	"hpbelt", "hpamulet", "shoes", "coat", "pants", "strring", "intring", "vitring", "dexring",
+	"cclaw", "mushroomstaff", "dexamulet", "stramulet", "intamulet", "slimestaff", "stinger",
+	"wattire", "wshoes", "wcap", "wbreeches", // Wanders set
+	"helmet1", "pants1", "coat1", "gloves1", "shoes1", // Rugged set
 ];
 
 const bankWhitelist = [
 	"spores", "seashell", "beewings", "gem0", "gem1", "whiteegg", "monstertoken", "spidersilk", "cscale", "spores",
-	"rattail", "crabclaw", "bfur", "feather0", "gslime"
+	"rattail", "crabclaw", "bfur", "feather0", "gslime", "ringsj", "smush"
 ];
 
 class Merchant {
@@ -27,7 +30,6 @@ class Merchant {
 		this.fishing = false;
 		this.mining = false;
 
-		// Kick off periodic tasks
 		this.restockPotions();
 
 		this.fishingInterval = setInterval(() => this.goFishing(), 30 * 1000);
@@ -35,9 +37,15 @@ class Merchant {
 
 		setInterval(() => this.restockPotions(), 5 * 60 * 1000);
 		setInterval(async () => await this.manageInventory(), 5 * 60 * 1000);
-		setInterval(() => this.mainLoop(), 1000);
+		setInterval(() => this.healAndBuff(), 1000);
+		setInterval(() => this.returnHome(), 20 * 1000);
+		setInterval(() => {
+			if (this.busy || this.fishing || this.mining) { return; }
+			const { used, total } = this.getInventoryUsage();
+			if (used < 14) { return; }
+			this.sellItem();
+		}, 10 * 1000);
 
-		// Listen for cm events
 		character.on("cm", async (sender, data) => {
 			await this.handleCM(sender, data);
 		});
@@ -62,31 +70,23 @@ class Merchant {
 		if (used >= 30) {
 			this.busy = true;
 
-			await this.autoCombine();
-
-			await smart_move({ to: "potions" })
-			await this.sellItem()
+			await smart_move({ to: "potions" });
+			await this.sellItem();
 		}
 
 	}
 
-	async bankItems() {
-		if (character.map !== "bank") {
-			await smart_move({ to: "bank" });
-		}
-
+	async sellItem() {
 		for (let i = 0; i < character.items.length; i++) {
 			const item = character.items[i];
-			if (!item) continue;
 
-			if (bankWhitelist.includes(item.name)) {
-				bank_store(i);
+			if (item && sellWhiteList.includes(item.name)) {
+				sell(i, item.q || 1);
+				console.log(`Sold ${item.q || 1}x ${item.name} from slot ${i}`);
 			}
 		}
 
-		await smart_move({ to: "potions" });
-
-		this.busy = false;
+		await this.autoCombine();
 	}
 
 	async autoCombine(itemName = "ringsj", itemLevel = 0) {
@@ -123,17 +123,23 @@ class Merchant {
 		await this.bankItems();
 	}
 
-	async sellItem() {
+	async bankItems() {
+		if (character.map !== "bank") {
+			await smart_move({ to: "bank" });
+		}
+
 		for (let i = 0; i < character.items.length; i++) {
 			const item = character.items[i];
+			if (!item) continue;
 
-			if (item && sellWhiteList.includes(item.name)) {
-				sell(i, item.q || 1);
-				console.log(`Sold ${item.q || 1}x ${item.name} from slot ${i}`);
+			if (bankWhitelist.includes(item.name)) {
+				bank_store(i);
 			}
 		}
 
-		await this.autoCombine();
+		await smart_move({ to: "potions" });
+
+		this.busy = false;
 	}
 
 	async restockPotions() {
@@ -178,12 +184,27 @@ class Merchant {
 		}
 	}
 
-	// Fishing & Mining
+	returnHome() {
+		if (!this.busy && !this.fishing && !this.mining) {
+			set_message("On call..");
+			if (character.map !== "main") {
+				smart_move({ map: "main" });
+			} else {
+				if (Math.abs(character.real_x) <= 100 && Math.abs(character.real_y) <= 100) {
+					console.log("No need to move");
+					return;
+				} else {
+					use_skill("use_town");
+				}
+			}
 
+		}
+	}
+
+	// Fishing & Mining
 	async goFishing() {
 		if (this.fishing && is_on_cooldown("fishing")) {
-			unequip("mainhand");
-			unequip("offhand");
+			this.removeWeapons();
 
 			this.fishing = false;
 			return;
@@ -204,19 +225,18 @@ class Merchant {
 			this.fishingInterval = setInterval(() => this.goFishing(), 20 * 1000);
 		}
 
-		unequip("mainhand");
-		unequip("offhand");
-		await sleep(100);
+		this.removeWeapons();
+		await sleep(200);
 
-		equip(rodSlot);
+		equip(locate_item(fishingRodName));
+		await sleep(50);
 		use_skill("fishing");
 		set_message("Fishing...");
 	}
 
 	async goMining() {
 		if (this.mining && is_on_cooldown("mining")) {
-			unequip("mainhand");
-			unequip("offhand");
+			this.removeWeapons();
 
 			this.mining = false;
 			return;
@@ -240,8 +260,7 @@ class Merchant {
 		}
 
 		if (character.real_x == this.miningLocation.x && character.real_y == this.miningLocation.y && this.mining) {
-			unequip("mainhand");
-			unequip("offhand");
+			this.removeWeapons();
 			await sleep(100);
 
 			equip(locate_item(pickaxeItemId));
@@ -250,17 +269,14 @@ class Merchant {
 		}
 	}
 
-	async mainLoop() {
+	async healAndBuff() {
 		reviveSelf();
 		manageParty();
 		recoverOutOfCombat();
 
-		if (this.busy || this.fishing || this.mining) return;
-
 		this.buffPartyWithMLuck();
 		loot();
 		useHealthPotion();
-		await returnToLeader();
 	}
 
 	resetFlags() {
@@ -269,19 +285,33 @@ class Merchant {
 		this.fishing = false;
 	}
 
+	removeWeapons() {
+		unequip("mainhand");
+		unequip("offhand");
+	}
+
 	async handleCM(sender, payload) {
 
 		if (this.busy || this.fishing || this.mining) return;
 		if (!sender.name.startsWith("Jhl")) return;
 
+		this.removeWeapons();
+
 		const [command, data] = sender.message.split(" ");
 
 		switch (command.trim()) {
 			case "need_pots": {
-				const [x, y] = data.split(",").map(Number);
+				const [xStr, yStr, map] = data.split(",");
+				const x = Number(xStr);
+				const y = Number(yStr);
+
 				this.busy = true;
 
-				set_message(`Moving to ${x}, ${y} to deliver potions...`);
+				set_message(`Moving to ${map}: ${x}, ${y} to deliver potions...`);
+				if (map && character.map !== map) {
+					await smart_move({ to: map });
+				}
+
 				await xmove(x, y);
 
 				const player = get_player(sender.name);
@@ -292,6 +322,10 @@ class Merchant {
 
 					returnToLeader();
 				}
+				else if (player == null) {
+					this.busy = false;
+				}
+
 				break;
 			}
 
@@ -311,8 +345,33 @@ class Merchant {
 				if (character.x === x && character.y === y) {
 					set_message(`Arrived at group location (${x}, ${y})`);
 					this.busy = false;
-					this.waitForCoords = false;
 				}
+
+				break;
+			}
+
+			case "need_luck": {
+				const [xStr, yStr, map] = data.split(",");
+				const x = Number(xStr);
+				const y = Number(yStr);
+
+				this.busy = true;
+
+				if (map && character.map !== map) {
+					await smart_move({ to: map });
+				}
+				await xmove(x, y);
+
+				if (character.x === x && character.y === y) {
+					const target = get_player(sender.name);
+					if (target && !is_on_cooldown("mluck")) {
+						use_skill("mluck", target);
+						set_message(`Buffed ${sender.name} with MLuck`);
+					}
+
+					this.busy = false;
+				}
+
 				break;
 			}
 

@@ -1,6 +1,6 @@
 load_code("helpers");
 
-// mobs mainland:
+// mobs
 /**
  * 
  * Goo
@@ -35,20 +35,22 @@ class BaseClass {
         this.whitelist = [
             // Keep
             "spores", "seashell", "beewings", "gem0", "gem1", "whiteegg", "monstertoken", "spidersilk", "cscale", "spores",
-            "rattail", "crabclaw", "bfur", "feather0", "gslime",
+            "rattail", "crabclaw", "bfur", "feather0", "gslime", "smush",
             // Upgrade
             "ringsj", "intbelt",
             // Sell
             "hpbelt", "hpamulet", "shoes", "coat", "pants", "strring", "intring", "vitring", "dexring",
             "wattire", "wshoes", "wcap", "cclaw", "mushroomstaff", "dexamulet", "stramulet", "intamulet",
-            "wbreeches"
+            "wbreeches", "slimestaff", "stinger"
         ];
 
-        this.currentMobFarm = "Pom Pom";
+        this.monsterHunter = true;
+        this.getNewTask = false;
+        this.currentMobFarm = "Rat";
+        this.kite = true;
 
         this.attackMode = true;
         this.fightTogeather = true;
-        this.followLeaderMode = false;
         this.returningToGroup = false;
 
         this.movingToNewMob = false;
@@ -60,7 +62,10 @@ class BaseClass {
             await this.handleCM(sender, data);
         });
 
-        setInterval(() => this.sendWhitelistedItemsToMerchant(), 15 * 1000);
+        setInterval(() => this.sendWhitelistedItemsToMerchant(), 3 * 1000);
+        setInterval(() => this.askForLuck(), 20 * 1000);
+        setInterval(() => this.callMerchant(), 20 * 1000);
+
         startSharedTasks();
     }
 
@@ -114,9 +119,9 @@ class BaseClass {
 
     callPlayers() {
         const leader = get_player("Jhlpriest");
-        if (!leader) return;
+        if (!leader || this.getNewTask) return;
 
-        const partyMembers = ["Jhlranger", "Jhlmerch", "Jhlmage"];
+        const partyMembers = ["Jhlranger", "Jhlmage"];
 
         for (const name of partyMembers) {
             const member = get_player(name);
@@ -124,6 +129,28 @@ class BaseClass {
                 send_cm(name, `come_to_me ${leader.x},${leader.y},${leader.map}`);
             }
         }
+    }
+
+    askForLuck() {
+        const mluckBuff = character.s?.mluck;
+        const remaining = mluckBuff?.ms || 0;
+
+        if (!mluckBuff || remaining < 160000) {
+            send_cm("Jhlmerch", `need_luck ${character.x},${character.y},${character.map}`);
+            set_message("Requesting MLuck from merchant...");
+        }
+    }
+
+    callMerchant() {
+        let used = 0;
+        for (let i = 0; i < character.items.length; i++) {
+            if (character.items[i]) used++;
+        }
+
+        if (used >= 15) {
+            send_cm("Jhlmerch", `need_luck ${character.x},${character.y},${character.map}`);
+        }
+
     }
 
     setCurrentMobFarm(mobFarmName) {
@@ -259,6 +286,51 @@ class BaseClass {
             }
 
             return target;
+        }
+    }
+
+    // MONSTER HUNTER
+    async checkMonsterHunt() {
+        if (!this.monsterHunter) { return; }
+        const huntBuff = character.s?.monsterhunt;
+
+        if (!huntBuff) {
+            this.getNewTask = true;
+            // No active hunt
+            if (character.map !== "main") {
+                await smart_move({ map: "main" });
+                await smart_move({ to: "monsterhunter" });
+                parent.socket.emit("monsterhunt");
+            } else if (character.c.monsterhunt === 0) {
+                // Ready to turn in
+                await smart_move({ to: "monsterhunter" });
+                parent.socket.emit("monsterhunt");
+                set_message("Turning in Monster Hunt");
+            } else {
+                await smart_move({ to: "monsterhunter" });
+                parent.socket.emit("monsterhunt");
+                set_message("Waiting for new hunt...");
+            }
+
+            return;
+        }
+
+        // Active hunt — validate target
+        const huntTargetId = huntBuff.id;
+        const mobKey = getMobKeyFromValue(huntTargetId);
+
+        if (mobKey == null) {
+            set_message(`Unknown hunt target: ${huntTargetId}`);
+            this.getNewTask = false;
+
+            return;
+        }
+
+        // Update farm target and notify party
+        if (myChar.currentMobFarm !== mobs[mobKey]) {
+            myChar.currentMobFarm = mobs[mobKey];
+            updateTarget(huntTargetId);
+            set_message(`New hunt target: ${huntTargetId}`);
         }
     }
 

@@ -3,7 +3,18 @@
 const mobs = {
     "goo": "Goo", "bee": "Bee", "crab": "Tiny Crab", "minimush": "Pom Pom", "snake": "Snake", "rat": "Rat",
     "squig": "Squig", "articbee": "Artic Bee", "armadillo": "Armadillo", "croc": "Croc", "porcupine": "Porcupine",
-    "squigtoad": "Squigtoad", "spider": "Spider",
+    "squigtoad": "Squigtoad", "spider": "Spider", "poisio": "Poisio", "boar": "Wild Boar"
+}
+
+function getMobKeyFromValue(target) {
+    for (const [key, val] of Object.entries(mobs)) {
+        if (val === target) {
+
+            return key;
+        }
+    }
+
+    return null;
 }
 
 function updateTarget(mob) {

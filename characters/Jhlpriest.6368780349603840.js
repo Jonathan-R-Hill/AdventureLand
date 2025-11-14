@@ -1,5 +1,6 @@
 load_code("baseClass");
 load_code("helpers");
+load_code("commCommands")
 
 class MyChar extends BaseClass {
 
@@ -9,24 +10,23 @@ class MyChar extends BaseClass {
         // Filter members below 75% HP
         let lowMembers = partyHealth.filter(m => m.hp < m.max_hp * 0.75);
         if (lowMembers.length >= 2 && !is_on_cooldown("partyheal")) {
-            set_message("Using Party Heal");
             use_skill("partyheal");
         }
         else if (lowMembers.length > 0 && !is_on_cooldown("heal")) {
-            set_message(`Healing ${lowMembers[0].name}`);
             use_skill("heal", lowMembers[0].name);
-
-            return;
         }
     }
 }
 
 const myChar = new MyChar(character.name);
 
+myChar.monsterHunting = true;
+
 setInterval(() => myChar.callPlayers(), 10 * 1000);
+setInterval(() => myChar.checkMonsterHunt(), 15 * 1000);
 
 // Combat
-setInterval(function () {
+setInterval(async function () {
     loot();
 
     useHealthPotion();
@@ -34,7 +34,7 @@ setInterval(function () {
 
     recoverOutOfCombat();
 
-    if (!myChar.attackMode || character.rip) return;
+    if (!myChar.attackMode || character.rip || myChar.getNewTask) return;
 
     if (!myChar.waitForCoords) {
 
@@ -51,12 +51,22 @@ setInterval(function () {
             target = myChar.findTarget(target);
 
             if (target == null || !target || target == undefined) {
+                set_message(`No target, moving to farm ${mobs[myChar.currentMobFarm]}`);
+
+                for (const [key, val] of Object.entries(mobs)) {
+                    if (val === myChar.currentMobFarm) {
+
+                        if (!myChar.movingToNewMob) { smart_move(key); }
+                        myChar.movingToNewMob = true;
+                        return;
+                    }
+                }
                 return;
             }
         }
 
-        // attack
-        // kiteTarget();
+        myChar.movingToNewMob = false;
+        if (myChar.kite) { kiteTarget(); }
         myChar.attack(target);
     }
 

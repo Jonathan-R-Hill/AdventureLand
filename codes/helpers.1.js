@@ -1,11 +1,11 @@
 
 function startSharedTasks() {
-    setInterval(manageParty, 1100);
+    setInterval(manageParty, 2100);
     setInterval(reviveSelf, 8000);
 
     if (character.name != "Jhlmerch") {
-        setInterval(sendGoldToMerchant, 5 * 60 * 1000);
-        setInterval(checkPotions, 10 * 1000);
+        setInterval(sendGoldToMerchant, 3 * 1000);
+        setInterval(checkPotions, 5 * 1000);
     }
 }
 
@@ -25,7 +25,7 @@ function reviveSelf() {
 function useHealthPotion() {
     if (is_on_cooldown("regen_mp")) { return; }
 
-    if (character.hp < character.max_hp * 0.50) {
+    if (character.hp < character.max_hp * 0.60) {
         return use_skill('use_hp');
     }
 }
@@ -33,7 +33,7 @@ function useHealthPotion() {
 function useManaPotion() {
     if (is_on_cooldown("regen_mp")) { return; }
 
-    if (character.mp < character.max_mp * 0.35) {
+    if (character.mp < character.max_mp * 0.50) {
         use_skill('use_mp');
     }
 }
@@ -99,13 +99,6 @@ async function manageParty() {
     }
 }
 
-
-function nearTank() {
-    let player = "Jhlpriest"
-
-    return player != null;
-}
-
 function sendGoldToMerchant() {
     const merchantName = "Jhlmerch";
     const merchant = get_player(merchantName);
@@ -122,8 +115,8 @@ function sendGoldToMerchant() {
 }
 
 function checkPotions() {
-    const HP_POTION = "hpot0";
-    const MP_POTION = "mpot0";
+    const HP_POTION = "hpot1";
+    const MP_POTION = "mpot1";
     const MIN_POTIONS = 100;
 
     const hpCount = countItem(HP_POTION);
@@ -137,7 +130,7 @@ function checkPotions() {
     );
 
     if (hpCount < MIN_POTIONS || mpCount < MIN_POTIONS) {
-        send_cm("Jhlmerch", `need_pots ${player.x},${player.y}`);
+        send_cm("Jhlmerch", `need_pots ${player.x},${player.y},${player.map}`);
     }
 }
 
@@ -173,16 +166,16 @@ function returnToLeader() {
     let safeX = leader.x + offsetX;
     let safeY = leader.y + offsetY;
 
-    // ✅ Enforce minimum 60 units separation from leader in at least one axis
     const dxLeader = safeX - leader.x;
     const dyLeader = safeY - leader.y;
 
-    if (Math.abs(dxLeader) < 60 && Math.abs(dyLeader) < 60) {
+    const dist = 40;
+    if (Math.abs(dxLeader) < dist && Math.abs(dyLeader) < dist) {
         // Push further along whichever axis has more room
         if (Math.abs(dxLeader) >= Math.abs(dyLeader)) {
-            safeX = leader.x + (dxLeader >= 0 ? 60 : -60);
+            safeX = leader.x + (dxLeader >= 0 ? dist : -dist);
         } else {
-            safeY = leader.y + (dyLeader >= 0 ? 60 : -60);
+            safeY = leader.y + (dyLeader >= 0 ? dist : -dist);
         }
     }
 
@@ -196,31 +189,54 @@ function kiteTarget() {
         return;
     }
 
-    // Vector from mob to you
     const dx = character.x - target.x;
     const dy = character.y - target.y;
     const dist = Math.max(Math.sqrt(dx * dx + dy * dy), 1);
 
-    // Step away from mob
-    const awayFactor = 30; // smaller step
-    let safeX = target.x + (dx / dist) * awayFactor;
-    let safeY = target.y + (dy / dist) * awayFactor;
+    const awayFactor = 30;
+    const safeRange = (target.range * 2) + (target.speed * 2) + 1;
 
-    const dxMob = safeX - target.x;
-    const dyMob = safeY - target.y;
+    if (dist > safeRange) return;
 
-    const distReq = 90;
-    if (Math.abs(dxMob) < distReq && Math.abs(dyMob) < distReq) {
-        // Push further along whichever axis has more room
-        if (Math.abs(dxMob) >= Math.abs(dyMob)) {
-            safeX = target.x + (dxMob >= 0 ? distReq : -distReq);
-        } else {
-            safeY = target.y + (dyMob >= 0 ? distReq : -distReq);
+    // Normalized escape vector
+    const nx = dx / dist;
+    const ny = dy / dist;
+
+    // Primary escape
+    let safeX = character.x + nx * awayFactor;
+    let safeY = character.y + ny * awayFactor;
+
+    // Ensure minimum separation
+    const distToTarget = Math.sqrt((safeX - target.x) ** 2 + (safeY - target.y) ** 2);
+    if (distToTarget < safeRange) {
+        safeX = target.x + nx * safeRange;
+        safeY = target.y + ny * safeRange;
+    }
+
+    // Try primary direction
+    if (can_move_to(safeX, safeY)) {
+        move(safeX, safeY);
+        set_message(`Kiting to (${safeX.toFixed(0)}, ${safeY.toFixed(0)})`);
+        return;
+    }
+
+    // Try rotated escape vectors (±45°, ±90°)
+    const angles = [Math.PI / 4, -Math.PI / 4, Math.PI / 2, -Math.PI / 2];
+    for (const angle of angles) {
+        const rx = nx * Math.cos(angle) - ny * Math.sin(angle);
+        const ry = nx * Math.sin(angle) + ny * Math.cos(angle);
+
+        const altX = target.x + rx * safeRange;
+        const altY = target.y + ry * safeRange;
+
+        if (can_move_to(altX, altY)) {
+            move(altX, altY);
+            set_message(`Kiting (angled) to (${altX.toFixed(0)}, ${altY.toFixed(0)})`);
+            return;
         }
     }
 
-    move(safeX, safeY);
-    set_message(`Kiting: keeping ~30 units from mob (${safeX.toFixed(0)}, ${safeY.toFixed(0)})`);
+    set_message("Kite blocked in all directions");
 }
 
 // ----- Merchant Section
