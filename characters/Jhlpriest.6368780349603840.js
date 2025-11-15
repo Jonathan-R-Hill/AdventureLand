@@ -1,6 +1,5 @@
 load_code("baseClass");
 load_code("helpers");
-load_code("commCommands")
 
 class MyChar extends BaseClass {
 
@@ -20,11 +19,6 @@ class MyChar extends BaseClass {
 
 const myChar = new MyChar(character.name);
 
-myChar.monsterHunting = true;
-
-setInterval(() => myChar.callPlayers(), 10 * 1000);
-setInterval(() => myChar.checkMonsterHunt(), 15 * 1000);
-
 // Combat
 setInterval(async function () {
     loot();
@@ -34,40 +28,38 @@ setInterval(async function () {
 
     recoverOutOfCombat();
 
-    if (!myChar.attackMode || character.rip || myChar.getNewTask) return;
+    if (!myChar.attackMode || character.rip) return;
 
-    if (!myChar.waitForCoords) {
+    myChar.healParty();
 
-        myChar.healParty();
+    let target = get_targeted_monster();
+    if (target && target.name != myChar.currentMobFarm) {
+        target = null;
+    }
 
-        let target = get_targeted_monster();
-        if (target && target.name != myChar.currentMobFarm) {
-            target = null;
-        }
+    if (target == null || !target || target == undefined) {
+        target = get_targeted_monster();
+
+        target = myChar.findTarget(target);
 
         if (target == null || !target || target == undefined) {
-            target = get_targeted_monster();
+            set_message(`No target, moving to farm ${myMobs[myChar.currentMobFarm]}`);
 
-            target = myChar.findTarget(target);
+            for (const [key, val] of Object.entries(myMobs)) {
+                if (val === myChar.currentMobFarm) {
 
-            if (target == null || !target || target == undefined) {
-                set_message(`No target, moving to farm ${mobs[myChar.currentMobFarm]}`);
-
-                for (const [key, val] of Object.entries(mobs)) {
-                    if (val === myChar.currentMobFarm) {
-
-                        if (!myChar.movingToNewMob) { smart_move(key); }
-                        myChar.movingToNewMob = true;
-                        return;
-                    }
+                    if (!myChar.movingToNewMob) { smart_move(key); }
+                    myChar.movingToNewMob = true;
+                    return;
                 }
-                return;
             }
+            return;
         }
-
-        myChar.movingToNewMob = false;
-        if (myChar.kite) { kiteTarget(); }
-        myChar.attack(target);
     }
+
+    myChar.movingToNewMob = false;
+    if (myChar.kite) { myChar.kiteTarget(); }
+    myChar.attack(target);
+
 
 }, 1000 / 4);

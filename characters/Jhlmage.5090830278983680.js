@@ -11,7 +11,7 @@ setInterval(function () {
 	const target = myChar.targetLogicNonTank();
 	if (target == null) { return; }
 
-	if (myChar.kite) { kiteTarget(); }
+	if (myChar.kite) { myChar.kiteTarget(); }
 	myChar.attack(target);
 
 }, 1000 / 4);

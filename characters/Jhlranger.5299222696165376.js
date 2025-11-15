@@ -4,7 +4,7 @@ load_code("helpers");
 class MyChar extends BaseClass {
 
     markTarget(target) {
-        if (!is_on_cooldown("huntersmark") && target.hp > 1500 && character.mp > 600 && !target.name.startsWith("Jhl")) {
+        if (!is_on_cooldown("huntersmark") && target.hp > 2000 && character.mp > 600 && !target.name.startsWith("Jhl")) {
             use_skill("huntersmark", target);
             this.attack(target);
         }
@@ -22,7 +22,7 @@ setInterval(function () {
     const target = myChar.targetLogicNonTank();
     if (target == null) { return; }
 
-    if (myChar.kite) { kiteTarget(); }
+    if (myChar.kite) { myChar.kiteTarget(); }
     myChar.markTarget(target);
 }, 1000 / 4);
 

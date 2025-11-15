@@ -45,12 +45,39 @@ class Merchant {
 			if (used < 14) { return; }
 			this.sellItem();
 		}, 10 * 1000);
+		setInterval(() => this.resetFlags(), 120 * 1000);
 
 		character.on("cm", async (sender, data) => {
 			await this.handleCM(sender, data);
 		});
 	}
 
+	// Send pots
+	getItemSlot(name) {
+		for (let i = 0; i < character.items.length; i++) {
+			const item = character.items[i];
+			if (item && item.name === name) return i;
+		}
+
+		return -1;
+	}
+
+	sendPotionsTo(name, hpPotion, mpPotion, hpAmount = 200, mpAmount = 200) {
+		const player = get_player(name);
+		if (!player || parent.distance(character, player) > 400) {
+			return;
+		}
+
+		const hpSlot = this.getItemSlot(hpPotion);
+		const mpSlot = this.getItemSlot(mpPotion);
+
+		if (hpSlot > -1) send_item(name, hpSlot, hpAmount);
+		if (mpSlot > -1) send_item(name, mpSlot, mpAmount);
+
+		game_log(`🧴 Sent ${hpAmount} HP and ${mpAmount} MP potions to ${name}`);
+	}
+
+	// Sell
 	getInventoryUsage() {
 		let used = 0;
 		for (let i = 0; i < character.items.length; i++) {
@@ -142,6 +169,7 @@ class Merchant {
 		this.busy = false;
 	}
 
+	// restock & buff
 	async restockPotions() {
 		const currentHp = countItem(HP_POTION);
 		const currentMp = countItem(MP_POTION);
@@ -184,9 +212,13 @@ class Merchant {
 		}
 	}
 
+	// wait for commands or something to do
 	returnHome() {
 		if (!this.busy && !this.fishing && !this.mining) {
+			equip(locate_item("broom"));
+
 			set_message("On call..");
+
 			if (character.map !== "main") {
 				smart_move({ map: "main" });
 			} else {
@@ -203,10 +235,11 @@ class Merchant {
 
 	// Fishing & Mining
 	async goFishing() {
+		equip(locate_item("broom"));
 		if (this.fishing && is_on_cooldown("fishing")) {
-			this.removeWeapons();
 
 			this.fishing = false;
+			set_message("Done fishing");
 			return;
 		}
 
@@ -221,6 +254,7 @@ class Merchant {
 			this.fishing = true;
 
 			await smart_move(this.fishingLocation);
+
 			clearInterval(this.fishingInterval);
 			this.fishingInterval = setInterval(() => this.goFishing(), 20 * 1000);
 		}
@@ -229,16 +263,17 @@ class Merchant {
 		await sleep(200);
 
 		equip(locate_item(fishingRodName));
-		await sleep(50);
+		await sleep(100);
 		use_skill("fishing");
 		set_message("Fishing...");
 	}
 
 	async goMining() {
+		equip(locate_item("broom"));
 		if (this.mining && is_on_cooldown("mining")) {
-			this.removeWeapons();
-
 			this.mining = false;
+
+			set_message("Finished Mining");
 			return;
 		}
 
@@ -253,6 +288,7 @@ class Merchant {
 		if (character.real_x != this.miningLocation.x && character.real_y != this.miningLocation.y && !this.mining) {
 			this.mining = true;
 
+			equip(locate_item("broom"));
 			await smart_move(this.miningLocation);
 
 			clearInterval(this.miningInterval);
@@ -260,9 +296,6 @@ class Merchant {
 		}
 
 		if (character.real_x == this.miningLocation.x && character.real_y == this.miningLocation.y && this.mining) {
-			this.removeWeapons();
-			await sleep(100);
-
 			equip(locate_item(pickaxeItemId));
 
 			use_skill("mining");
@@ -291,11 +324,10 @@ class Merchant {
 	}
 
 	async handleCM(sender, payload) {
-
 		if (this.busy || this.fishing || this.mining) return;
 		if (!sender.name.startsWith("Jhl")) return;
 
-		this.removeWeapons();
+		equip(locate_item("broom"));
 
 		const [command, data] = sender.message.split(" ");
 
@@ -316,7 +348,7 @@ class Merchant {
 
 				const player = get_player(sender.name);
 				if (player?.name.startsWith("Jhl")) {
-					sendPotionsTo(player.name, HP_POTION, MP_POTION, 100, 100);
+					this.sendPotionsTo(player.name, HP_POTION, MP_POTION, 100, 100);
 					set_message(`Delivered 100 HP & MP potions to ${player.name}`);
 					this.busy = false;
 
