@@ -215,7 +215,7 @@ class Merchant {
 	// wait for commands or something to do
 	returnHome() {
 		if (!this.busy && !this.fishing && !this.mining) {
-			equip(locate_item("broom"));
+			this.equipBroom();
 
 			set_message("On call..");
 
@@ -235,7 +235,7 @@ class Merchant {
 
 	// Fishing & Mining
 	async goFishing() {
-		equip(locate_item("broom"));
+		this.equipBroom();
 		if (this.fishing && is_on_cooldown("fishing")) {
 
 			this.fishing = false;
@@ -269,7 +269,8 @@ class Merchant {
 	}
 
 	async goMining() {
-		equip(locate_item("broom"));
+		this.equipBroom();
+
 		if (this.mining && is_on_cooldown("mining")) {
 			this.mining = false;
 
@@ -288,7 +289,7 @@ class Merchant {
 		if (character.real_x != this.miningLocation.x && character.real_y != this.miningLocation.y && !this.mining) {
 			this.mining = true;
 
-			equip(locate_item("broom"));
+			this.equipBroom();
 			await smart_move(this.miningLocation);
 
 			clearInterval(this.miningInterval);
@@ -323,11 +324,25 @@ class Merchant {
 		unequip("offhand");
 	}
 
+	equipBroom() {
+		// Check if broom is already equipped in any slot
+		const broomSlot = Object.values(character.slots).find(
+			slot => slot && slot.name === "broom"
+		);
+
+		if (!broomSlot) {
+			const broomIndex = locate_item("broom");
+			if (broomIndex !== -1) {
+				equip(broomIndex);
+			}
+		}
+	}
+
 	async handleCM(sender, payload) {
 		if (this.busy || this.fishing || this.mining) return;
 		if (!sender.name.startsWith("Jhl")) return;
 
-		equip(locate_item("broom"));
+		this.equipBroom();
 
 		const [command, data] = sender.message.split(" ");
 
