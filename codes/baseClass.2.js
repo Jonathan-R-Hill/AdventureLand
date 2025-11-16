@@ -12,7 +12,7 @@ class BaseClass {
         this.whitelist = [
             // Keep
             "spores", "seashell", "beewings", "gem0", "gem1", "whiteegg", "monstertoken", "spidersilk", "cscale", "spores",
-            "rattail", "crabclaw", "bfur", "feather0", "gslime", "smush",
+            "rattail", "crabclaw", "bfur", "feather0", "gslime", "smush", "lostearring", "spiderkey",
             // Upgrade
             "ringsj", "intbelt",
             // Sell
@@ -21,11 +21,11 @@ class BaseClass {
             "wbreeches", "slimestaff", "stinger"
         ];
 
-        this.currentMobFarm = "Spider";
-        this.kite = false;
+        this.currentMobFarm = "Squigtoad";
+        this.kite = true;
 
         this.attackMode = true;
-        this.fightTogeather = true;
+        this.fightTogeather = false;
         this.returningToGroup = false;
 
         this.movingToNewMob = false;
@@ -85,6 +85,22 @@ class BaseClass {
                 await smart_move({ to: dataSplit[0] });
                 this.movingToNewMob = false;
 
+                break;
+            }
+
+            case "set_new_hunter_target": {
+                const dataSplit = data.split(',');
+                const travel = dataSplit[0];
+                const target = dataSplit[1];
+                const map = dataSplit[2];
+
+                this.currentMobFarm = target;
+                this.movingToNewMob = true;
+
+                await smart_move({ map: map });
+                await smart_move(travel);
+
+                this.movingToNewMob = false;
                 break;
             }
 
@@ -244,7 +260,7 @@ class BaseClass {
         recoverOutOfCombat();
         loot();
 
-        if (!this.attackMode || character.rip || this.movingToNewMob || this.returnToLeader) return null;
+        if (!this.attackMode || character.rip || this.returnToLeader) { return null; }
         let target;
 
         if (this.fightTogeather) {
@@ -270,6 +286,7 @@ class BaseClass {
             }
         }
 
+        this.movingToNewMob = false;
         return target;
     }
 

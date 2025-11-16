@@ -15,7 +15,7 @@ const sellWhiteList = [
 
 const bankWhitelist = [
 	"spores", "seashell", "beewings", "gem0", "gem1", "whiteegg", "monstertoken", "spidersilk", "cscale", "spores",
-	"rattail", "crabclaw", "bfur", "feather0", "gslime", "ringsj", "smush"
+	"rattail", "crabclaw", "bfur", "feather0", "gslime", "ringsj", "smush", "lostearring", "spiderkey",
 ];
 
 class Merchant {
