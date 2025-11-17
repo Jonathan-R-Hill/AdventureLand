@@ -21,45 +21,19 @@ const myChar = new MyChar(character.name);
 
 // Combat
 setInterval(async function () {
-    loot();
-
     useHealthPotion();
     useManaPotion();
-
     recoverOutOfCombat();
+    loot();
 
-    if (!myChar.attackMode || character.rip) return;
+    const target = await myChar.targetLogicNonTank();
+    if (target == null) { return; }
 
     myChar.healParty();
 
-    let target = get_targeted_monster();
-    if (target && target.name != myChar.currentMobFarm) {
-        target = null;
-    }
-
-    if (target == null || !target || target == undefined) {
-        target = get_targeted_monster();
-
-        target = myChar.findTarget(target);
-
-        if (target == null || !target || target == undefined) {
-            set_message(`No target, moving to farm ${myMobs[myChar.currentMobFarm]}`);
-
-            for (const [key, val] of Object.entries(myMobs)) {
-                if (val === myChar.currentMobFarm) {
-
-                    if (!myChar.movingToNewMob) { smart_move(key); }
-                    myChar.movingToNewMob = true;
-                    return;
-                }
-            }
-            return;
-        }
-    }
-
     myChar.movingToNewMob = false;
     if (myChar.kite) { myChar.kiteTarget(); }
-    myChar.attack(target);
 
+    myChar.attack(target);
 
 }, 1000 / 4);

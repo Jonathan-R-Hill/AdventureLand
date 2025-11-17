@@ -9,6 +9,13 @@ class BaseClass {
         this.sendItems = true;
         this.merchantName = "Jhlmerch";
 
+        this.kite = false;
+        this.attackMode = true;
+        this.fightTogeather = false;
+
+        this.currentMobFarm = "Snake";
+        this.tank = "Jhlwarrior";
+
         this.whitelist = [
             // Keep
             "spores", "seashell", "beewings", "gem0", "gem1", "whiteegg", "monstertoken", "spidersilk", "cscale", "spores",
@@ -21,17 +28,11 @@ class BaseClass {
             "wbreeches", "slimestaff", "stinger"
         ];
 
-        this.currentMobFarm = "Squigtoad";
-        this.kite = true;
-
-        this.attackMode = true;
-        this.fightTogeather = false;
         this.returningToGroup = false;
-
         this.movingToNewMob = false;
 
-        this.x = this.char.x;
-        this.y = this.char.y;
+        this.x = this.char.real_x;
+        this.y = this.char.real_y;
 
         character.on("cm", async (sender, data) => {
             await this.handleCM(sender, data);
@@ -40,6 +41,7 @@ class BaseClass {
         setInterval(() => this.sendWhitelistedItemsToMerchant(), 3 * 1000);
         setInterval(() => this.askForLuck(), 20 * 1000);
         setInterval(() => this.callMerchant(), 20 * 1000);
+        setInterval(() => this.checkNearbyFarmMob(), 3 * 1000);
 
         startSharedTasks();
     }
@@ -178,9 +180,12 @@ class BaseClass {
     }
 
     getTankTarget() {
-        const tank = get_player("Jhlpriest");
+        const tank = get_player(this.tank);
         if (tank) {
+            console.log(tank);
             if (get_nearest_monster({ target: "Jhlpriest" }) != null) { return get_nearest_monster({ target: "Jhlpriest" }); }
+            else if (get_nearest_monster({ target: "Jhlranger" }) != null) { return get_nearest_monster({ target: "Jhlranger" }); }
+            else if (get_nearest_monster({ target: "Jhlwarrior" }) != null) { return get_nearest_monster({ target: "Jhlwarrior" }); }
             else { return get_target_of(tank); }
         }
 
@@ -188,17 +193,17 @@ class BaseClass {
     }
 
     findTarget(target) {
-        if (target && target.name != myChar.currentMobFarm) {
+        if (target && target.name != this.currentMobFarm) {
             target = null;
         }
 
         if (target != null) { return target; }
 
         if (target == null || !target || target == undefined) {
-            target = myChar.getClosestMonsterByName(myChar.currentMobFarm);
+            target = this.getClosestMonsterByName(this.currentMobFarm);
             if (target) {
 
-                if (target.name == myChar.currentMobFarm || myChar.currentMobFarm == "") {
+                if (target.name == this.currentMobFarm || this.currentMobFarm == "") {
                     change_target(target);
 
                     return target;
@@ -207,7 +212,7 @@ class BaseClass {
                 }
 
             } else {
-                set_message(`Not my target ${myChar.currentMobFarm}`);
+                set_message(`Not my target ${this.currentMobFarm}`);
 
                 return null;
             }
@@ -216,24 +221,26 @@ class BaseClass {
 
     // ATTTACKING
     attack(target) {
+        if (this.movingToNewMob) { return; }
         if (!is_in_range(target)) {
             move(
-                character.x + (target.x - character.x) / 2,
-                character.y + (target.y - character.y) / 2
+                character.x + (target.real_x - character.real_x) / 1.5,
+                character.y + (target.real_y - character.real_y) / 1.5
             );
 
             set_message("Moving to target");
         } else if (can_attack(target)) {
+            stop();
             set_message("Attacking");
             attack(target);
         }
     }
 
-    farmTogeather(target) {
+    farmTogeather(target = null) {
         const currentTarget = get_target_of(character.name);
-        target = myChar.getTankTarget();
+        target = this.getTankTarget();
 
-        returnToLeader();
+        if (character.name != "Jhlwarrior") { returnToLeader(); }
 
         // Fallback to current target if tank target is invalid or a player
         if (!target || target.name?.startsWith("Jhl")) {
@@ -241,9 +248,9 @@ class BaseClass {
         }
 
         if (!target || target.name?.startsWith("Jhl")) {
-            if (target == null && get_player("Jhlpriest") == null) {
+            if (target == null && get_player(this.tank) == null) {
                 target = get_targeted_monster();
-                target = myChar.findTarget(target);
+                target = this.findTarget(target);
 
                 if (!target) {
                     target = null;
@@ -254,41 +261,81 @@ class BaseClass {
         return target;
     }
 
-    targetLogicNonTank() {
-        useHealthPotion();
-        useManaPotion();
-        recoverOutOfCombat();
-        loot();
+    async targetLogicNonTank() {
+        if (!this.attackMode || character.rip) { return null; }
 
-        if (!this.attackMode || character.rip || this.returnToLeader) { return null; }
-        let target;
+        let target = null;
 
         if (this.fightTogeather) {
             target = this.farmTogeather();
-
-            return target;
         } else {
+            target = await this.targetLogicTank();
+        }
+
+        return target;
+    }
+
+    async targetLogicTank() {
+        if (!this.attackMode || character.rip || this.movingToNewMob) { return null; }
+
+        let target = get_targeted_monster();
+        if (target && target.name != this.currentMobFarm) {
+            target = null;
+        }
+
+        if (target == null || !target || target == undefined && get_player) {
             target = get_targeted_monster();
-            target = myChar.findTarget(target);
 
-            if (!target) {
-                set_message(`No target, moving to farm ${myMobs[myChar.currentMobFarm]}`);
+            target = this.findTarget(target);
 
-                for (const [key, val] of Object.entries(myMobs)) {
-                    if (val === this.currentMobFarm) {
+            if (target == null || !target || target == undefined) {
+                set_message(`No target, moving to farm ${myMobs[this.currentMobFarm]}`);
 
-                        if (!this.movingToNewMob) { smart_move(key); }
-                        this.movingToNewMob = true;
-                        return;
-                    }
-                }
+                return null;
+            }
+        }
+
+        return target;
+    }
+
+    checkNearbyFarmMob() {
+        let found = false;
+
+        if (this.fightTogeather && get_player(this.tank) && character.name != this.tank) {
+            this.movingToNewMob = false;
+            return;
+        }
+
+        for (const id in parent.entities) {
+            const ent = parent.entities[id];
+            if (!ent || ent.type !== "monster" || ent.dead || !ent.visible) continue;
+
+            // Distance check
+            const dist = parent.distance(character, ent);
+            if (dist > 250) continue;
+
+            if (ent.name === this.currentMobFarm) {
+                this.movingToNewMob = false;
+                stop();
                 return;
             }
         }
 
-        this.movingToNewMob = false;
-        return target;
+        // If no farm mob was found nearby, move to its spawn
+        if (!found) {
+            for (const [key, val] of Object.entries(myMobs)) {
+                if (val === this.currentMobFarm) {
+                    if (!this.movingToNewMob) {
+                        smart_move(key);
+                    }
+                    this.movingToNewMob = true;
+                    set_message(`No ${this.currentMobFarm} nearby, moving to farm`);
+                    break;
+                }
+            }
+        }
     }
+
 
     kiteTarget() {
         const target = get_targeted_monster();

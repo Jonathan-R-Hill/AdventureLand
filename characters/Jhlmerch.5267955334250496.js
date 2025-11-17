@@ -3,7 +3,7 @@ load_code("commCommands");
 
 const HP_POTION = "hpot1";
 const MP_POTION = "mpot1";
-const POTSMINSTOCK = 600;
+const POTSMINSTOCK = 800;
 const POT_BUFFER = 300;
 
 const sellWhiteList = [
@@ -22,8 +22,6 @@ class Merchant {
 	constructor() {
 		this.fishingLocation = { map: "main", x: -1368, y: -82 };
 		this.miningLocation = { map: "tunnel", x: -279, y: -148 };
-
-		this.fishingEnabled = false;
 
 		this.busy = false;
 
@@ -235,7 +233,6 @@ class Merchant {
 
 	// Fishing & Mining
 	async goFishing() {
-		this.equipBroom();
 		if (this.fishing && is_on_cooldown("fishing")) {
 
 			this.fishing = false;
@@ -251,26 +248,22 @@ class Merchant {
 		if (character.slots.mainhand?.name !== fishingRodName && rodSlot === -1) { return; }
 
 		if ((character.real_x !== this.fishingLocation.x || character.real_y !== this.fishingLocation.y) && !this.fishing) {
-			this.fishing = true;
+			this.equipBroom();
 
+			this.fishing = true;
 			await smart_move(this.fishingLocation);
 
 			clearInterval(this.fishingInterval);
 			this.fishingInterval = setInterval(() => this.goFishing(), 20 * 1000);
 		}
 
-		this.removeWeapons();
-		await sleep(200);
-
 		equip(locate_item(fishingRodName));
-		await sleep(100);
+		await sleep(200);
 		use_skill("fishing");
 		set_message("Fishing...");
 	}
 
 	async goMining() {
-		this.equipBroom();
-
 		if (this.mining && is_on_cooldown("mining")) {
 			this.mining = false;
 
@@ -287,9 +280,9 @@ class Merchant {
 		}
 
 		if (character.real_x != this.miningLocation.x && character.real_y != this.miningLocation.y && !this.mining) {
+			this.equipBroom();
 			this.mining = true;
 
-			this.equipBroom();
 			await smart_move(this.miningLocation);
 
 			clearInterval(this.miningInterval);

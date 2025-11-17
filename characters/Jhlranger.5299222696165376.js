@@ -16,14 +16,19 @@ class MyChar extends BaseClass {
 }
 
 const myChar = new MyChar(character.name);
-myChar.currentMobFarm = "Snake"
 
-setInterval(function () {
+setInterval(async function () {
+    useHealthPotion();
+    useManaPotion();
+    recoverOutOfCombat();
+    loot();
 
-    const target = myChar.targetLogicNonTank();
+    const target = await myChar.targetLogicNonTank();
     if (target == null) { return; }
 
     if (myChar.kite) { myChar.kiteTarget(); }
+
     myChar.markTarget(target);
+
 }, 1000 / 4);
 

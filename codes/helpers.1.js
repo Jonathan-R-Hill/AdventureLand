@@ -71,13 +71,11 @@ function sendGoldToMerchant() {
             send_gold(merchantName, character.gold - 10000);
             game_log(`💸 Sent gold to ${merchantName}`);
         }
-    } else {
-        game_log("Merchant not nearby or not found!");
     }
 }
 
 function returnToLeader() {
-    let leader = get_player("Jhlpriest");
+    let leader = get_player("Jhlwarrior");
 
     if (!leader) {
         set_message("Leader not found");
