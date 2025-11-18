@@ -16,30 +16,27 @@ const mobData = [
 ];
 
 // MONSTER HUNTER
-async function checkMonsterHunt() {
+function checkMonsterHunt() {
     const huntBuff = character.s?.monsterhunt;
 
     if (!huntBuff || (huntBuff && (huntBuff.c <= 0 || huntBuff.c == undefined || huntBuff.c == null))) {
         // No active hunt
-        if (character.map !== "main") {
-            await smart_move({ map: "main" });
-            await smart_move({ to: "monsterhunter" });
-            parent.socket.emit("monsterhunt");
-
-        } else if (character.c.monsterhunt === 0) {
-            // Ready to turn in
-            await smart_move({ to: "monsterhunter" });
-            parent.socket.emit("monsterhunt");
-            set_message("Turning in Monster Hunt");
-
-        } else {
-            await smart_move({ to: "monsterhunter" });
-            parent.socket.emit("monsterhunt");
-            set_message("Waiting for new hunt...");
-        }
-
-        return;
+        return true;
     }
+
+    return false;
+}
+
+async function getNewTask() {
+    if (character.map !== "main") {
+        await smart_move({ map: "main" });
+    }
+    await smart_move({ to: "monsterhunter" });
+
+    parent.socket.emit("monsterhunt");
+    set_message("Requested new Monster Hunt");
+
+    await new Promise(resolve => setTimeout(resolve, 500));
 }
 
 // TODO: monster hunter
@@ -48,7 +45,7 @@ async function setNewTask() {
 
     if (!huntBuff) { return; }
 
-    const mobEntry = mobData.find(m => m.travel === travelTag);
+    const mobEntry = mobData.find(m => m.travel === character.s?.monsterhunt.id);
 
     if (!mobEntry) {
         return null;

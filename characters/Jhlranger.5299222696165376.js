@@ -16,8 +16,11 @@ class MyChar extends BaseClass {
 }
 
 const myChar = new MyChar(character.name);
+myChar.currentMobFarm = "Snake";
 
 setInterval(async function () {
+    myChar.checkNearbyFarmMob();
+
     useHealthPotion();
     useManaPotion();
     recoverOutOfCombat();

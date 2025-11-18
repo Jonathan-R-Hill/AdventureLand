@@ -13,7 +13,7 @@ class BaseClass {
         this.attackMode = true;
         this.fightTogeather = false;
 
-        this.currentMobFarm = "Snake";
+        this.currentMobFarm = "Rat";
         this.tank = "Jhlwarrior";
 
         this.whitelist = [
@@ -41,7 +41,6 @@ class BaseClass {
         setInterval(() => this.sendWhitelistedItemsToMerchant(), 3 * 1000);
         setInterval(() => this.askForLuck(), 20 * 1000);
         setInterval(() => this.callMerchant(), 20 * 1000);
-        setInterval(() => this.checkNearbyFarmMob(), 3 * 1000);
 
         startSharedTasks();
     }
@@ -219,20 +218,65 @@ class BaseClass {
         }
     }
 
+    is_in_range(target) {
+        if (!target || !target.visible) return false;
+
+        // 1. Calculate the MAX distance the character can be from the target's center.
+        //    Max Range = (Your Range) + (Target Radius) + (Your Character Radius)
+        // 2. Subtract the desired buffer (10) to force your character closer.
+
+        const character_radius = get_width(character) / 2;
+        const target_radius = target.width / 2;
+        const desired_buffer = 1;
+
+        // The maximum C2C distance that still allows an attack.
+        const max_c2c_range = character.range + target_radius + character_radius;
+
+        // The actual distance we check against (max range - buffer)
+        const check_distance = max_c2c_range - desired_buffer;
+
+        // Return true if the current distance is less than the calculated check distance.
+        return this.distance(character, target) < check_distance;
+    }
+
+    // Center-to-Center Distance Calculation
+    distance(a, b) {
+        if (!a || !b) return 99999999;
+        // Keep map/instance checks for safety
+        if ("in" in a && "in" in b && a.in != b.in) return 99999999;
+        if ("map" in a && "map" in b && a.map != b.map) return 99999999;
+
+        // Get the center coordinates for both entities
+        // Use get_x and get_y as they typically return the center point
+        const a_x = get_x(a);
+        const a_y = get_y(a);
+        const b_x = get_x(b);
+        const b_y = get_y(b);
+
+        // Calculate the difference in coordinates
+        const dx = a_x - b_x;
+        const dy = a_y - b_y;
+
+        // Return the Euclidean distance (Pythagorean theorem)
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+
     // ATTTACKING
     attack(target) {
         if (this.movingToNewMob) { return; }
-        if (!is_in_range(target)) {
+        if (!this.is_in_range(target, "attack")) {
             move(
-                character.x + (target.real_x - character.real_x) / 1.5,
-                character.y + (target.real_y - character.real_y) / 1.5
+                character.real_x + (target.real_x - character.real_x) / 2,
+                character.real_y + (target.real_y - character.real_y) / 2
             );
 
             set_message("Moving to target");
-        } else if (can_attack(target)) {
-            stop();
+        } else if (!is_on_cooldown("attack")) {
             set_message("Attacking");
+            // stop();
             attack(target);
+        } else if (this.is_in_range(target)) {
+            stop();
         }
     }
 
@@ -312,7 +356,7 @@ class BaseClass {
 
             // Distance check
             const dist = parent.distance(character, ent);
-            if (dist > 250) continue;
+            if (dist > 170) continue;
 
             if (ent.name === this.currentMobFarm) {
                 this.movingToNewMob = false;

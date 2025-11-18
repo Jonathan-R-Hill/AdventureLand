@@ -43,7 +43,7 @@ class Merchant {
 			if (used < 14) { return; }
 			this.sellItem();
 		}, 10 * 1000);
-		setInterval(() => this.resetFlags(), 120 * 1000);
+		setInterval(() => this.resetFlags(), 300 * 1000);
 
 		character.on("cm", async (sender, data) => {
 			await this.handleCM(sender, data);

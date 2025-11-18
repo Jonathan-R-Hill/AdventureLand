@@ -21,6 +21,8 @@ const myChar = new MyChar(character.name);
 
 // Combat
 setInterval(async function () {
+    myChar.checkNearbyFarmMob();
+
     useHealthPotion();
     useManaPotion();
     recoverOutOfCombat();
