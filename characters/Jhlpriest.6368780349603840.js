@@ -3,6 +3,8 @@ load_code("helpers");
 
 class MyChar extends BaseClass {
 
+    lastFarmCheck = 0;
+
     healParty() {
         let partyHealth = getPartyHealth();
 
@@ -21,7 +23,11 @@ const myChar = new MyChar(character.name);
 
 // Combat
 setInterval(async function () {
-    myChar.checkNearbyFarmMob();
+    const now = Date.now();
+    if (now - myChar.lastFarmCheck > 5000) {
+        myChar.checkNearbyFarmMob();
+        myChar.lastFarmCheck = now;
+    }
 
     useHealthPotion();
     useManaPotion();

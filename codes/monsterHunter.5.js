@@ -31,6 +31,7 @@ async function getNewTask() {
     if (character.map !== "main") {
         await smart_move({ map: "main" });
     }
+
     await smart_move({ to: "monsterhunter" });
 
     parent.socket.emit("monsterhunt");
@@ -39,7 +40,6 @@ async function getNewTask() {
     await new Promise(resolve => setTimeout(resolve, 500));
 }
 
-// TODO: monster hunter
 async function setNewTask() {
     const huntBuff = character.s?.monsterhunt;
 
@@ -52,20 +52,28 @@ async function setNewTask() {
     }
 
     const { travel, target, map } = mobEntry;
+    handleNewTarget(travel);
 
     return `${travel},${target},${map}`
 }
 
 function handleNewTarget(travelTag) {
+    const partyMembers = ["Jhlranger", "Jhlmage", "Jhlpriest"];
+
     const mobEntry = mobData.find(m => m.travel === travelTag);
     if (!mobEntry) {
-        set_message(`Unknown travel tag: ${travelTag}`);
+        mobEntry = mobData.find(m => m.travel === `rat`);
+
+        set_message(`Unknown travel tag: ${travelTag} - Going back to rats.`);
+        for (const name of partyMembers) {
+            send_cm(name, `set_new_hunter_target ${travel},${target},${map}`);
+        }
+
         return;
     }
 
     const { travel, target, map } = mobEntry;
 
-    const partyMembers = ["Jhlranger", "Jhlmerch", "Jhlmage", "Jhlwarrior", "Jhlpriest"];
     for (const name of partyMembers) {
         send_cm(name, `set_new_hunter_target ${travel},${target},${map}`);
     }

@@ -3,18 +3,42 @@ load_code("helpers");
 load_code("monsterHunter");
 
 class MyChar extends BaseClass {
-    monsterHunter = false;
+    monsterHunter = true;
     gettingNewTask = false;
 
-    taunt(target) {
+    lastFarmCheck = 0;
+
+    equipMainWeapons() {
+        if (locate_item(`hammer`) != -1) equip(locate_item(`hammer`));
+        if (locate_item(`wshield`) != - 1) equip(locate_item(`wshield`));
+    }
+
+    async taunt(target) {
         if (
             !is_on_cooldown("taunt") && distance(character, target) < G.skills.taunt.range &&
             target.target != character.name && target.target != null
         ) {
             use_skill("taunt", target);
         }
+
+        if (character.hp < character.max_hp * 0.65) { await this.useStun(); }
+        this.equipMainWeapons();
         this.attack(target);
     }
+
+    async useStun() {
+        if (is_on_cooldown(`stomp`)) { return; }
+
+        this.removeWeapons();
+        equip(locate_item(`basher`));
+
+        await sleep(25);
+
+        use_skill((`stomp`));
+
+        return true;
+    }
+
 }
 
 const myChar = new MyChar(character.name);
@@ -23,6 +47,7 @@ myChar.kite = false;
 let combatLoop = null;
 
 const combat = async () => {
+    if (myChar.currentMobFarm == `Porcupine`) { myChar.currentMobFarm = 'Rat'; }
     useHealthPotion();
     useManaPotion();
     recoverOutOfCombat();
@@ -34,12 +59,18 @@ const combat = async () => {
         await newMonsterHunter();
         return;
     }
-    myChar.checkNearbyFarmMob();
+
+    const now = Date.now();
+    if (now - myChar.lastFarmCheck > 5000) {
+        myChar.checkNearbyFarmMob();
+        myChar.lastFarmCheck = now;
+    }
+
 
     const target = await myChar.targetLogicTank();
     if (!target) return;
 
-    myChar.taunt(target);
+    await myChar.taunt(target);
 };
 
 const newMonsterHunter = async () => {
@@ -56,6 +87,7 @@ const newMonsterHunter = async () => {
     if (!targetInfo) {
         myChar.gettingNewTask = false;
         combatLoop = setInterval(() => combat(), 250);
+
         return;
     }
 

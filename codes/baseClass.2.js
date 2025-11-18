@@ -158,6 +158,11 @@ class BaseClass {
         }
     }
 
+    removeWeapons() {
+        unequip("mainhand");
+        unequip("offhand");
+    }
+
     // TARGETING
     getClosestMonsterByName(name) {
         let closest = null;
@@ -242,12 +247,11 @@ class BaseClass {
     // Center-to-Center Distance Calculation
     distance(a, b) {
         if (!a || !b) return 99999999;
-        // Keep map/instance checks for safety
+        // map/instance checks for safety
         if ("in" in a && "in" in b && a.in != b.in) return 99999999;
         if ("map" in a && "map" in b && a.map != b.map) return 99999999;
 
         // Get the center coordinates for both entities
-        // Use get_x and get_y as they typically return the center point
         const a_x = get_x(a);
         const a_y = get_y(a);
         const b_x = get_x(b);
@@ -257,7 +261,7 @@ class BaseClass {
         const dx = a_x - b_x;
         const dy = a_y - b_y;
 
-        // Return the Euclidean distance (Pythagorean theorem)
+        // Return the distance (Pythagorean theorem)
         return Math.sqrt(dx * dx + dy * dy);
     }
 
@@ -379,7 +383,6 @@ class BaseClass {
             }
         }
     }
-
 
     kiteTarget() {
         const target = get_targeted_monster();

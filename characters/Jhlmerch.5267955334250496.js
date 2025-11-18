@@ -30,8 +30,8 @@ class Merchant {
 
 		this.restockPotions();
 
-		this.fishingInterval = setInterval(() => this.goFishing(), 30 * 1000);
 		this.miningInterval = setInterval(async () => await this.goMining(), 30 * 1000);
+		this.fishingInterval = setInterval(async () => await this.goFishing(), 31 * 1000);
 
 		setInterval(() => this.restockPotions(), 5 * 60 * 1000);
 		setInterval(async () => await this.manageInventory(), 5 * 60 * 1000);
@@ -40,7 +40,7 @@ class Merchant {
 		setInterval(() => {
 			if (this.busy || this.fishing || this.mining) { return; }
 			const { used, total } = this.getInventoryUsage();
-			if (used < 14) { return; }
+			if (used < 15) { return; }
 			this.sellItem();
 		}, 10 * 1000);
 		setInterval(() => this.resetFlags(), 300 * 1000);
@@ -233,34 +233,39 @@ class Merchant {
 
 	// Fishing & Mining
 	async goFishing() {
+		console.log(`busy: ${this.busy}, fishing: ${this.fishing}, mining: ${this.mining}`);
 		if (this.fishing && is_on_cooldown("fishing")) {
-
 			this.fishing = false;
-			set_message("Done fishing");
+			set_message("Finished Fishing");
 			return;
 		}
 
-		if (is_on_cooldown("fishing") || this.busy || this.mining) { return; }
+		if (is_on_cooldown("fishing") || this.busy || this.mining) return;
 
 		const fishingRodName = "rod";
-		const rodSlot = locate_item(fishingRodName);
 
-		if (character.slots.mainhand?.name !== fishingRodName && rodSlot === -1) { return; }
-
-		if ((character.real_x !== this.fishingLocation.x || character.real_y !== this.fishingLocation.y) && !this.fishing) {
-			this.equipBroom();
-
-			this.fishing = true;
-			await smart_move(this.fishingLocation);
-
-			clearInterval(this.fishingInterval);
-			this.fishingInterval = setInterval(() => this.goFishing(), 20 * 1000);
+		if (character.slots.mainhand?.name !== fishingRodName && locate_item(fishingRodName) === -1) {
+			return;
 		}
 
-		equip(locate_item(fishingRodName));
-		await sleep(200);
-		use_skill("fishing");
-		set_message("Fishing...");
+		if (parent.distance(character, this.fishingLocation) > 2) {
+			if (!this.fishing) {
+				this.equipBroom();
+				this.fishing = true;
+
+				await smart_move(this.fishingLocation);
+
+				clearInterval(this.fishingInterval);
+				this.fishingInterval = setInterval(async () => await this.goFishing(), 20 * 1000);
+			}
+			return;
+		}
+
+		if (this.fishing) {
+			equip(locate_item(fishingRodName));
+			await sleep(20);
+			use_skill("fishing");
+		}
 	}
 
 	async goMining() {
@@ -299,11 +304,11 @@ class Merchant {
 	async healAndBuff() {
 		reviveSelf();
 		manageParty();
+		useHealthPotion();
 		recoverOutOfCombat();
 
 		this.buffPartyWithMLuck();
 		loot();
-		useHealthPotion();
 	}
 
 	resetFlags() {
