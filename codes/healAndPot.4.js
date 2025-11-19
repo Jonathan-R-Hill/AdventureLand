@@ -48,11 +48,14 @@ function checkPotions() {
 
     console.log(
         `${character.name} - Potion Check - HP: ${hpCount}, MP: ${mpCount}
-        ${player.x},${player.y}`
+        ${player.x},${player.y},${player.map}`
     );
 
-    if (hpCount < MIN_POTIONS || mpCount < MIN_POTIONS) {
-        send_cm("Jhlmerch", `need_pots ${player.x},${player.y},${player.map}`);
+    if (hpCount < MIN_POTIONS) {
+        send_cm("Jhlmerch", `need_Hpots ${player.x},${player.y},${player.map}`);
+    }
+    if (mpCount < MIN_POTIONS) {
+        send_cm("Jhlmerch", `need_Mpots ${player.x},${player.y},${player.map}`);
     }
 }
 

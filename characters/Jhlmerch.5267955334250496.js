@@ -3,8 +3,8 @@ load_code("commCommands");
 
 const HP_POTION = "hpot1";
 const MP_POTION = "mpot1";
-const POTSMINSTOCK = 800;
-const POT_BUFFER = 300;
+const POTSMINSTOCK = 1200;
+const POT_BUFFER = 600;
 
 const sellWhiteList = [
 	"hpbelt", "hpamulet", "shoes", "coat", "pants", "strring", "intring", "vitring", "dexring",
@@ -15,11 +15,14 @@ const sellWhiteList = [
 
 const bankWhitelist = [
 	"spores", "seashell", "beewings", "gem0", "gem1", "whiteegg", "monstertoken", "spidersilk", "cscale", "spores",
-	"rattail", "crabclaw", "bfur", "feather0", "gslime", "ringsj", "smush", "lostearring", "spiderkey",
+	"rattail", "crabclaw", "bfur", "feather0", "gslime", "ringsj", "smush", "lostearring", "spiderkey", "snakeoil",
+	"ascale", "gemfragment",
 ];
 
 class Merchant {
 	constructor() {
+		this.deliveryList = [];
+
 		this.fishingLocation = { map: "main", x: -1368, y: -82 };
 		this.miningLocation = { map: "tunnel", x: -279, y: -148 };
 
@@ -31,7 +34,7 @@ class Merchant {
 		this.restockPotions();
 
 		this.miningInterval = setInterval(async () => await this.goMining(), 30 * 1000);
-		this.fishingInterval = setInterval(async () => await this.goFishing(), 31 * 1000);
+		this.fishingInterval = setInterval(async () => await this.goFishing(), 11 * 1000);
 
 		setInterval(() => this.restockPotions(), 5 * 60 * 1000);
 		setInterval(async () => await this.manageInventory(), 5 * 60 * 1000);
@@ -50,7 +53,97 @@ class Merchant {
 		});
 	}
 
-	// Send pots
+	async handleCM(sender, payload) {
+		if (this.busy || this.fishing || this.mining) return;
+		if (!sender.name.startsWith("Jhl")) return;
+
+		this.equipBroom();
+
+		const [command, data] = sender.message.split(" ");
+
+		switch (command.trim()) {
+			case "need_Hpots": {
+				const [xStr, yStr, map] = data.split(",");
+				const x = Number(xStr);
+				const y = Number(yStr);
+
+				await this.handlePotionRequest(sender.name, "need_Hpots", x, y, map);
+
+				const player = get_player(sender.name);
+				if (!player) {
+					this.busy = false;
+				}
+
+				break;
+			}
+
+			case "need_Mpots": {
+				const [xStr, yStr, map] = data.split(",");
+				const x = Number(xStr);
+				const y = Number(yStr);
+
+				this.handlePotionRequest(sender.name, "need_Mpots", x, y, map);
+
+				const player = get_player(sender.name);
+				if (!player) {
+					this.busy = false;
+				}
+
+				break;
+			}
+
+			case "come_to_me": {
+				const [xStr, yStr, map] = data.split(",");
+				const x = Number(xStr);
+				const y = Number(yStr);
+
+				this.busy = true;
+
+				console.log(xStr, yStr, map)
+				if (map && character.map !== map) {
+					await smart_move({ to: map });
+				}
+				await xmove(x, y);
+
+				if (character.x === x && character.y === y) {
+					set_message(`Arrived at group location (${x}, ${y})`);
+					this.busy = false;
+				}
+
+				break;
+			}
+
+			case "need_luck": {
+				const [xStr, yStr, map] = data.split(",");
+				const x = Number(xStr);
+				const y = Number(yStr);
+
+				this.busy = true;
+
+				if (map && character.map !== map) {
+					await smart_move({ to: map });
+				}
+				await xmove(x, y);
+
+				if (character.x === x && character.y === y) {
+					const target = get_player(sender.name);
+					if (target && !is_on_cooldown("mluck")) {
+						use_skill("mluck", target);
+						set_message(`Buffed ${sender.name} with MLuck`);
+					}
+
+					this.busy = false;
+				}
+
+				break;
+			}
+
+			default:
+				// Unknown command — ignore
+				break;
+		}
+	}
+
 	getItemSlot(name) {
 		for (let i = 0; i < character.items.length; i++) {
 			const item = character.items[i];
@@ -60,17 +153,64 @@ class Merchant {
 		return -1;
 	}
 
-	sendPotionsTo(name, hpPotion, mpPotion, hpAmount = 200, mpAmount = 200) {
-		const player = get_player(name);
+	// Send pots
+	async handlePotionRequest(name, type, x, y, map) {
+		const alreadyQueued = this.deliveryList.some(
+			req => req.name === name && req.type === type
+		);
+		if (alreadyQueued) {
+			game_log(`⚠️ Skipping duplicate ${type} request from ${name}`);
+			return;
+		}
+
+		game_log(`Added request for ${type} from ${name}`);
+		this.deliveryList.push({ name, type, x, y, map });
+		await this.processDeliveries();
+	}
+
+	async processDeliveries() {
+		if (this.busy || this.deliveryList.length === 0) return;
+
+		this.busy = true;
+		const request = this.deliveryList[0];
+
+		if (character.map !== request.map) {
+			await smart_move({ map: request.map });
+		}
+		await smart_move({ x: request.x, y: request.y });
+
+		if (request.type === "need_Hpots") {
+			await this.sendPotionsTo(request.name, HP_POTION, MP_POTION, 200, 0);
+		} else if (request.type === "need_Mpots") {
+			await this.sendPotionsTo(request.name, HP_POTION, MP_POTION, 0, 200);
+		}
+
+		this.deliveryList.shift();
+		this.busy = false;
+
+		if (this.deliveryList.length > 0) {
+			this.processDeliveries();
+		}
+	}
+
+	async sendPotionsTo(name, hpPotion, mpPotion, hpAmount = 200, mpAmount = 200) {
+		let player = get_player(name);
+		const start = Date.now();
+		while ((!player || parent.distance(character, player) > 400) && Date.now() - start < 5000) {
+			await sleep(250);
+			player = get_player(name);
+		}
+
 		if (!player || parent.distance(character, player) > 400) {
+			game_log(`❌ Could not deliver potions to ${name}`);
 			return;
 		}
 
 		const hpSlot = this.getItemSlot(hpPotion);
 		const mpSlot = this.getItemSlot(mpPotion);
 
-		if (hpSlot > -1) send_item(name, hpSlot, hpAmount);
-		if (mpSlot > -1) send_item(name, mpSlot, mpAmount);
+		if (hpSlot > -1 && hpAmount > 0) send_item(name, hpSlot, hpAmount);
+		if (mpSlot > -1 && mpAmount > 0) send_item(name, mpSlot, mpAmount);
 
 		game_log(`🧴 Sent ${hpAmount} HP and ${mpAmount} MP potions to ${name}`);
 	}
@@ -254,17 +394,15 @@ class Merchant {
 				this.fishing = true;
 
 				await smart_move(this.fishingLocation);
-
-				clearInterval(this.fishingInterval);
-				this.fishingInterval = setInterval(async () => await this.goFishing(), 20 * 1000);
 			}
-			return;
 		}
 
-		if (this.fishing) {
+		if (this.fishing && parent.distance(character, this.fishingLocation) > 2) {
 			equip(locate_item(fishingRodName));
 			await sleep(20);
-			use_skill("fishing");
+			if (!character.c.fishing) {
+				use_skill("fishing");
+			}
 		}
 	}
 
@@ -304,6 +442,8 @@ class Merchant {
 	async healAndBuff() {
 		reviveSelf();
 		manageParty();
+
+		if (this.fishing || this.mining) { return; }
 		useHealthPotion();
 		recoverOutOfCombat();
 
@@ -336,95 +476,6 @@ class Merchant {
 		}
 	}
 
-	async handleCM(sender, payload) {
-		if (this.busy || this.fishing || this.mining) return;
-		if (!sender.name.startsWith("Jhl")) return;
-
-		this.equipBroom();
-
-		const [command, data] = sender.message.split(" ");
-
-		switch (command.trim()) {
-			case "need_pots": {
-				const [xStr, yStr, map] = data.split(",");
-				const x = Number(xStr);
-				const y = Number(yStr);
-
-				this.busy = true;
-
-				set_message(`Moving to ${map}: ${x}, ${y} to deliver potions...`);
-				if (map && character.map !== map) {
-					await smart_move({ to: map });
-				}
-
-				await xmove(x, y);
-
-				const player = get_player(sender.name);
-				if (player?.name.startsWith("Jhl")) {
-					this.sendPotionsTo(player.name, HP_POTION, MP_POTION, 100, 100);
-					set_message(`Delivered 100 HP & MP potions to ${player.name}`);
-					this.busy = false;
-
-					returnToLeader();
-				}
-				else if (player == null) {
-					this.busy = false;
-				}
-
-				break;
-			}
-
-			case "come_to_me": {
-				const [xStr, yStr, map] = data.split(",");
-				const x = Number(xStr);
-				const y = Number(yStr);
-
-				this.busy = true;
-
-				console.log(xStr, yStr, map)
-				if (map && character.map !== map) {
-					await smart_move({ to: map });
-				}
-				await xmove(x, y);
-
-				if (character.x === x && character.y === y) {
-					set_message(`Arrived at group location (${x}, ${y})`);
-					this.busy = false;
-				}
-
-				break;
-			}
-
-			case "need_luck": {
-				const [xStr, yStr, map] = data.split(",");
-				const x = Number(xStr);
-				const y = Number(yStr);
-
-				this.busy = true;
-
-				if (map && character.map !== map) {
-					await smart_move({ to: map });
-				}
-				await xmove(x, y);
-
-				if (character.x === x && character.y === y) {
-					const target = get_player(sender.name);
-					if (target && !is_on_cooldown("mluck")) {
-						use_skill("mluck", target);
-						set_message(`Buffed ${sender.name} with MLuck`);
-					}
-
-					this.busy = false;
-				}
-
-				break;
-			}
-
-			default:
-				// Unknown command — ignore
-				break;
-		}
-	}
 }
 
 // Instantiate manager

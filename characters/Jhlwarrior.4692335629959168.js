@@ -82,6 +82,7 @@ const newMonsterHunter = async () => {
     myChar.gettingNewTask = true;
 
     await getNewTask();
+    await getNewTask();
 
     const targetInfo = await setNewTask();
     if (!targetInfo) {

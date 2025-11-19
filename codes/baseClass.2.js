@@ -19,7 +19,7 @@ class BaseClass {
         this.whitelist = [
             // Keep
             "spores", "seashell", "beewings", "gem0", "gem1", "whiteegg", "monstertoken", "spidersilk", "cscale", "spores",
-            "rattail", "crabclaw", "bfur", "feather0", "gslime", "smush", "lostearring", "spiderkey",
+            "rattail", "crabclaw", "bfur", "feather0", "gslime", "smush", "lostearring", "spiderkey", "snakeoil", "ascale",
             // Upgrade
             "ringsj", "intbelt",
             // Sell
@@ -98,7 +98,7 @@ class BaseClass {
                 this.currentMobFarm = target;
                 this.movingToNewMob = true;
 
-                await smart_move({ map: map });
+                if (character.map != map) { await smart_move({ map: map }); }
                 await smart_move(travel);
 
                 this.movingToNewMob = false;
@@ -226,21 +226,19 @@ class BaseClass {
     is_in_range(target) {
         if (!target || !target.visible) return false;
 
-        // 1. Calculate the MAX distance the character can be from the target's center.
-        //    Max Range = (Your Range) + (Target Radius) + (Your Character Radius)
-        // 2. Subtract the desired buffer (10) to force your character closer.
+        // 1. Calculate the MAX distance the character can be from the target's center
+        //    Max Range = (My Range) + (Target Radius) + (Your Character Radius)
 
         const character_radius = get_width(character) / 2;
         const target_radius = target.width / 2;
         const desired_buffer = 1;
 
-        // The maximum C2C distance that still allows an attack.
-        const max_c2c_range = character.range + target_radius + character_radius;
+        // The maximum dist that still allows an attack
+        const maxCenter2CenterRange = character.range + target_radius + character_radius;
 
-        // The actual distance we check against (max range - buffer)
-        const check_distance = max_c2c_range - desired_buffer;
+        // The actual distance we check (max range - buffer)
+        const check_distance = maxCenter2CenterRange - desired_buffer;
 
-        // Return true if the current distance is less than the calculated check distance.
         return this.distance(character, target) < check_distance;
     }
 
@@ -279,8 +277,6 @@ class BaseClass {
             set_message("Attacking");
             // stop();
             attack(target);
-        } else if (this.is_in_range(target)) {
-            stop();
         }
     }
 
