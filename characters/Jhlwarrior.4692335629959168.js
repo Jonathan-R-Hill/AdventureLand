@@ -47,7 +47,7 @@ myChar.kite = false;
 let combatLoop = null;
 
 const combat = async () => {
-    if (myChar.currentMobFarm == `Porcupine`) { myChar.currentMobFarm = 'Rat'; }
+    if (myChar.currentMobFarm == `Porcupine`) { myChar.currentMobFarm = 'Croc'; }
     useHealthPotion();
     useManaPotion();
     recoverOutOfCombat();

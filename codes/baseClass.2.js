@@ -13,7 +13,7 @@ class BaseClass {
         this.attackMode = true;
         this.fightTogeather = false;
 
-        this.currentMobFarm = "Rat";
+        this.currentMobFarm = "Croc";
         this.tank = "Jhlwarrior";
 
         this.whitelist = [

@@ -47,6 +47,7 @@ class Merchant {
 			this.sellItem();
 		}, 10 * 1000);
 		setInterval(() => this.resetFlags(), 300 * 1000);
+		setInterval(async () => await this.processDeliveries(), 10 * 1000);
 
 		character.on("cm", async (sender, data) => {
 			await this.handleCM(sender, data);
@@ -158,21 +159,17 @@ class Merchant {
 		const alreadyQueued = this.deliveryList.some(
 			req => req.name === name && req.type === type
 		);
-		if (alreadyQueued) {
-			game_log(`⚠️ Skipping duplicate ${type} request from ${name}`);
-			return;
+		if (!alreadyQueued) {
+			game_log(`Added request for ${type} from ${name}`);
+			this.deliveryList.push({ name, type, x, y, map });
 		}
-
-		game_log(`Added request for ${type} from ${name}`);
-		this.deliveryList.push({ name, type, x, y, map });
-		await this.processDeliveries();
 	}
 
 	async processDeliveries() {
-		if (this.busy || this.deliveryList.length === 0) return;
+		if ((this.busy || this.mining || this.fishing) || this.deliveryList.length === 0) return;
 
-		this.busy = true;
 		const request = this.deliveryList[0];
+		this.busy = true;
 
 		if (character.map !== request.map) {
 			await smart_move({ map: request.map });
@@ -189,7 +186,7 @@ class Merchant {
 		this.busy = false;
 
 		if (this.deliveryList.length > 0) {
-			this.processDeliveries();
+			await this.processDeliveries();
 		}
 	}
 
