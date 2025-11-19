@@ -397,7 +397,7 @@ class Merchant {
 			}
 		}
 
-		if (this.fishing && parent.distance(character, this.fishingLocation) > 2) {
+		if (this.fishing && parent.distance(character, this.fishingLocation) < 2) {
 			equip(locate_item(fishingRodName));
 			await sleep(20);
 			if (!character.c.fishing) {
