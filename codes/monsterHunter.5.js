@@ -63,6 +63,10 @@ function handleNewTarget(travelTag) {
         mobEntry = mobData.find(m => m.travel === "croc");
         set_message(`Unknown travel tag: ${travelTag} - Going back to crocs.`);
 
+        const { travel, target, map } = mobEntry;
+        for (const name of partyMembers) {
+            send_cm(name, `set_new_hunter_target ${travel},${target},${map}`);
+        }
 
         return;
     }
