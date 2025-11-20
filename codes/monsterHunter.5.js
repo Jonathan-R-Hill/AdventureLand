@@ -62,6 +62,9 @@ function handleNewTarget(travelTag) {
     if (!mobEntry) {
         mobEntry = mobData.find(m => m.travel === "croc");
         set_message(`Unknown travel tag: ${travelTag} - Going back to crocs.`);
+
+
+        return;
     }
 
     const { travel, target, map } = mobEntry;

@@ -469,6 +469,9 @@ class Merchant {
 			equip(locate_item(fishingRodName));
 			await sleep(20);
 			if (!character.c.fishing) {
+				useManaPotion();
+
+				await sleep(20);
 				use_skill("fishing");
 			}
 		}
@@ -501,6 +504,9 @@ class Merchant {
 		}
 
 		if (character.real_x == this.miningLocation.x && character.real_y == this.miningLocation.y && this.mining) {
+			useManaPotion();
+			await sleep(20);
+
 			equip(locate_item(pickaxeItemId));
 
 			use_skill("mining");
