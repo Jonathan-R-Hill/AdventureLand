@@ -31,50 +31,42 @@ async function getNewTask() {
     if (character.map !== "main") {
         await smart_move({ map: "main" });
     }
-
     await smart_move({ to: "monsterhunter" });
 
     parent.socket.emit("monsterhunt");
     set_message("Requested new Monster Hunt");
 
-    await new Promise(resolve => setTimeout(resolve, 500));
+    // Wait up to 5s for buff to appear
+    const start = Date.now();
+    while (!character.s?.monsterhunt && Date.now() - start < 5000) {
+        await sleep(250);
+    }
 }
+
 
 async function setNewTask() {
     const huntBuff = character.s?.monsterhunt;
+    if (!huntBuff) { return null; }
 
-    if (!huntBuff) { return; }
+    const mobEntry = mobData.find(m => m.travel === huntBuff.id);
+    if (!mobEntry) { return null; }
 
-    const mobEntry = mobData.find(m => m.travel === character.s?.monsterhunt.id);
-
-    if (!mobEntry) {
-        return null;
-    }
-
-    const { travel, target, map } = mobEntry;
-    handleNewTarget(travel);
-
-    return `${travel},${target},${map}`
+    return mobEntry; // { travel, target, map }
 }
+
 
 function handleNewTarget(travelTag) {
     const partyMembers = ["Jhlranger", "Jhlmage", "Jhlpriest"];
+    let mobEntry = mobData.find(m => m.travel === travelTag);
 
-    const mobEntry = mobData.find(m => m.travel === travelTag);
     if (!mobEntry) {
-        mobEntry = mobData.find(m => m.travel === `rat`);
-
-        set_message(`Unknown travel tag: ${travelTag} - Going back to rats.`);
-        for (const name of partyMembers) {
-            send_cm(name, `set_new_hunter_target ${travel},${target},${map}`);
-        }
-
-        return;
+        mobEntry = mobData.find(m => m.travel === "croc");
+        set_message(`Unknown travel tag: ${travelTag} - Going back to crocs.`);
     }
 
     const { travel, target, map } = mobEntry;
-
     for (const name of partyMembers) {
         send_cm(name, `set_new_hunter_target ${travel},${target},${map}`);
     }
 }
+

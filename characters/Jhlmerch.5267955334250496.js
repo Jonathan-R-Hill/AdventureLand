@@ -36,23 +36,94 @@ class Merchant {
 		this.miningInterval = setInterval(async () => await this.goMining(), 30 * 1000);
 		this.fishingInterval = setInterval(async () => await this.goFishing(), 11 * 1000);
 
-		setInterval(() => this.restockPotions(), 5 * 60 * 1000);
-		setInterval(async () => await this.manageInventory(), 5 * 60 * 1000);
-		setInterval(() => this.healAndBuff(), 1000);
-		setInterval(() => this.returnHome(), 20 * 1000);
-		setInterval(() => {
-			if (this.busy || this.fishing || this.mining) { return; }
-			const { used, total } = this.getInventoryUsage();
-			if (used < 15) { return; }
-			this.sellItem();
-		}, 10 * 1000);
-		setInterval(() => this.resetFlags(), 300 * 1000);
-		setInterval(async () => await this.processDeliveries(), 10 * 1000);
+		this.lastRun = {
+			restock: 0,
+			manageInventory: 0,
+			healBuff: 0,
+			returnHome: 0,
+			sellCheck: 0,
+			resetFlags: 0,
+			processDeliveries: 0,
+			fishing: 0,
+			mining: 0
+		};
+
+
+		setInterval(() => this.mainLoop(), 1000);
 
 		character.on("cm", async (sender, data) => {
 			await this.handleCM(sender, data);
 		});
+
 	}
+
+	async mainLoop() {
+		const now = Date.now();
+
+		// we stop here, don't run lower priority tasks this tick
+		if (now - this.lastRun.processDeliveries > 10_000) {
+			this.lastRun.processDeliveries = now;
+			if (!this.busy && !this.fishing && !this.mining && this.deliveryList.length > 0) {
+				await this.processDeliveries();
+				return;
+			}
+		}
+
+		if (now - this.lastRun.fishing > 11_000) {
+			this.lastRun.fishing = now;
+			if (!this.busy && !this.mining) {
+				await this.goFishing();
+				return;
+			}
+		}
+
+		if (now - this.lastRun.mining > 30_000) {
+			this.lastRun.mining = now;
+			if (!this.busy && !this.fishing) {
+				await this.goMining();
+				return;
+			}
+		}
+
+		if (now - this.lastRun.restock > 300_000) {
+			this.lastRun.restock = now;
+			if (!this.busy) {
+				await this.restockPotions();
+				return;
+			}
+		}
+
+		if (now - this.lastRun.manageInventory > 300_000) {
+			this.lastRun.manageInventory = now;
+			await this.manageInventory();
+		}
+
+		if (now - this.lastRun.healBuff > 1_000) {
+			this.lastRun.healBuff = now;
+			await this.healAndBuff();
+		}
+
+		if (now - this.lastRun.returnHome > 20_000) {
+			this.lastRun.returnHome = now;
+			this.returnHome();
+		}
+
+		if (now - this.lastRun.sellCheck > 10_000) {
+			this.lastRun.sellCheck = now;
+			if (!this.busy && !this.fishing && !this.mining) {
+				const { used } = this.getInventoryUsage();
+				if (used >= 15) {
+					await this.sellItem();
+				}
+			}
+		}
+
+		if (now - this.lastRun.resetFlags > 300_000) {
+			this.lastRun.resetFlags = now;
+			this.resetFlags();
+		}
+	}
+
 
 	async handleCM(sender, payload) {
 		if (this.busy || this.fishing || this.mining) return;
