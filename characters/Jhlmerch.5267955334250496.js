@@ -1,5 +1,6 @@
 load_code("helpers");
 load_code("commCommands");
+load_code("combineItems");
 
 const HP_POTION = "hpot1";
 const MP_POTION = "mpot1";
@@ -19,15 +20,15 @@ const bankWhitelist = [
 	"ascale", "gemfragment",
 ];
 
-class Merchant {
+class Merchant extends combineItems {
 	constructor() {
+		super()
 		this.deliveryList = [];
 
 		this.fishingLocation = { map: "main", x: -1368, y: -82 };
 		this.miningLocation = { map: "tunnel", x: -279, y: -148 };
 
 		this.busy = false;
-
 		this.fishing = false;
 		this.mining = false;
 
@@ -40,8 +41,11 @@ class Merchant {
 			resetFlags: 0,
 			processDeliveries: 0,
 			fishing: 0,
-			mining: 0
+			mining: 0,
+			combine: 0,
 		};
+
+		scaleUI(0.80);
 
 
 		setInterval(async () => await this.mainLoop(), 1000);
@@ -55,6 +59,14 @@ class Merchant {
 	async mainLoop() {
 		const now = Date.now();
 
+		if (now - this.lastRun.combine > 80_000) {
+			this.lastRun.combine = now;
+			if (!this.busy && !this.fishing && !this.mining) {
+				await this.autoCombineRings();
+				await this.bankItems()
+			}
+		}
+
 		if (now - this.lastRun.processDeliveries > 10_000) {
 			this.lastRun.processDeliveries = now;
 			if (!this.busy && !this.fishing && !this.mining && this.deliveryList.length > 0) {
@@ -62,14 +74,14 @@ class Merchant {
 			}
 		}
 
-		if (now - this.lastRun.fishing > 11000) {
+		if (now - this.lastRun.fishing > 11_000) {
 			this.lastRun.fishing = now;
 			if (!this.busy && !this.mining) {
 				await this.goFishing();
 			}
 		}
 
-		if (now - this.lastRun.mining > 30000) {
+		if (now - this.lastRun.mining > 30_000) {
 			this.lastRun.mining = now;
 			if (!this.busy && !this.fishing) {
 				await this.goMining();
@@ -353,7 +365,7 @@ class Merchant {
 
 		for (let i = 0; i < character.items.length; i++) {
 			const item = character.items[i];
-			if (!item) continue;
+			if (!item) { continue; }
 
 			if (bankWhitelist.includes(item.name)) {
 				bank_store(i);
@@ -393,7 +405,7 @@ class Merchant {
 			if (!member) continue;
 
 			// Check if they already have mluck
-			const hasBuff = member.s && member.s.mluck;
+			const hasBuff = member.s && member.s.mluck && member.s.mluck.f == "Jhlmerch";
 			const remaining = hasBuff ? member.s.mluck.ms : 0;
 
 			if (

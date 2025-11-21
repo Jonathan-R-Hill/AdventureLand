@@ -43,6 +43,8 @@ class BaseClass {
         setInterval(() => this.callMerchant(), 20 * 1000);
 
         startSharedTasks();
+
+        scaleUI(0.80);
     }
 
     async handleCM(sender, payload) {
@@ -127,7 +129,7 @@ class BaseClass {
             if (character.items[i]) used++;
         }
 
-        if (used >= 15) {
+        if (used >= 25) {
             send_cm("Jhlmerch", `need_luck ${character.x},${character.y},${character.map}`);
         }
 
@@ -204,7 +206,13 @@ class BaseClass {
         if (target != null) { return target; }
 
         if (target == null || !target || target == undefined) {
-            target = this.getClosestMonsterByName(this.currentMobFarm);
+            if (this.getClosestMonsterByName("Phoenix")) {
+                target = this.getClosestMonsterByName("Phoenix");
+            }
+            else {
+                target = this.getClosestMonsterByName(this.currentMobFarm);
+            }
+
             if (target) {
 
                 if (target.name == this.currentMobFarm || this.currentMobFarm == "") {
@@ -320,21 +328,25 @@ class BaseClass {
     }
 
     async targetLogicTank() {
-        if (!this.attackMode || character.rip || this.movingToNewMob) { return null; }
+        if (!this.attackMode || character.rip || this.movingToNewMob) return null;
 
         let target = get_targeted_monster();
-        if (target && target.name != this.currentMobFarm) {
+
+        // if Phoenix is in range, target it
+        const phoenix = get_nearest_monster({ type: "phoenix" });
+        if (phoenix) {
+            return phoenix;
+        }
+
+        // Otherwise stick to current farm mob
+        if (target && target.name !== this.currentMobFarm) {
             target = null;
         }
 
-        if (target == null || !target || target == undefined && get_player) {
-            target = get_targeted_monster();
-
-            target = this.findTarget(target);
-
-            if (target == null || !target || target == undefined) {
+        if (!target) {
+            target = this.findTarget();
+            if (!target) {
                 set_message(`No target, moving to farm ${myMobs[this.currentMobFarm]}`);
-
                 return null;
             }
         }

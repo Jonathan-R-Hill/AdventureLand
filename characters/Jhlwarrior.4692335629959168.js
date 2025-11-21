@@ -10,7 +10,7 @@ class MyChar extends BaseClass {
 
     equipMainWeapons() {
         if (locate_item(`hammer`) != -1) equip(locate_item(`hammer`));
-        if (locate_item(`wshield`) != - 1) equip(locate_item(`wshield`));
+        if (locate_item(`fireblade`) != - 1) equip(locate_item(`fireblade`));
     }
 
     async taunt(target) {

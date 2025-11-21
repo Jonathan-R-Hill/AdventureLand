@@ -6,7 +6,7 @@ function startSharedTasks() {
 
     if (character.name != "Jhlmerch") {
         setInterval(sendGoldToMerchant, 3 * 1000);
-        setInterval(checkPotions, 7 * 1000);
+        setInterval(checkPotions, 9 * 1000);
     }
 }
 
@@ -122,3 +122,37 @@ function returnToLeader() {
 
     move(safeX, safeY);
 }
+
+function scaleUI(factor = 0.75) {
+    const body = parent.document.body;
+    const canvas = parent.document.querySelector("canvas");
+
+    // Shrink everything
+    body.style.transform = `scale(${factor})`;
+    body.style.transformOrigin = "top left";
+
+    // Expand the container so the content fills the window
+    body.style.width = `${100 / factor}%`;
+    body.style.height = `${100 / factor}%`;
+
+    // Make canvas fill the window
+    if (canvas) {
+        canvas.style.width = "100%";
+        canvas.style.height = "100%";
+    }
+
+    const hpDiv = parent.document.getElementById("bottommid");
+    if (hpDiv) {
+        hpDiv.style.position = "fixed";
+        hpDiv.style.left = "50%";
+        hpDiv.style.bottom = "1px";
+        hpDiv.style.transform = "translateX(-50%)";
+        hpDiv.style.zIndex = "9999";
+
+        // Give it more width so stuff doesnt stack
+        hpDiv.style.width = "700px";
+        hpDiv.style.maxWidth = "100%";
+    }
+
+}
+
