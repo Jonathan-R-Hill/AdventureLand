@@ -31,11 +31,6 @@ class Merchant {
 		this.fishing = false;
 		this.mining = false;
 
-		this.restockPotions();
-
-		this.miningInterval = setInterval(async () => await this.goMining(), 30 * 1000);
-		this.fishingInterval = setInterval(async () => await this.goFishing(), 11 * 1000);
-
 		this.lastRun = {
 			restock: 0,
 			manageInventory: 0,
@@ -49,7 +44,7 @@ class Merchant {
 		};
 
 
-		setInterval(() => this.mainLoop(), 1000);
+		setInterval(async () => await this.mainLoop(), 1000);
 
 		character.on("cm", async (sender, data) => {
 			await this.handleCM(sender, data);
@@ -60,28 +55,24 @@ class Merchant {
 	async mainLoop() {
 		const now = Date.now();
 
-		// we stop here, don't run lower priority tasks this tick
 		if (now - this.lastRun.processDeliveries > 10_000) {
 			this.lastRun.processDeliveries = now;
 			if (!this.busy && !this.fishing && !this.mining && this.deliveryList.length > 0) {
 				await this.processDeliveries();
-				return;
 			}
 		}
 
-		if (now - this.lastRun.fishing > 11_000) {
+		if (now - this.lastRun.fishing > 11000) {
 			this.lastRun.fishing = now;
 			if (!this.busy && !this.mining) {
 				await this.goFishing();
-				return;
 			}
 		}
 
-		if (now - this.lastRun.mining > 30_000) {
+		if (now - this.lastRun.mining > 30000) {
 			this.lastRun.mining = now;
 			if (!this.busy && !this.fishing) {
 				await this.goMining();
-				return;
 			}
 		}
 
@@ -89,7 +80,6 @@ class Merchant {
 			this.lastRun.restock = now;
 			if (!this.busy) {
 				await this.restockPotions();
-				return;
 			}
 		}
 

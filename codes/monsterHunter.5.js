@@ -56,7 +56,7 @@ async function setNewTask() {
 
 
 function handleNewTarget(travelTag) {
-    const partyMembers = ["Jhlranger", "Jhlmage", "Jhlpriest"];
+    const partyMembers = ["Jhlranger", "Jhlmage", "Jhlpriest", "Jhlwarrior"];
     let mobEntry = mobData.find(m => m.travel === travelTag);
 
     if (!mobEntry) {
