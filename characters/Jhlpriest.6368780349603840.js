@@ -41,6 +41,7 @@ setInterval(async function () {
 
     myChar.movingToNewMob = false;
     if (myChar.kite) { myChar.kiteTarget(); }
+    myChar.moveAwayFromWarrior();
 
     myChar.attack(target);
 

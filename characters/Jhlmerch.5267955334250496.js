@@ -58,7 +58,7 @@ class Merchant extends combineItems {
 	}
 
 	checkIfDoingSOmething() {
-		return this.busy && this.fishing && this.mining;
+		return this.busy || this.fishing || this.mining;
 	}
 
 	async mainLoop() {
@@ -129,7 +129,7 @@ class Merchant extends combineItems {
 
 		if (now - this.lastRun.sellCheck > 10_000) {
 			this.lastRun.sellCheck = now;
-			if (this.checkIfDoingSOmething()) {
+			if (!this.checkIfDoingSOmething()) {
 				const { used } = this.getInventoryUsage();
 				if (used >= 15) {
 					await this.sellItem();
@@ -316,16 +316,15 @@ class Merchant extends combineItems {
 		const { used, total } = this.getInventoryUsage();
 		console.log(`Inventory: ${used}/${total}`);
 
-		if (this.busy) { return; }
+		if (this.checkIfDoingSOmething()) { return; }
 
 		// If inventory is getting full, go sell
-		if (used >= 30) {
+		if (used >= 20) {
 			this.busy = true;
 
 			await smart_move({ to: "potions" });
 			await this.sellItem();
 		}
-
 	}
 
 	async sellItem() {

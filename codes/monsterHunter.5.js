@@ -7,12 +7,13 @@ const mobData = [
     { travel: "osnake", target: "Snake", map: "halloween" },
     { travel: "snake", target: "Snake", map: "main" },
     { travel: "rat", target: "Rat", map: "main" },
+    { travel: "spider", target: "Spider", map: "main" },
     { travel: "squig", target: "Squig", map: "main" },
     { travel: "squigtoad", target: "Squigtoad", map: "main" },
     { travel: "articbee", target: "Artic Bee", map: "winterland" },
     { travel: "armadillo", target: "Armadillo", map: "main" },
     { travel: "croc", target: "Croc", map: "main" },
-    { travel: "porcupine", target: "Porcupine", map: "main" },
+    { travel: "porcupine", target: "Porcupine", map: "desertland" },
 ];
 
 // MONSTER HUNTER

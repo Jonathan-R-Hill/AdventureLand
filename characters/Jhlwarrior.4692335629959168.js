@@ -87,16 +87,16 @@ const newMonsterHunter = async () => {
     myChar.gettingNewTask = true;
 
     await getNewTask();
+    await sleep(100);
 
     const targetInfo = await setNewTask();
-    if (!targetInfo) {
-        myChar.gettingNewTask = false;
-        combatLoop = setInterval(() => combat(), 250);
-
-        return;
+    if (!targetInfo || targetInfo == null) {
+        handleNewTarget("spider")
+    }
+    else {
+        handleNewTarget(targetInfo.travel);
     }
 
-    handleNewTarget(targetInfo.travel);
     myChar.gettingNewTask = false;
 
     combatLoop = setInterval(() => combat(), 250);

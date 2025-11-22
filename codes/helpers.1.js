@@ -147,11 +147,16 @@ function scaleUI(factor = 0.75) {
         hpDiv.style.left = "50%";
         hpDiv.style.bottom = "1px";
         hpDiv.style.transform = "translateX(-50%)";
-        hpDiv.style.zIndex = "9999";
+        hpDiv.style.zIndex = "1000";
 
         // Give it more width so stuff doesnt stack
         hpDiv.style.width = "700px";
         hpDiv.style.maxWidth = "100%";
+    }
+
+    const invDiv = parent.document.getElementById("bottomleftcorner");
+    if (invDiv) {
+        invDiv.style.zIndex = "2000";
     }
 
 }

@@ -35,6 +35,7 @@ setInterval(async function () {
     if (target == null) { return; }
 
     if (myChar.kite) { myChar.kiteTarget(); }
+    myChar.moveAwayFromWarrior();
 
     myChar.markTarget(target);
 

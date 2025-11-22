@@ -52,7 +52,7 @@ class BaseClass {
     async handleCM(sender, payload) {
         if (!sender.name.startsWith("Jhl")) return;
 
-        const [command, data] = sender.message.split(" ");
+        const [command, data] = sender.message.split(" ", 2);
 
         switch (command.trim()) {
             case "come_to_me": {
@@ -425,6 +425,7 @@ class BaseClass {
         }
     }
 
+    // Movement
     kiteTarget() {
         const target = get_targeted_monster();
         if (!target || target.dead) {
@@ -480,6 +481,31 @@ class BaseClass {
         }
 
         set_message("Kite blocked in all directions");
+    }
+
+    moveAwayFromWarrior() {
+        const war = get_player("Jhlwarrior");
+
+        if (!war) { return; }
+
+        if (this.distance(character, war) < 20) {
+            // Calculate direction vector away from warrior
+            const dx = character.x - war.x;
+            const dy = character.y - war.y;
+
+            // Normalize vector
+            const length = Math.sqrt(dx * dx + dy * dy);
+            if (length === 0) { return; }
+
+            const nx = dx / length;
+            const ny = dy / length;
+
+            const targetX = war.x + nx * 20;
+            const targetY = war.y + ny * 20;
+
+            move(targetX, targetY);
+            game_log("Moving away from warrior");
+        }
     }
 }
 
