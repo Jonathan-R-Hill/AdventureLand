@@ -21,11 +21,11 @@ class BaseClass {
             "spores", "seashell", "beewings", "gem0", "gem1", "whiteegg", "monstertoken", "spidersilk", "cscale", "spores",
             "rattail", "crabclaw", "bfur", "feather0", "gslime", "smush", "lostearring", "spiderkey", "snakeoil", "ascale",
             // Upgrade
-            "ringsj", "intbelt",
+            "ringsj", "intbelt", "intearring", "strearring", "dexearring",
             // Sell
             "hpbelt", "hpamulet", "shoes", "coat", "pants", "strring", "intring", "vitring", "dexring",
             "wattire", "wshoes", "wcap", "cclaw", "mushroomstaff", "dexamulet", "stramulet", "intamulet",
-            "wbreeches", "slimestaff", "stinger"
+            "wbreeches", "slimestaff", "stinger", "vitearring",
         ];
 
         this.returningToGroup = false;

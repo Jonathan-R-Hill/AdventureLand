@@ -1,7 +1,7 @@
 class combineItems {
     busy = false;
 
-    async gatherRings(itemName = "ringsj", levels = [0, 1, 2]) {
+    async gatherItems(itemName = "ringsj", levels = [0, 1, 2]) {
         const slots = [];
 
         // Scan inventory
@@ -15,7 +15,7 @@ class combineItems {
         // Make sure bank is loaded
         await smart_move({ to: "bank" });
 
-        // Scan bank safely
+        // Scan bank
         if (character.bank) {
             for (const packName in character.bank) {
                 const pack = character.bank[packName];
@@ -33,7 +33,7 @@ class combineItems {
         return slots;
     }
 
-    async collectRings(slots) {
+    async collectItems(slots) {
         for (const s of slots) {
             if (s.location === "bank") {
                 await smart_move({ to: "bank" });
@@ -44,24 +44,25 @@ class combineItems {
         }
     }
 
-    async autoCombineRings() {
+    async autoCombineItems(itemName = "ringsj", levels = [0, 1, 2]) {
         this.busy = true;
 
-        const rings = await this.gatherRings("ringsj", [0, 1, 2]);
+        const items = await this.gatherItems(itemName, levels);
 
-        if (rings.length < 3) {
-            game_log("Not enough rings to combine");
+        if (items.length < 3) {
+            game_log(`Not enough ${itemName} to combine`);
             this.busy = false;
             return;
         }
 
-        const grouped = { 0: [], 1: [], 2: [] };
+        const grouped = {};
+        for (const lvl of levels) grouped[lvl] = [];
 
         // Scan inventory
         for (let i = 0; i < character.items.length; i++) {
-            const item = character.items[i];
-            if (item && item.name === "ringsj" && [0, 1, 2].includes(item.level)) {
-                grouped[item.level].push({ location: "inventory", slot: i });
+            const invItem = character.items[i];
+            if (invItem && invItem.name === itemName && levels.includes(invItem.level)) {
+                grouped[invItem.level].push({ location: "inventory", slot: i });
             }
         }
 
@@ -72,19 +73,20 @@ class combineItems {
                 if (!pack) continue;
 
                 for (let i = 0; i < pack.length; i++) {
-                    const item = pack[i];
-                    // console.log(item, packName, i);
-
-                    if (item && item.name === "ringsj" && [0, 1, 2].includes(item.level)) {
-                        grouped[item.level].push({ location: "bank", pack: packName, slot: i });
+                    const bankItem = pack[i];
+                    if (bankItem && bankItem.name === itemName && levels.includes(bankItem.level)) {
+                        grouped[bankItem.level].push({ location: "bank", pack: packName, slot: i });
                     }
                 }
             }
         }
 
-        // Find a level with at least 3 rings
+
+        console.log(grouped)
+
+        // Find a level with at least 3 of the item
         let chosenLevel = null;
-        for (const lvl of [0, 1, 2]) {
+        for (const lvl of levels) {
             if (grouped[lvl].length >= 3) {
                 chosenLevel = lvl;
                 break;
@@ -92,24 +94,26 @@ class combineItems {
         }
 
         if (chosenLevel === null) {
-            game_log("No set of 3 rings at the same level");
+            game_log(`No set of 3 ${itemName} at the same level`);
             this.busy = false;
 
             return;
         }
 
         // Collect items from bank 
-        await this.collectRings(grouped[chosenLevel].slice(0, 3));
+        await this.collectItems(grouped[chosenLevel].slice(0, 3));
+        await sleep(500);
 
         // Refresh inventory slots with item locations 
         const invSlots = [];
         for (let i = 0; i < character.items.length; i++) {
-            const item = character.items[i];
-            if (item && item.name === "ringsj" && item.level === chosenLevel) {
+            const invItem = character.items[i];
+            if (invItem && invItem.name === itemName && invItem.level === chosenLevel) {
                 invSlots.push(i);
                 if (invSlots.length === 3) break;
             }
         }
+
 
         if (invSlots.length < 3) {
             this.busy = false;
@@ -133,9 +137,10 @@ class combineItems {
             }
         }
 
-        // Compound
+        // Compound5
+        use_skill("massproduction")
         compound(invSlots[0], invSlots[1], invSlots[2], scrollSlot);
-        await sleep(2500);
+        await sleep(4000);
 
         this.busy = false;
     }

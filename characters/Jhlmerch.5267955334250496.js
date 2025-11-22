@@ -10,6 +10,7 @@ const POT_BUFFER = 600;
 const sellWhiteList = [
 	"hpbelt", "hpamulet", "shoes", "coat", "pants", "strring", "intring", "vitring", "dexring",
 	"cclaw", "mushroomstaff", "dexamulet", "stramulet", "intamulet", "slimestaff", "stinger",
+	"vitearring",
 	"wattire", "wshoes", "wcap", "wbreeches", // Wanders set
 	"helmet1", "pants1", "coat1", "gloves1", "shoes1", // Rugged set
 ];
@@ -17,7 +18,7 @@ const sellWhiteList = [
 const bankWhitelist = [
 	"spores", "seashell", "beewings", "gem0", "gem1", "whiteegg", "monstertoken", "spidersilk", "cscale", "spores",
 	"rattail", "crabclaw", "bfur", "feather0", "gslime", "ringsj", "smush", "lostearring", "spiderkey", "snakeoil",
-	"ascale", "gemfragment",
+	"ascale", "gemfragment", "intearring", "strearring", "dexearring"
 ];
 
 class Merchant extends combineItems {
@@ -62,7 +63,13 @@ class Merchant extends combineItems {
 		if (now - this.lastRun.combine > 80_000) {
 			this.lastRun.combine = now;
 			if (!this.busy && !this.fishing && !this.mining) {
-				await this.autoCombineRings();
+				await this.autoCombineItems("ringsj", [0, 1, 2]);
+				const upgrades = ["intearring", "strearring", "dexearring",];
+				const levels = [0, 1];
+				await this.autoCombineItems(upgrades[0], levels);
+				await this.autoCombineItems(upgrades[1], levels);
+				await this.autoCombineItems(upgrades[2], levels);
+
 				await this.bankItems()
 			}
 		}
@@ -321,40 +328,6 @@ class Merchant extends combineItems {
 			}
 		}
 
-		await this.autoCombine();
-	}
-
-	async autoCombine(itemName = "ringsj", itemLevel = 0) {
-		const slots = [];
-		for (let i = 0; i < character.items.length; i++) {
-			const item = character.items[i];
-
-			if (item && item.name === itemName && item.level === itemLevel) {
-				slots.push(i);
-
-				if (slots.length === 3) { break; }
-			}
-		}
-
-		if (slots.length === 3) {
-
-			let scrollSlot = locate_item("cscroll0");
-			if (scrollSlot === -1) {
-				await smart_move({ to: "scrolls" });
-				buy("cscroll0", 1);
-				scrollSlot = locate_item("cscroll0");
-
-				if (scrollSlot === -1) {
-					game_log("Failed to acquire compound scroll");
-					return;
-				}
-			}
-
-			compound(slots[0], slots[1], slots[2], scrollSlot);
-
-			await sleep(2000);
-		}
-
 		await this.bankItems();
 	}
 
@@ -371,8 +344,6 @@ class Merchant extends combineItems {
 				bank_store(i);
 			}
 		}
-
-		await smart_move({ to: "potions" });
 
 		this.busy = false;
 	}
@@ -450,7 +421,7 @@ class Merchant extends combineItems {
 			return;
 		}
 
-		if (is_on_cooldown("fishing") || this.busy || this.mining) return;
+		if (is_on_cooldown("fishing") || this.busy || this.mining) { return; }
 
 		const fishingRodName = "rod";
 
