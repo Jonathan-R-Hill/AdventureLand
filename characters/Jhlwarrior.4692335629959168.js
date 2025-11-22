@@ -9,8 +9,9 @@ class MyChar extends BaseClass {
     lastFarmCheck = 0;
 
     equipMainWeapons() {
-        if (locate_item(`hammer`) != -1) equip(locate_item(`hammer`));
-        if (locate_item(`fireblade`) != - 1) equip(locate_item(`fireblade`));
+        this.equipItem(`hammer`, 6);
+        this.equipItem(`fireblade`, 4);
+        // this.equipItem(`fireblade`, 3);
     }
 
     async taunt(target) {
@@ -45,9 +46,10 @@ const myChar = new MyChar(character.name);
 myChar.kite = false;
 
 let combatLoop = null;
+let target;
 
 const combat = async () => {
-    if (myChar.currentMobFarm == `Porcupine`) { myChar.currentMobFarm = 'Croc'; }
+    if (myChar.currentMobFarm == undefined || myChar.currentMobFarm == `Porcupine`) { myChar.currentMobFarm = 'Spider'; }
     useHealthPotion();
     useManaPotion();
     recoverOutOfCombat();
@@ -66,8 +68,11 @@ const combat = async () => {
         myChar.lastFarmCheck = now;
     }
 
+    if (get_nearest_monster({ target: "Jhlpriest" }) != null) { target = get_nearest_monster({ target: "Jhlpriest" }); }
+    else if (get_nearest_monster({ target: "Jhlranger" }) != null) { target = get_nearest_monster({ target: "Jhlranger" }); }
+    else if (get_nearest_monster({ target: "Jhlwarrior" }) != null) { target = get_nearest_monster({ target: "Jhlwarrior" }); }
+    else { target = await myChar.targetLogicTank(); }
 
-    const target = await myChar.targetLogicTank();
     if (!target) return;
 
     await myChar.taunt(target);

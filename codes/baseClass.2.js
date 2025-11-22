@@ -13,13 +13,14 @@ class BaseClass {
         this.attackMode = true;
         this.fightTogeather = false;
 
-        this.currentMobFarm = "Croc";
+        this.currentMobFarm = "Spider";
         this.tank = "Jhlwarrior";
 
         this.whitelist = [
             // Keep
             "spores", "seashell", "beewings", "gem0", "gem1", "whiteegg", "monstertoken", "spidersilk", "cscale", "spores",
             "rattail", "crabclaw", "bfur", "feather0", "gslime", "smush", "lostearring", "spiderkey", "snakeoil", "ascale",
+            "snakefang", "vitscroll",
             // Upgrade
             "ringsj", "intbelt", "intearring", "strearring", "dexearring",
             // Sell
@@ -41,6 +42,7 @@ class BaseClass {
         setInterval(() => this.sendWhitelistedItemsToMerchant(), 3 * 1000);
         setInterval(() => this.askForLuck(), 20 * 1000);
         setInterval(() => this.callMerchant(), 20 * 1000);
+        setInterval(() => parent.socket.emit("send_updates", {}), 30000); // Clear ghost entities
 
         startSharedTasks();
 
@@ -158,6 +160,37 @@ class BaseClass {
                 console.log(`Sent ${quantity}x ${item.name} to ${this.merchantName}`);
             }
         }
+    }
+
+    // Equip / un-equip weapons
+    equipItem(itemName, targetLevel) {
+        if (this.isEquipped(itemName, targetLevel)) { return; }
+        let slot = -1;
+
+        for (let i = 0; i < character.items.length; i++) {
+            const invItem = character.items[i];
+            if (invItem && invItem.name === itemName && invItem.level === targetLevel) {
+                slot = i;
+                break;
+            }
+        }
+
+        if (slot !== -1 && !this.isEquipped(itemName, targetLevel)) {
+            equip(slot);
+            game_log(`Equipped ${itemName} (level ${targetLevel}) from slot ${slot}`);
+        }
+    }
+
+    isEquipped(itemName, level) {
+        for (const slot in character.slots) {
+            const equipped = character.slots[slot];
+
+            if (equipped && equipped.name === itemName && equipped.level === level) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     removeWeapons() {

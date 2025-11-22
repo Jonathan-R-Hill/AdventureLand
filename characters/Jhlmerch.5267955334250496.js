@@ -4,7 +4,7 @@ load_code("combineItems");
 
 const HP_POTION = "hpot1";
 const MP_POTION = "mpot1";
-const POTSMINSTOCK = 1200;
+const POTSMINSTOCK = 2000;
 const POT_BUFFER = 600;
 
 const sellWhiteList = [
@@ -18,7 +18,7 @@ const sellWhiteList = [
 const bankWhitelist = [
 	"spores", "seashell", "beewings", "gem0", "gem1", "whiteegg", "monstertoken", "spidersilk", "cscale", "spores",
 	"rattail", "crabclaw", "bfur", "feather0", "gslime", "ringsj", "smush", "lostearring", "spiderkey", "snakeoil",
-	"ascale", "gemfragment", "intearring", "strearring", "dexearring"
+	"ascale", "gemfragment", "intearring", "strearring", "dexearring", "snakefang", "vitscroll",
 ];
 
 class Merchant extends combineItems {
@@ -57,15 +57,21 @@ class Merchant extends combineItems {
 
 	}
 
+	checkIfDoingSOmething() {
+		return this.busy && this.fishing && this.mining;
+	}
+
 	async mainLoop() {
 		const now = Date.now();
 
-		if (now - this.lastRun.combine > 80_000) {
-			this.lastRun.combine = now;
-			if (!this.busy && !this.fishing && !this.mining) {
+		if (now - this.lastRun.combine > 3 * 60 * 1000) {
+			if (!this.checkIfDoingSOmething()) {
+				this.lastRun.combine = now;
 				await this.autoCombineItems("ringsj", [0, 1, 2]);
+
 				const upgrades = ["intearring", "strearring", "dexearring",];
 				const levels = [0, 1];
+
 				await this.autoCombineItems(upgrades[0], levels);
 				await this.autoCombineItems(upgrades[1], levels);
 				await this.autoCombineItems(upgrades[2], levels);
@@ -75,36 +81,38 @@ class Merchant extends combineItems {
 		}
 
 		if (now - this.lastRun.processDeliveries > 10_000) {
-			this.lastRun.processDeliveries = now;
-			if (!this.busy && !this.fishing && !this.mining && this.deliveryList.length > 0) {
+			if (!this.checkIfDoingSOmething() && this.deliveryList.length > 0) {
+				this.lastRun.processDeliveries = now;
 				await this.processDeliveries();
 			}
 		}
 
 		if (now - this.lastRun.fishing > 11_000) {
-			this.lastRun.fishing = now;
 			if (!this.busy && !this.mining) {
+				this.lastRun.fishing = now;
 				await this.goFishing();
 			}
 		}
 
 		if (now - this.lastRun.mining > 30_000) {
-			this.lastRun.mining = now;
 			if (!this.busy && !this.fishing) {
+				this.lastRun.mining = now;
 				await this.goMining();
 			}
 		}
 
 		if (now - this.lastRun.restock > 300_000) {
-			this.lastRun.restock = now;
-			if (!this.busy) {
+			if (!this.checkIfDoingSOmething()) {
+				this.lastRun.restock = now;
 				await this.restockPotions();
 			}
 		}
 
 		if (now - this.lastRun.manageInventory > 300_000) {
-			this.lastRun.manageInventory = now;
-			await this.manageInventory();
+			if (!this.checkIfDoingSOmething()) {
+				this.lastRun.manageInventory = now;
+				await this.manageInventory();
+			}
 		}
 
 		if (now - this.lastRun.healBuff > 1_000) {
@@ -114,12 +122,14 @@ class Merchant extends combineItems {
 
 		if (now - this.lastRun.returnHome > 20_000) {
 			this.lastRun.returnHome = now;
-			this.returnHome();
+			if (!this.checkIfDoingSOmething()) {
+				this.returnHome();
+			}
 		}
 
 		if (now - this.lastRun.sellCheck > 10_000) {
 			this.lastRun.sellCheck = now;
-			if (!this.busy && !this.fishing && !this.mining) {
+			if (this.checkIfDoingSOmething()) {
 				const { used } = this.getInventoryUsage();
 				if (used >= 15) {
 					await this.sellItem();
@@ -257,9 +267,9 @@ class Merchant extends combineItems {
 		await smart_move({ x: request.x, y: request.y });
 
 		if (request.type === "need_Hpots") {
-			await this.sendPotionsTo(request.name, HP_POTION, MP_POTION, 200, 0);
+			await this.sendPotionsTo(request.name, HP_POTION, MP_POTION, 350, 0);
 		} else if (request.type === "need_Mpots") {
-			await this.sendPotionsTo(request.name, HP_POTION, MP_POTION, 0, 200);
+			await this.sendPotionsTo(request.name, HP_POTION, MP_POTION, 0, 350);
 		}
 
 		this.deliveryList.shift();

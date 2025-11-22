@@ -137,10 +137,13 @@ class combineItems {
             }
         }
 
-        // Compound5
+        // Compound
         use_skill("massproduction")
         compound(invSlots[0], invSlots[1], invSlots[2], scrollSlot);
-        await sleep(4000);
+
+        await sleep(100);
+        use_skill("use_town")
+        await sleep(3500);
 
         this.busy = false;
     }

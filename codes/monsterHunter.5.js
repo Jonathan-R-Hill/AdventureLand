@@ -8,11 +8,11 @@ const mobData = [
     { travel: "snake", target: "Snake", map: "main" },
     { travel: "rat", target: "Rat", map: "main" },
     { travel: "squig", target: "Squig", map: "main" },
+    { travel: "squigtoad", target: "Squigtoad", map: "main" },
     { travel: "articbee", target: "Artic Bee", map: "winterland" },
     { travel: "armadillo", target: "Armadillo", map: "main" },
     { travel: "croc", target: "Croc", map: "main" },
     { travel: "porcupine", target: "Porcupine", map: "main" },
-    { travel: "squigtoad", target: "Squigtoad", map: "main" },
 ];
 
 // MONSTER HUNTER
@@ -60,15 +60,15 @@ function handleNewTarget(travelTag) {
     let mobEntry = mobData.find(m => m.travel === travelTag);
 
     if (!mobEntry) {
-        mobEntry = mobData.find(m => m.travel === "croc");
-        set_message(`Unknown travel tag: ${travelTag} - Going back to crocs.`);
+        mobEntry = mobData.find(m => m.travel === "spider");
+        set_message(`Unknown travel tag: ${travelTag} - Going back to spiders.`);
 
         const { travel, target, map } = mobEntry;
         for (const name of partyMembers) {
             send_cm(name, `set_new_hunter_target ${travel},${target},${map}`);
         }
 
-        return;
+        return mobEntry;
     }
 
     const { travel, target, map } = mobEntry;
