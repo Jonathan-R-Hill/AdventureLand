@@ -23,7 +23,7 @@ function reviveSelf() {
 function useHealthPotion() {
     if (is_on_cooldown("regen_mp")) { return; }
 
-    if (character.hp < character.max_hp * 0.60) {
+    if (character.hp < character.max_hp * 0.65) {
         return use_skill('use_hp');
     }
 }
@@ -31,7 +31,7 @@ function useHealthPotion() {
 function useManaPotion() {
     if (is_on_cooldown("regen_mp")) { return; }
 
-    if (character.mp < character.max_mp * 0.50) {
+    if (character.mp < character.max_mp * 0.60) {
         use_skill('use_mp');
     }
 }

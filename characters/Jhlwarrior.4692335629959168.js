@@ -6,11 +6,14 @@ class MyChar extends BaseClass {
     monsterHunter = true;
     gettingNewTask = false;
 
+    // currentMobFarm = "Hawk"
+
     lastFarmCheck = 0;
 
     equipMainWeapons() {
         this.equipItem(`hammer`, 6);
         this.equipItem(`fireblade`, 4);
+        // this.equipItem("wshield", 7);
         // this.equipItem(`fireblade`, 3);
     }
 
@@ -49,7 +52,7 @@ let combatLoop = null;
 let target;
 
 const combat = async () => {
-    if (myChar.currentMobFarm == undefined || myChar.currentMobFarm == `Porcupine`) { myChar.currentMobFarm = 'Spider'; }
+    if (myChar.currentMobFarm == undefined || myChar.currentMobFarm == `Porcupine`) { myChar.currentMobFarm = 'Squig'; }
     useHealthPotion();
     useManaPotion();
     recoverOutOfCombat();

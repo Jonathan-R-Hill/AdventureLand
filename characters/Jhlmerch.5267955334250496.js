@@ -94,7 +94,7 @@ class Merchant extends combineItems {
 			}
 		}
 
-		if (now - this.lastRun.mining > 30_000) {
+		if (now - this.lastRun.mining > 12_000) {
 			if (!this.busy && !this.fishing) {
 				this.lastRun.mining = now;
 				await this.goMining();
@@ -123,7 +123,7 @@ class Merchant extends combineItems {
 		if (now - this.lastRun.returnHome > 20_000) {
 			this.lastRun.returnHome = now;
 			if (!this.checkIfDoingSOmething()) {
-				this.returnHome();
+				await this.returnHome();
 			}
 		}
 
@@ -132,12 +132,14 @@ class Merchant extends combineItems {
 			if (!this.checkIfDoingSOmething()) {
 				const { used } = this.getInventoryUsage();
 				if (used >= 15) {
-					await this.sellItem();
+					await this.sellItems();
+
+					await this.bankItems();
 				}
 			}
 		}
 
-		if (now - this.lastRun.resetFlags > 300_000) {
+		if (now - this.lastRun.resetFlags > 10 * 60 * 1000) {
 			this.lastRun.resetFlags = now;
 			this.resetFlags();
 		}
@@ -194,9 +196,10 @@ class Merchant extends combineItems {
 				if (map && character.map !== map) {
 					await smart_move({ to: map });
 				}
+
 				await xmove(x, y);
 
-				if (character.x === x && character.y === y) {
+				if (this.distance(character, { x, y }) <= 2) {
 					set_message(`Arrived at group location (${x}, ${y})`);
 					this.busy = false;
 				}
@@ -233,6 +236,26 @@ class Merchant extends combineItems {
 				// Unknown command — ignore
 				break;
 		}
+	}
+
+	distance(a, b) {
+		if (!a || !b) return 99999999;
+		// map/instance checks for safety
+		if ("in" in a && "in" in b && a.in != b.in) return 99999999;
+		if ("map" in a && "map" in b && a.map != b.map) return 99999999;
+
+		// Get the center coordinates for both entities
+		const a_x = get_x(a);
+		const a_y = get_y(a);
+		const b_x = get_x(b);
+		const b_y = get_y(b);
+
+		// Calculate the difference in coordinates
+		const dx = a_x - b_x;
+		const dy = a_y - b_y;
+
+		// Return the distance (Pythagorean theorem)
+		return Math.sqrt(dx * dx + dy * dy);
 	}
 
 	getItemSlot(name) {
@@ -323,11 +346,11 @@ class Merchant extends combineItems {
 			this.busy = true;
 
 			await smart_move({ to: "potions" });
-			await this.sellItem();
+			await this.sellItems();
 		}
 	}
 
-	async sellItem() {
+	async sellItems() {
 		for (let i = 0; i < character.items.length; i++) {
 			const item = character.items[i];
 
@@ -336,8 +359,6 @@ class Merchant extends combineItems {
 				console.log(`Sold ${item.q || 1}x ${item.name} from slot ${i}`);
 			}
 		}
-
-		await this.bankItems();
 	}
 
 	async bankItems() {
@@ -401,17 +422,19 @@ class Merchant extends combineItems {
 	}
 
 	// wait for commands or something to do
-	returnHome() {
+	async returnHome() {
 		if (!this.busy && !this.fishing && !this.mining) {
 			this.equipBroom();
 
 			set_message("On call..");
 
 			if (character.map !== "main") {
-				smart_move({ map: "main" });
+				await smart_move({ map: "main" });
 			} else {
 				if (Math.abs(character.real_x) <= 100 && Math.abs(character.real_y) <= 100) {
 					console.log("No need to move");
+
+					await this.sellItems();
 					return;
 				} else {
 					use_skill("use_town");
@@ -424,19 +447,20 @@ class Merchant extends combineItems {
 	// Fishing & Mining
 	async goFishing() {
 		console.log(`busy: ${this.busy}, fishing: ${this.fishing}, mining: ${this.mining}`);
-		if (this.fishing && is_on_cooldown("fishing")) {
+
+		const fishingRodName = "rod";
+
+		if ((this.fishing && is_on_cooldown("fishing"))
+			|| (character.slots.mainhand?.name !== fishingRodName && locate_item(fishingRodName) === -1)
+		) {
 			this.fishing = false;
+			this.equipBroom();
 			set_message("Finished Fishing");
+
 			return;
 		}
 
 		if (is_on_cooldown("fishing") || this.busy || this.mining) { return; }
-
-		const fishingRodName = "rod";
-
-		if (character.slots.mainhand?.name !== fishingRodName && locate_item(fishingRodName) === -1) {
-			return;
-		}
 
 		if (parent.distance(character, this.fishingLocation) > 2) {
 			if (!this.fishing) {
@@ -448,10 +472,11 @@ class Merchant extends combineItems {
 		}
 
 		if (this.fishing && parent.distance(character, this.fishingLocation) < 2) {
-			equip(locate_item(fishingRodName));
-			await sleep(20);
 			if (!character.c.fishing) {
 				useManaPotion();
+
+				equip(locate_item(fishingRodName));
+				await sleep(20);
 
 				await sleep(20);
 				use_skill("fishing");
@@ -460,8 +485,11 @@ class Merchant extends combineItems {
 	}
 
 	async goMining() {
-		if (this.mining && is_on_cooldown("mining")) {
+		const pickaxeItemId = "pickaxe";
+
+		if ((this.mining && is_on_cooldown("mining")) || character.slots.mainhand?.name !== pickaxeItemId && locate_item(pickaxeItemId) === -1) {
 			this.mining = false;
+			this.equipBroom();
 
 			set_message("Finished Mining");
 			return;
@@ -469,29 +497,22 @@ class Merchant extends combineItems {
 
 		if (is_on_cooldown("mining") || this.busy || this.fishing) { return; }
 
-		const pickaxeItemId = "pickaxe";
-
-		if (character.slots.mainhand?.name !== pickaxeItemId && locate_item(pickaxeItemId) === -1) {
-			return;
-		}
-
 		if (character.real_x != this.miningLocation.x && character.real_y != this.miningLocation.y && !this.mining) {
 			this.equipBroom();
 			this.mining = true;
 
 			await smart_move(this.miningLocation);
-
-			clearInterval(this.miningInterval);
-			this.miningInterval = setInterval(async () => await this.goMining(), 30 * 1000);
 		}
 
 		if (character.real_x == this.miningLocation.x && character.real_y == this.miningLocation.y && this.mining) {
 			useManaPotion();
-			await sleep(20);
+			await sleep(50);
 
 			equip(locate_item(pickaxeItemId));
 
-			use_skill("mining");
+			if (!character.c.mining) {
+				use_skill("mining");
+			}
 		}
 	}
 

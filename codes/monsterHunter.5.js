@@ -61,8 +61,8 @@ function handleNewTarget(travelTag) {
     let mobEntry = mobData.find(m => m.travel === travelTag);
 
     if (!mobEntry) {
-        mobEntry = mobData.find(m => m.travel === "spider");
-        set_message(`Unknown travel tag: ${travelTag} - Going back to spiders.`);
+        mobEntry = mobData.find(m => m.travel === "armadillo");
+        set_message(`Unknown travel tag: ${travelTag} - Going back to armadillos.`);
 
         const { travel, target, map } = mobEntry;
         for (const name of partyMembers) {

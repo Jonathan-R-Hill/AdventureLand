@@ -99,7 +99,7 @@ function returnToLeader() {
         const dy = character.y - point.y;
         const dist = Math.max(Math.sqrt(dx * dx + dy * dy), 1);
 
-        const awayFactor = 50;
+        const awayFactor = 30;
         offsetX += (dx / dist) * awayFactor;
         offsetY += (dy / dist) * awayFactor;
     }

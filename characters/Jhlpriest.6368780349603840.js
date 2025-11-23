@@ -21,6 +21,10 @@ class MyChar extends BaseClass {
 
 const myChar = new MyChar(character.name);
 
+setInterval(() => {
+    send_cm("Jhlmerch", `come_to_me ${character.real_x},${character.real_y},${character.map}`);
+}, 8 * 60 * 1000);
+
 // Combat
 setInterval(async function () {
     const now = Date.now();

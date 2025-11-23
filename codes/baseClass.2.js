@@ -11,9 +11,10 @@ class BaseClass {
 
         this.kite = false;
         this.attackMode = true;
+        // this.fightTogeather = false;
         this.fightTogeather = false;
 
-        this.currentMobFarm = "Spider";
+        this.currentMobFarm = "Armadillo";
         this.tank = "Jhlwarrior";
 
         this.whitelist = [
@@ -500,8 +501,9 @@ class BaseClass {
             const nx = dx / length;
             const ny = dy / length;
 
-            const targetX = war.x + nx * 20;
-            const targetY = war.y + ny * 20;
+            const reqDist = 33;
+            const targetX = war.x + nx * reqDist;
+            const targetY = war.y + ny * reqDist;
 
             move(targetX, targetY);
             game_log("Moving away from warrior");
