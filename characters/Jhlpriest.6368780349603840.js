@@ -9,7 +9,7 @@ class MyChar extends BaseClass {
         let partyHealth = getPartyHealth();
 
         // Filter members below 75% HP
-        let lowMembers = partyHealth.filter(m => m.hp < m.max_hp * 0.75);
+        let lowMembers = partyHealth.filter(m => m.hp < m.max_hp * 0.80);
         if (lowMembers.length >= 2 && !is_on_cooldown("partyheal")) {
             use_skill("partyheal");
         }

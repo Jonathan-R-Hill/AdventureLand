@@ -13,7 +13,7 @@ class MyChar extends BaseClass {
     equipMainWeapons() {
         this.equipItem(`hammer`, 6);
         this.equipItem(`fireblade`, 4);
-        // this.equipItem("wshield", 7);
+        // this.equipItem("sshield", 4);
         // this.equipItem(`fireblade`, 3);
     }
 

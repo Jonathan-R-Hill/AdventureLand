@@ -82,6 +82,7 @@ function returnToLeader() {
         return null;
     }
 
+    if (distance(character, leader) > 100) { return; }
     const target = get_targeted_monster();
     let offsetX = 0;
     let offsetY = 0;

@@ -11,17 +11,17 @@ class BaseClass {
 
         this.kite = false;
         this.attackMode = true;
-        // this.fightTogeather = false;
         this.fightTogeather = false;
+        // this.fightTogeather = true;
 
-        this.currentMobFarm = "Armadillo";
+        this.currentMobFarm = "Spider";
         this.tank = "Jhlwarrior";
 
         this.whitelist = [
             // Keep
             "spores", "seashell", "beewings", "gem0", "gem1", "whiteegg", "monstertoken", "spidersilk", "cscale", "spores",
             "rattail", "crabclaw", "bfur", "feather0", "gslime", "smush", "lostearring", "spiderkey", "snakeoil", "ascale",
-            "snakefang", "vitscroll",
+            "snakefang", "vitscroll", "offeringp", "offering",
             // Upgrade
             "ringsj", "intbelt", "intearring", "strearring", "dexearring",
             // Sell
@@ -53,11 +53,13 @@ class BaseClass {
     async handleCM(sender, payload) {
         if (!sender.name.startsWith("Jhl")) return;
 
-        const [command, data] = sender.message.split(" ", 2);
+        const msg = sender.message;
+        const firstSpace = msg.indexOf(" ");
+        const command = firstSpace === -1 ? msg : msg.slice(0, firstSpace);
+        const data = firstSpace === -1 ? "" : msg.slice(firstSpace + 1);
 
         switch (command.trim()) {
             case "come_to_me": {
-                return;
                 const [xStr, yStr, map] = data.split(",");
                 const x = Number(xStr);
                 const y = Number(yStr);
@@ -95,15 +97,14 @@ class BaseClass {
             }
 
             case "set_new_hunter_target": {
-                const dataSplit = data.split(',');
-                const travel = dataSplit[0];
-                const target = dataSplit[1];
-                const map = dataSplit[2];
+                const [travel, target, map] = data.split(',');
 
                 this.currentMobFarm = target;
                 this.movingToNewMob = true;
 
-                if (character.map != map) { await smart_move({ map: map }); }
+                if (character.map !== map) {
+                    await smart_move({ map: map });
+                }
                 await smart_move(travel);
 
                 this.movingToNewMob = false;

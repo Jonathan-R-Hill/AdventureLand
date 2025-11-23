@@ -14,6 +14,7 @@ const mobData = [
     { travel: "armadillo", target: "Armadillo", map: "main" },
     { travel: "croc", target: "Croc", map: "main" },
     { travel: "porcupine", target: "Porcupine", map: "desertland" },
+    // { travel: "cgoo", target: "Irradiated Goo", map: "arena" }
 ];
 
 // MONSTER HUNTER
