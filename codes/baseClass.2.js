@@ -111,6 +111,40 @@ class BaseClass {
                 break;
             }
 
+            case "fightTogeather": {
+                if (data == "true") { this.fightTogeather = true; }
+                else if (data == "false") { this.fightTogeather = false; }
+                else { console.log(`Learn to type..`); }
+
+                break;
+            }
+
+            case "foundPheonix": {
+                const [xStr, yStr, map] = data.split(",");
+                const x = Number(xStr);
+                const y = Number(yStr);
+
+                console.log(x, y, map);
+                if (get_player(sender.name)) { this.returningToGroup = false; }
+
+                if (this.returningToGroup) { return; }
+                this.returningToGroup = true;
+
+                console.log(xStr, yStr, map)
+                if (map && character.map !== map) {
+                    await smart_move({ to: map });
+                }
+
+                await xmove(x, y);
+
+                if (get_player(sender.name) || this.distance(character, { x, y } < 20)) {
+                    set_message(`Arrived at group location (${x}, ${y})`);
+                    this.returningToGroup = false;
+                }
+
+                break;
+            }
+
             default:
                 // Unknown command — ignore
                 break;
