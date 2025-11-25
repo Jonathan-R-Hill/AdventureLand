@@ -48,10 +48,12 @@ class combineItems {
         this.busy = true;
 
         const items = await this.gatherItems(itemName, levels);
+        let useBetterScroll = false;
 
         if (items.length < 3) {
             game_log(`Not enough ${itemName} to combine`);
             this.busy = false;
+
             return;
         }
 
@@ -121,18 +123,24 @@ class combineItems {
             return;
         }
 
+        if (["intearring", "strearring", "dexearring"].includes(itemName) && chosenLevel >= 2) { useBetterScroll = true; }
+        await sleep(30);
+
         await smart_move({ to: "scrolls" });
 
         // Find / get scroll
-        let scrollSlot = locate_item("cscroll0");
+        let scroll = useBetterScroll ? "cscroll1" : "cscroll0";
+        let scrollSlot = locate_item(scroll);
+
         if (scrollSlot === -1) {
-            buy("cscroll0", 1);
+            buy(scroll, 1);
             await sleep(200)
 
-            scrollSlot = locate_item("cscroll0");
+            scrollSlot = locate_item(scroll);
             if (scrollSlot === -1) {
                 game_log("Failed to acquire compound scroll");
                 this.busy = false;
+
                 return;
             }
         }

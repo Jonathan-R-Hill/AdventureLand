@@ -11,7 +11,7 @@ const sellWhiteList = [
 	"hpbelt", "hpamulet", "shoes", "coat", "pants", "strring", "intring", "vitring", "dexring",
 	"cclaw", "mushroomstaff", "dexamulet", "stramulet", "intamulet", "slimestaff", "stinger",
 	"vitearring",
-	"wattire", "wshoes", "wcap", "wbreeches", // Wanders set
+	"wattire", "wshoes", "wcap", "wbreeches", "wgloves", // Wanders set
 	"helmet1", "pants1", "coat1", "gloves1", "shoes1", // Rugged set
 ];
 
@@ -19,6 +19,11 @@ const bankWhitelist = [
 	"spores", "seashell", "beewings", "gem0", "gem1", "whiteegg", "monstertoken", "spidersilk", "cscale", "spores",
 	"rattail", "crabclaw", "bfur", "feather0", "gslime", "ringsj", "smush", "lostearring", "spiderkey", "snakeoil",
 	"ascale", "gemfragment", "intearring", "strearring", "dexearring", "snakefang", "vitscroll", "offeringp", "offering",
+	"essenceoffire", "wbook0",
+];
+
+const dismantleList = [
+	"firebow", "fireblade", "firestaff",
 ];
 
 class Merchant extends combineItems {
@@ -39,6 +44,7 @@ class Merchant extends combineItems {
 			healBuff: 0,
 			returnHome: 0,
 			sellCheck: 0,
+			dismantle: 0,
 			resetFlags: 0,
 			processDeliveries: 0,
 			fishing: 0,
@@ -69,12 +75,13 @@ class Merchant extends combineItems {
 				this.lastRun.combine = now;
 				await this.autoCombineItems("ringsj", [0, 1, 2]);
 
-				const upgrades = ["intearring", "strearring", "dexearring",];
-				const levels = [0, 1];
+				const upgrades = ["intearring", "strearring", "dexearring", "wbook0"];
+				const levels = [0, 1, 2];
 
 				await this.autoCombineItems(upgrades[0], levels);
 				await this.autoCombineItems(upgrades[1], levels);
 				await this.autoCombineItems(upgrades[2], levels);
+				await this.autoCombineItems(upgrades[3], levels);
 
 				await this.bankItems()
 			}
@@ -105,6 +112,13 @@ class Merchant extends combineItems {
 			if (!this.checkIfDoingSOmething()) {
 				this.lastRun.restock = now;
 				await this.restockPotions();
+			}
+		}
+
+		if (now - this.lastRun.dismantle > 200_000) {
+			if (!this.checkIfDoingSOmething()) {
+				this.lastRun.dismantle = now;
+				await this.dismantleFireWeapons();
 			}
 		}
 
@@ -359,6 +373,8 @@ class Merchant extends combineItems {
 				console.log(`Sold ${item.q || 1}x ${item.name} from slot ${i}`);
 			}
 		}
+
+		this.busy = false;
 	}
 
 	async bankItems() {
@@ -372,6 +388,40 @@ class Merchant extends combineItems {
 
 			if (bankWhitelist.includes(item.name)) {
 				bank_store(i);
+			}
+		}
+
+		this.busy = false;
+	}
+
+	// Dismantle
+	async dismantleFireWeapons() {
+		this.busy = true;
+
+		const dismantleSlots = [];
+		for (let i = 0; i < character.items.length; i++) {
+			const item = character.items[i];
+			if (!item) { continue; }
+
+			if (item.name && dismantleList.includes(item.name) && item.level == 0) {
+				dismantleSlots.push(i);
+			}
+		}
+
+		if (dismantleSlots.length === 0) {
+			this.busy = false;
+
+			return;
+		}
+
+		await smart_move({ x: 29.10676790733877, y: 651.4848803418221, map: `main` });
+
+		for (const slot of dismantleSlots) {
+			try {
+				dismantle(slot);
+				game_log(`Dismantled ${character.items[slot].name} in slot ${slot}`);
+			} catch (e) {
+				game_log(`Failed to dismantle slot ${slot}: ${e}`);
 			}
 		}
 
@@ -476,9 +526,8 @@ class Merchant extends combineItems {
 				useManaPotion();
 
 				equip(locate_item(fishingRodName));
-				await sleep(20);
+				await sleep(80);
 
-				await sleep(20);
 				use_skill("fishing");
 			}
 		}

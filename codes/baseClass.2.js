@@ -27,7 +27,7 @@ class BaseClass {
             // Sell
             "hpbelt", "hpamulet", "shoes", "coat", "pants", "strring", "intring", "vitring", "dexring",
             "wattire", "wshoes", "wcap", "cclaw", "mushroomstaff", "dexamulet", "stramulet", "intamulet",
-            "wbreeches", "slimestaff", "stinger", "vitearring",
+            "wbreeches", "slimestaff", "stinger", "vitearring", "wgloves"
         ];
 
         this.returningToGroup = false;
@@ -178,19 +178,23 @@ class BaseClass {
     }
 
     sendWhitelistedItemsToMerchant() {
-        if (!this.sendItems) return;
+        if (!this.sendItems) { return; }
 
         const merchant = get_player(this.merchantName);
-        if (!merchant || parent.distance(character, merchant) > 400) {
-            return;
-        }
+        if (!merchant || parent.distance(character, merchant) > 400) { return; }
+
+        const onlyTier1 = [
+            "firebow", "fireblade", "firestaff",
+        ];
 
         for (let i = 0; i < character.items.length; i++) {
             const item = character.items[i];
-            if (!item) continue;
 
-            if (this.whitelist.includes(item.name)) {
+            if (!item) { continue; }
+
+            if (this.whitelist.includes(item.name) || onlyTier1.includes(item.name)) {
                 const quantity = item.q || 1; // stackable or single
+                if (onlyTier1.includes(item.name) && item.level != 0) { continue; }
 
                 send_item(this.merchantName, i, quantity);
                 console.log(`Sent ${quantity}x ${item.name} to ${this.merchantName}`);
