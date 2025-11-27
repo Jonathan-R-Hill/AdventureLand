@@ -3,7 +3,7 @@
 let myMobs = {
     "goo": "Goo", "bee": "Bee", "crab": "Tiny Crab", "minimush": "Pom Pom", "snake": "Snake", "rat": "Rat",
     "squig": "Squig", "articbee": "Artic Bee", "armadillo": "Armadillo", "croc": "Croc", "porcupine": "Porcupine",
-    "squigtoad": "Squigtoad", "spider": "Spider", "poisio": "Poisio", "boar": "Wild Boar"
+    "squigtoad": "Squigtoad", "spider": "Spider", "poisio": "Poisio", "boar": "Wild Boar", "iceroamer": "Water Spirit",
 }
 
 function getMobKeyFromValue(target) {

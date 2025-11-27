@@ -70,6 +70,8 @@ class Merchant extends combineItems {
 	async mainLoop() {
 		const now = Date.now();
 
+		if (character.rip) { this.resetFlags; }
+
 		if (now - this.lastRun.combine > 3 * 60 * 1000) {
 			if (!this.checkIfDoingSOmething()) {
 				this.lastRun.combine = now;

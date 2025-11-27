@@ -10,10 +10,15 @@ const mobData = [
     { travel: "spider", target: "Spider", map: "main" },
     { travel: "squig", target: "Squig", map: "main" },
     { travel: "squigtoad", target: "Squigtoad", map: "main" },
+    { travel: "poisio", target: "Poisio", map: "main" },
     { travel: "articbee", target: "Artic Bee", map: "winterland" },
+    { travel: "iceroamer", target: "Water Spirit", map: "winterland" },
     { travel: "armadillo", target: "Armadillo", map: "main" },
     { travel: "croc", target: "Croc", map: "main" },
     { travel: "porcupine", target: "Porcupine", map: "desertland" },
+    { travel: "scorpion", target: "Scorpion", map: "main" },
+    { travel: "bigbird", target: "Hawk", map: "main" },
+    { travel: "stoneworm", target: "Stone Worm", map: "spookytown" }
     // { travel: "cgoo", target: "Irradiated Goo", map: "arena" }
 ];
 
@@ -75,6 +80,13 @@ function handleNewTarget(travelTag) {
 
     const { travel, target, map } = mobEntry;
     for (const name of partyMembers) {
+        if (["Poisio", "Wild Boar", "Water Spirit", "Hawk", "Scorpion"].includes(target)) {
+            send_cm("fightTogeather true")
+        }
+        else {
+            send_cm("fightTogeather false")
+        }
+
         send_cm(name, `set_new_hunter_target ${travel},${target},${map}`);
     }
 }

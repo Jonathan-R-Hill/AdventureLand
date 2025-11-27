@@ -203,7 +203,7 @@ class BaseClass {
     }
 
     // Equip / un-equip weapons
-    equipItem(itemName, targetLevel) {
+    equipItem(itemName, targetLevel, equipSlot = null) {
         if (this.isEquipped(itemName, targetLevel)) { return; }
         let slot = -1;
 
@@ -216,7 +216,9 @@ class BaseClass {
         }
 
         if (slot !== -1 && !this.isEquipped(itemName, targetLevel)) {
-            equip(slot);
+            if (equipSlot != null) { equip(slot, equipSlot); }
+            else { equip(slot); }
+
             game_log(`Equipped ${itemName} (level ${targetLevel}) from slot ${slot}`);
         }
     }
@@ -307,8 +309,8 @@ class BaseClass {
     is_in_range(target) {
         if (!target || !target.visible) return false;
 
-        // 1. Calculate the MAX distance the character can be from the target's center
-        //    Max Range = (My Range) + (Target Radius) + (Your Character Radius)
+        // Calculate the MAX distance the character can be from the target's center
+        // Max Range = (My Range) + (Target Radius) + (Your Character Radius)
 
         const character_radius = get_width(character) / 2;
         const target_radius = target.width / 2;

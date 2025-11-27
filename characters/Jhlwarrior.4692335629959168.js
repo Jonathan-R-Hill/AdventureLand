@@ -11,10 +11,16 @@ class MyChar extends BaseClass {
     lastFarmCheck = 0;
 
     equipMainWeapons() {
-        this.equipItem(`hammer`, 6);
-        this.equipItem(`fireblade`, 4);
-        // this.equipItem("sshield", 4);
-        // this.equipItem(`fireblade`, 3);
+        if (["Poisio", "Wild Boar", "Water Spirit", "Hawk", "Scorpion"].includes(this.currentMobFarm) || character.hp < character.max_hp * 0.5) {
+            this.equipItem("sshield", 4);
+            this.equipItem(`hammer`, 6, "mainhand");
+        }
+        else {
+            // this.equipItem("glolipop", 6);
+            // this.equipItem("glolipop", 6);
+            this.equipItem(`hammer`, 6, "offhand");
+            this.equipItem(`fireblade`, 4, "mainhand");
+        }
     }
 
     async taunt(target) {
