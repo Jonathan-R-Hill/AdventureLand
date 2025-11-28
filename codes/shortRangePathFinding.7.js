@@ -1,4 +1,4 @@
-async function moveTowardWarriorAvoiding(targetX = null, targetY = null) {
+async function moveTowardTargetAvoiding(targetX = null, targetY = null) {
     let tx, ty;
 
     if (targetX !== null && targetY !== null) {

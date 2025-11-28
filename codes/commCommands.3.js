@@ -1,28 +1,21 @@
+load_code("monsterHunter");
 
-// smart_move : attack name
-let myMobs = {
-    "goo": "Goo", "bee": "Bee", "crab": "Tiny Crab", "minimush": "Pom Pom", "snake": "Snake", "rat": "Rat",
-    "squig": "Squig", "articbee": "Artic Bee", "armadillo": "Armadillo", "croc": "Croc", "porcupine": "Porcupine",
-    "squigtoad": "Squigtoad", "spider": "Spider", "poisio": "Poisio", "boar": "Wild Boar", "iceroamer": "Water Spirit",
+function getMobKeyFromValue(travelKey) {
+    return mobData.find(m => m.travel === travelKey);
 }
 
-function getMobKeyFromValue(target) {
-    for (const [key, val] of Object.entries(myMobs)) {
-        if (val === target) {
+function updateTarget(travelKey) {
+    const mobEntry = getMobKeyFromValue(travelKey);
+    if (!mobEntry) {
+        game_log(`Mob ${travelKey} not found in dictionary`);
+        console.log(`Mob ${travelKey} not found in dictionary`)
 
-            return key;
-        }
+        return;
     }
-
-    return null;
-}
-
-function updateTarget(mob) {
-    if (!(mob in myMobs)) return;
 
     const partyMembers = ["Jhlranger", "Jhlmerch", "Jhlmage", "Jhlwarrior", "Jhlpriest"];
 
     for (const name of partyMembers) {
-        send_cm(name, `set_new_target ${mob},${myMobs[mob]}`);
+        send_cm(name, `set_new_target ${mobEntry.travel},${mobEntry.target}`);
     }
 }

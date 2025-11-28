@@ -1,5 +1,6 @@
 load_code("helpers");
-load_code("commCommands")
+load_code("commCommands");
+load_code("shortRangePathFinding");
 
 class BaseClass {
     constructor(name) {
@@ -21,7 +22,7 @@ class BaseClass {
             // Keep
             "spores", "seashell", "beewings", "gem0", "gem1", "whiteegg", "monstertoken", "spidersilk", "cscale", "spores",
             "rattail", "crabclaw", "bfur", "feather0", "gslime", "smush", "lostearring", "spiderkey", "snakeoil", "ascale",
-            "snakefang", "vitscroll", "offeringp", "offering",
+            "snakefang", "vitscroll", "offeringp", "offering", "essenceoffrost",
             // Upgrade
             "ringsj", "intbelt", "intearring", "strearring", "dexearring",
             // Sell
@@ -347,13 +348,10 @@ class BaseClass {
     }
 
     // ATTTACKING
-    attack(target) {
+    async attack(target) {
         if (this.movingToNewMob) { return; }
         if (!this.is_in_range(target, "attack")) {
-            move(
-                character.real_x + (target.real_x - character.real_x) / 2,
-                character.real_y + (target.real_y - character.real_y) / 2
-            );
+            moveTowardTargetAvoiding(target.real_x, target.real_y);
 
             set_message("Moving to target");
         } else if (!is_on_cooldown("attack")) {
@@ -432,8 +430,33 @@ class BaseClass {
     checkNearbyFarmMob() {
         let found = false;
 
-        if (this.fightTogeather && get_player(this.tank) && character.name != this.tank) {
+        // If fighting together and not the tank, stop herefor our follow logic
+        if (this.fightTogeather && get_player(this.tank) && character.name !== this.tank) {
             this.movingToNewMob = false;
+            return;
+        }
+
+        // Priority check Phoenix 
+        for (const id in parent.entities) {
+            const ent = parent.entities[id];
+            if (!ent || ent.type !== "monster" || ent.dead || !ent.visible) { continue; }
+
+            const dist = parent.distance(character, ent);
+            if (dist > 300) { continue; }
+
+            if (ent.name === "Phoenix") {
+                this.movingToNewMob = false;
+                stop();
+                set_message("Phoenix spotted nearby, engaging");
+
+                return;
+            }
+        }
+
+        // Find mob entry from dictionary
+        const mobEntry = mobData.find(m => m.target === this.currentMobFarm);
+        if (!mobEntry) {
+            game_log(`Mob ${this.currentMobFarm} not found in dictionary`);
             return;
         }
 
@@ -443,27 +466,22 @@ class BaseClass {
 
             // Distance check
             const dist = parent.distance(character, ent);
-            if (dist > 170) continue;
+            if (dist > 200) { continue; }
 
-            if (ent.name === this.currentMobFarm) {
+            if (ent.name === mobEntry.target) {
                 this.movingToNewMob = false;
                 stop();
+                found = true;
                 return;
             }
         }
 
-        // If no farm mob was found nearby, move to its spawn
         if (!found) {
-            for (const [key, val] of Object.entries(myMobs)) {
-                if (val === this.currentMobFarm) {
-                    if (!this.movingToNewMob) {
-                        smart_move(key);
-                    }
-                    this.movingToNewMob = true;
-                    set_message(`No ${this.currentMobFarm} nearby, moving to farm`);
-                    break;
-                }
+            if (!this.movingToNewMob) {
+                smart_move(mobEntry.travel);
             }
+            this.movingToNewMob = true;
+            set_message(`No ${mobEntry.target} nearby, moving to farm`);
         }
     }
 

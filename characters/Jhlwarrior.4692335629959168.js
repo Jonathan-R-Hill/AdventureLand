@@ -11,15 +11,16 @@ class MyChar extends BaseClass {
     lastFarmCheck = 0;
 
     equipMainWeapons() {
-        if (["Poisio", "Wild Boar", "Water Spirit", "Hawk", "Scorpion"].includes(this.currentMobFarm) || character.hp < character.max_hp * 0.5) {
+        if (["Poisio", "Wild Boar", "Water Spirit", "Hawk", "Scorpion", "Ice Golem"].includes(this.currentMobFarm) || character.hp < character.max_hp * 0.5) {
             this.equipItem("sshield", 4);
             this.equipItem(`hammer`, 6, "mainhand");
         }
         else {
             // this.equipItem("glolipop", 6);
             // this.equipItem("glolipop", 6);
-            this.equipItem(`hammer`, 6, "offhand");
-            this.equipItem(`fireblade`, 4, "mainhand");
+            // this.equipItem(`hammer`, 6, "offhand");
+            this.equipItem(`fireblade`, 7, "mainhand");
+            this.equipItem(`fireblade`, 6, "offhand");
         }
     }
 
@@ -77,10 +78,15 @@ const combat = async () => {
         myChar.lastFarmCheck = now;
     }
 
-    if (get_nearest_monster({ target: "Jhlpriest" }) != null) { target = get_nearest_monster({ target: "Jhlpriest" }); }
-    else if (get_nearest_monster({ target: "Jhlranger" }) != null) { target = get_nearest_monster({ target: "Jhlranger" }); }
-    else if (get_nearest_monster({ target: "Jhlwarrior" }) != null) { target = get_nearest_monster({ target: "Jhlwarrior" }); }
-    else { target = await myChar.targetLogicTank(); }
+    if (["Poisio", "Wild Boar", "Water Spirit", "Hawk", "Scorpion", "Spider"].includes(myChar.currentMobFarm)) {
+        if (get_nearest_monster({ target: "Jhlpriest" }) != null) { target = get_nearest_monster({ target: "Jhlpriest" }); }
+        else if (get_nearest_monster({ target: "Jhlranger" }) != null) { target = get_nearest_monster({ target: "Jhlranger" }); }
+        else if (get_nearest_monster({ target: "Jhlwarrior" }) != null) { target = get_nearest_monster({ target: "Jhlwarrior" }); }
+        else { target = await myChar.targetLogicTank(); }
+    }
+    else {
+        target = await myChar.targetLogicTank();
+    }
 
     if (!target) return;
 

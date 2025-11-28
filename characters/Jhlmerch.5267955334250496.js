@@ -19,7 +19,7 @@ const bankWhitelist = [
 	"spores", "seashell", "beewings", "gem0", "gem1", "whiteegg", "monstertoken", "spidersilk", "cscale", "spores",
 	"rattail", "crabclaw", "bfur", "feather0", "gslime", "ringsj", "smush", "lostearring", "spiderkey", "snakeoil",
 	"ascale", "gemfragment", "intearring", "strearring", "dexearring", "snakefang", "vitscroll", "offeringp", "offering",
-	"essenceoffire", "wbook0",
+	"essenceoffire", "wbook0", "essenceoffrost",
 ];
 
 const dismantleList = [
