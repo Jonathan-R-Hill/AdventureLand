@@ -3,15 +3,15 @@ load_code("helpers");
 load_code("monsterHunter");
 
 class MyChar extends BaseClass {
-    monsterHunter = true;
+    monsterHunter = false;
     gettingNewTask = false;
-
-    // currentMobFarm = "Hawk"
 
     lastFarmCheck = 0;
 
     equipMainWeapons() {
-        if (["Poisio", "Wild Boar", "Water Spirit", "Hawk", "Scorpion", "Ice Golem"].includes(this.currentMobFarm) || character.hp < character.max_hp * 0.5) {
+        if (["Poisio", "Wild Boar", "Water Spirit", "Hawk", "Scorpion", "Ice Golem", "Green Jr"].includes(this.currentMobFarm)
+            || character.hp < character.max_hp * 0.5) {
+
             this.equipItem("sshield", 4);
             this.equipItem(`hammer`, 6, "mainhand");
         }
@@ -27,7 +27,7 @@ class MyChar extends BaseClass {
     async taunt(target) {
         if (
             !is_on_cooldown("taunt") && distance(character, target) < G.skills.taunt.range &&
-            target.target != character.name && target.target != null
+            target.target != character.name && target.target != null && target.target.startsWith("Jhl")
         ) {
             use_skill("taunt", target);
         }

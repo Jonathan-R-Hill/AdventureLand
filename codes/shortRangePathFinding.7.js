@@ -1,23 +1,23 @@
+// Keep a small history of last blocked positions
+let recentBlocked = [];
+
 async function moveTowardTargetAvoiding(targetX = null, targetY = null) {
     let tx, ty;
 
     if (targetX !== null && targetY !== null) {
         tx = targetX;
         ty = targetY;
-
     } else {
         const war = get_player("Jhlwarrior");
-
         if (!war) { return; }
-
         tx = war.real_x;
         ty = war.real_y;
     }
 
     const dx = tx - character.real_x;
     const dy = ty - character.real_y;
-    const length = Math.sqrt(dx * dx + dy * dy);
 
+    const length = Math.sqrt(dx * dx + dy * dy);
     if (length === 0) { return; }
 
     let dirX = dx / length;
@@ -29,31 +29,35 @@ async function moveTowardTargetAvoiding(targetX = null, targetY = null) {
 
     // If blocked, rotate dir until clear
     if (!can_move_to(targetX, targetY)) {
-        const angleStep = Math.PI / 12; // 15degree increments
+        const angleStep = Math.PI / 12; // 15° increments (I think?)
         let angle = Math.atan2(dirY, dirX);
         let found = false;
 
+        // Decide a bias direction
+        const bias = Math.random() < 0.5 ? 1 : -1;
+
         for (let i = 1; i <= 12; i++) {
-            // Try rotating left and right
-            for (const sign of [1, -1]) {
-                const newAngle = angle + sign * i * angleStep;
+            const newAngle = angle + bias * i * angleStep;
+            const nx = Math.cos(newAngle);
+            const ny = Math.sin(newAngle);
 
-                const nx = Math.cos(newAngle);
-                const ny = Math.sin(newAngle);
+            const tx = character.real_x + nx * stepSize;
+            const ty = character.real_y + ny * stepSize;
 
-                const tx = character.real_x + nx * stepSize;
-                const ty = character.real_y + ny * stepSize;
+            // Skip if we recently tried this tile
+            const key = `${Math.round(tx)},${Math.round(ty)}`;
+            if (recentBlocked.includes(key)) continue;
 
-                if (can_move_to(tx, ty)) {
-                    targetX = tx;
-                    targetY = ty;
-                    found = true;
-
-                    break;
-                }
+            if (can_move_to(tx, ty)) {
+                targetX = tx;
+                targetY = ty;
+                found = true;
+                break;
+            } else {
+                // Remember this failed tile
+                recentBlocked.push(key);
+                if (recentBlocked.length > 10) { recentBlocked.shift(); } // keep history small
             }
-
-            if (found) break;
         }
 
         // If still blocked, shrink step size

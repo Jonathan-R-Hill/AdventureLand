@@ -13,22 +13,21 @@ class BaseClass {
         this.kite = false;
         this.attackMode = true;
         this.fightTogeather = false;
-        // this.fightTogeather = true;
 
-        this.currentMobFarm = "Spider";
+        this.currentMobFarm = "Snake";
         this.tank = "Jhlwarrior";
 
         this.whitelist = [
             // Keep
             "spores", "seashell", "beewings", "gem0", "gem1", "whiteegg", "monstertoken", "spidersilk", "cscale", "spores",
             "rattail", "crabclaw", "bfur", "feather0", "gslime", "smush", "lostearring", "spiderkey", "snakeoil", "ascale",
-            "snakefang", "vitscroll", "offeringp", "offering", "essenceoffrost",
+            "snakefang", "vitscroll", "offeringp", "offering", "essenceoffrost", "carrot", "snowball",
             // Upgrade
-            "ringsj", "intbelt", "intearring", "strearring", "dexearring",
+            "ringsj", "intbelt", "intearring", "strearring", "dexearring", "dexamulet", "stramulet", "intamulet",
             // Sell
             "hpbelt", "hpamulet", "shoes", "coat", "pants", "strring", "intring", "vitring", "dexring",
-            "wattire", "wshoes", "wcap", "cclaw", "mushroomstaff", "dexamulet", "stramulet", "intamulet",
-            "wbreeches", "slimestaff", "stinger", "vitearring", "wgloves"
+            "wattire", "wshoes", "wcap", "cclaw", "mushroomstaff", "wbreeches", "slimestaff", "stinger",
+            "vitearring", "wgloves"
         ];
 
         this.returningToGroup = false;
@@ -409,6 +408,11 @@ class BaseClass {
         const phoenix = get_nearest_monster({ type: "phoenix" });
         if (phoenix) {
             return phoenix;
+        }
+
+        const greenJr = get_nearest_monster({ type: "greenjr" });
+        if (greenJr) {
+            return greenJr;
         }
 
         // Otherwise stick to current farm mob

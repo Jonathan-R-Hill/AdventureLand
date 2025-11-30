@@ -9,8 +9,7 @@ const POT_BUFFER = 600;
 
 const sellWhiteList = [
 	"hpbelt", "hpamulet", "shoes", "coat", "pants", "strring", "intring", "vitring", "dexring",
-	"cclaw", "mushroomstaff", "dexamulet", "stramulet", "intamulet", "slimestaff", "stinger",
-	"vitearring",
+	"cclaw", "mushroomstaff", "slimestaff", "stinger", "vitearring",
 	"wattire", "wshoes", "wcap", "wbreeches", "wgloves", // Wanders set
 	"helmet1", "pants1", "coat1", "gloves1", "shoes1", // Rugged set
 ];
@@ -19,7 +18,7 @@ const bankWhitelist = [
 	"spores", "seashell", "beewings", "gem0", "gem1", "whiteegg", "monstertoken", "spidersilk", "cscale", "spores",
 	"rattail", "crabclaw", "bfur", "feather0", "gslime", "ringsj", "smush", "lostearring", "spiderkey", "snakeoil",
 	"ascale", "gemfragment", "intearring", "strearring", "dexearring", "snakefang", "vitscroll", "offeringp", "offering",
-	"essenceoffire", "wbook0", "essenceoffrost",
+	"essenceoffire", "wbook0", "essenceoffrost", "carrot", "snowball", "dexamulet", "stramulet", "intamulet",
 ];
 
 const dismantleList = [
@@ -75,15 +74,17 @@ class Merchant extends combineItems {
 		if (now - this.lastRun.combine > 3 * 60 * 1000) {
 			if (!this.checkIfDoingSOmething()) {
 				this.lastRun.combine = now;
-				await this.autoCombineItems("ringsj", [0, 1, 2]);
 
-				const upgrades = ["intearring", "strearring", "dexearring", "wbook0"];
+				const upgrades = [
+					"intearring", "strearring", "dexearring", "ringsj", // Rings
+					"wbook0", // Books
+					"dexamulet", "stramulet", "intamulet", // Necks
+				];
 				const levels = [0, 1, 2];
 
-				await this.autoCombineItems(upgrades[0], levels);
-				await this.autoCombineItems(upgrades[1], levels);
-				await this.autoCombineItems(upgrades[2], levels);
-				await this.autoCombineItems(upgrades[3], levels);
+				for (const item of upgrades) {
+					await this.autoCombineItems(item, levels);
+				}
 
 				await this.bankItems()
 			}
