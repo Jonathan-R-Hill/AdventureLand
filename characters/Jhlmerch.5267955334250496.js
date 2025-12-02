@@ -9,7 +9,7 @@ const POT_BUFFER = 600;
 
 const sellWhiteList = [
 	"hpbelt", "hpamulet", "shoes", "coat", "pants", "strring", "intring", "vitring", "dexring",
-	"cclaw", "mushroomstaff", "slimestaff", "stinger", "vitearring",
+	"cclaw", "mushroomstaff", "slimestaff", "stinger", "vitearring", "glolipop",
 	"wattire", "wshoes", "wcap", "wbreeches", "wgloves", // Wanders set
 	"helmet1", "pants1", "coat1", "gloves1", "shoes1", // Rugged set
 ];
@@ -18,7 +18,7 @@ const bankWhitelist = [
 	"spores", "seashell", "beewings", "gem0", "gem1", "whiteegg", "monstertoken", "spidersilk", "cscale", "spores",
 	"rattail", "crabclaw", "bfur", "feather0", "gslime", "ringsj", "smush", "lostearring", "spiderkey", "snakeoil",
 	"ascale", "gemfragment", "intearring", "strearring", "dexearring", "snakefang", "vitscroll", "offeringp", "offering",
-	"essenceoffire", "wbook0", "essenceoffrost", "carrot", "snowball", "dexamulet", "stramulet", "intamulet",
+	"essenceoffire", "wbook0", "essenceoffrost", "carrot", "snowball", "dexamulet", "stramulet", "intamulet", "candy1",
 ];
 
 const dismantleList = [

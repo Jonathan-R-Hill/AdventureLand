@@ -14,14 +14,15 @@ class BaseClass {
         this.attackMode = true;
         this.fightTogeather = false;
 
-        this.currentMobFarm = "Snake";
+        this.currentMobFarm = "Squigtoad";
+        this.secondaryTarget = "Squig";
         this.tank = "Jhlwarrior";
 
         this.whitelist = [
             // Keep
             "spores", "seashell", "beewings", "gem0", "gem1", "whiteegg", "monstertoken", "spidersilk", "cscale", "spores",
             "rattail", "crabclaw", "bfur", "feather0", "gslime", "smush", "lostearring", "spiderkey", "snakeoil", "ascale",
-            "snakefang", "vitscroll", "offeringp", "offering", "essenceoffrost", "carrot", "snowball",
+            "snakefang", "vitscroll", "offeringp", "offering", "essenceoffrost", "carrot", "snowball", "candy1",
             // Upgrade
             "ringsj", "intbelt", "intearring", "strearring", "dexearring", "dexamulet", "stramulet", "intamulet",
             // Sell
@@ -184,7 +185,7 @@ class BaseClass {
         if (!merchant || parent.distance(character, merchant) > 400) { return; }
 
         const onlyTier1 = [
-            "firebow", "fireblade", "firestaff",
+            "firebow", "fireblade", "firestaff", "glolipop",
         ];
 
         for (let i = 0; i < character.items.length; i++) {
@@ -278,31 +279,19 @@ class BaseClass {
             target = null;
         }
 
-        if (target != null) { return target; }
+        if (target) { return target; }
 
-        if (target == null || !target || target == undefined) {
-            if (this.getClosestMonsterByName("Phoenix")) {
-                target = this.getClosestMonsterByName("Phoenix");
-            }
-            else {
-                target = this.getClosestMonsterByName(this.currentMobFarm);
-            }
+        target = this.getClosestMonsterByName("Phoenix")
+            || this.getClosestMonsterByName("Green Jr.")
+            || this.getClosestMonsterByName(this.currentMobFarm)
+            || this.getClosestMonsterByName(this.secondaryTarget);
 
-            if (target) {
-
-                if (target.name == this.currentMobFarm || this.currentMobFarm == "") {
-                    change_target(target);
-
-                    return target;
-                } else {
-                    return null
-                }
-
-            } else {
-                set_message(`Not my target ${this.currentMobFarm}`);
-
-                return null;
-            }
+        if (target) {
+            change_target(target);
+            return target;
+        } else {
+            set_message(`Not my target ${this.currentMobFarm}`);
+            return null;
         }
     }
 
@@ -404,46 +393,42 @@ class BaseClass {
 
         let target = get_targeted_monster();
 
-        // if Phoenix is in range, target it
+        // Phoenix
         const phoenix = get_nearest_monster({ type: "phoenix" });
-        if (phoenix) {
-            return phoenix;
-        }
+        if (phoenix) { return phoenix; }
 
+        // Green Jr
         const greenJr = get_nearest_monster({ type: "greenjr" });
-        if (greenJr) {
-            return greenJr;
-        }
+        if (greenJr) { return greenJr; }
 
-        // Otherwise stick to current farm mob
-        if (target && target.name !== this.currentMobFarm) {
+        // Current farm mob
+        if (target && target.name !== this.currentMobFarm && target.name !== this.secondaryTarget) {
             target = null;
         }
 
         if (!target) {
             target = this.findTarget();
-            if (!target) {
-                set_message(`No target, moving to farm ${myMobs[this.currentMobFarm]}`);
-                return null;
-            }
+        }
+
+        if (!target) {
+            set_message(`No target, moving to farm ${myMobs[this.currentMobFarm]}`);
+            return null;
         }
 
         return target;
     }
 
     checkNearbyFarmMob() {
-        let found = false;
-
-        // If fighting together and not the tank, stop herefor our follow logic
+        // If fighting together and not the tank, stop here for follow logic
         if (this.fightTogeather && get_player(this.tank) && character.name !== this.tank) {
             this.movingToNewMob = false;
             return;
         }
 
-        // Priority check Phoenix 
+        // Priority check Phoenix
         for (const id in parent.entities) {
             const ent = parent.entities[id];
-            if (!ent || ent.type !== "monster" || ent.dead || !ent.visible) { continue; }
+            if (!ent || ent.type !== "monster" || ent.dead || !ent.visible) continue;
 
             const dist = parent.distance(character, ent);
             if (dist > 300) { continue; }
@@ -452,41 +437,44 @@ class BaseClass {
                 this.movingToNewMob = false;
                 stop();
                 set_message("Phoenix spotted nearby, engaging");
-
                 return;
             }
         }
 
-        // Find mob entry from dictionary
-        const mobEntry = mobData.find(m => m.target === this.currentMobFarm);
-        if (!mobEntry) {
-            game_log(`Mob ${this.currentMobFarm} not found in dictionary`);
-            return;
-        }
+        const targetsToCheck = [this.currentMobFarm, this.secondaryTarget];
 
-        for (const id in parent.entities) {
-            const ent = parent.entities[id];
-            if (!ent || ent.type !== "monster" || ent.dead || !ent.visible) continue;
+        for (const targetName of targetsToCheck) {
+            const mobEntry = mobData.find(m => m.target === targetName);
+            if (!mobEntry) {
+                game_log(`Mob ${targetName} not found in dictionary`);
+                continue;
+            }
 
-            // Distance check
-            const dist = parent.distance(character, ent);
-            if (dist > 200) { continue; }
+            // Scan nearby entities for this mob
+            for (const id in parent.entities) {
+                const ent = parent.entities[id];
+                if (!ent || ent.type !== "monster" || ent.dead || !ent.visible) continue;
 
-            if (ent.name === mobEntry.target) {
-                this.movingToNewMob = false;
-                stop();
-                found = true;
-                return;
+                const dist = parent.distance(character, ent);
+                if (dist > 200) continue;
+
+                if (ent.name === mobEntry.target) {
+                    this.movingToNewMob = false;
+                    stop();
+                    set_message(`Engaging ${mobEntry.target}`);
+                    return;
+                }
             }
         }
 
-        if (!found) {
-            if (!this.movingToNewMob) {
-                smart_move(mobEntry.travel);
-            }
-            this.movingToNewMob = true;
-            set_message(`No ${mobEntry.target} nearby, moving to farm`);
+        // If none found nearby, move toward this mob’s spawn
+        if (!this.movingToNewMob) {
+            smart_move(mobEntry.travel);
         }
+        this.movingToNewMob = true;
+        set_message(`No ${mobEntry.target} nearby, moving to farm`);
+        return; // ✅ stop here, don’t override with later targets
+
     }
 
     // Movement
