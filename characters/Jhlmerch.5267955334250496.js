@@ -15,10 +15,23 @@ const sellWhiteList = [
 ];
 
 const bankWhitelist = [
-	"spores", "seashell", "beewings", "gem0", "gem1", "whiteegg", "monstertoken", "spidersilk", "cscale", "spores",
-	"rattail", "crabclaw", "bfur", "feather0", "gslime", "ringsj", "smush", "lostearring", "spiderkey", "snakeoil",
-	"ascale", "gemfragment", "intearring", "strearring", "dexearring", "snakefang", "vitscroll", "offeringp", "offering",
-	"essenceoffire", "wbook0", "essenceoffrost", "carrot", "snowball", "dexamulet", "stramulet", "intamulet", "candy1",
+	// Exchangables
+	"seashell", "gem0", "gem1", "monstertoken", "gemfragment", "armorbox", "weaponbox",
+	// Keyes
+	"spiderkey",
+	// Upgrades
+	"ringsj", "lostearring", "intearring", "strearring", "dexearring",
+	"wbook0", "dexamulet", "stramulet", "intamulet", "candy1",
+	// Pots
+	"elixirint0", "elixirint1", "elixirint2",
+	"elixirstr0", "elixirstr1", "elixirstr2",
+	"elixirdex0", "elixirdex1", "elixirdex2",
+	"elixirvit0", "elixirvit1", "elixirvit2",
+	// Mats
+	"spores", "beewings", "whiteegg", "spidersilk", "cscale", "rattail", "crabclaw", "bfur", "feather0", "gslime", "smush",
+	"snakeoil", "ascale", "snakefang", "vitscroll", "essenceoffire", "essenceoffrost", "carrot", "snowball", "frogt", "ink",
+	// Misc
+	"offeringp", "offering",
 ];
 
 const dismantleList = [
@@ -49,10 +62,10 @@ class Merchant extends combineItems {
 			fishing: 0,
 			mining: 0,
 			combine: 0,
+			exchange: 0,
 		};
 
 		scaleUI(0.80);
-
 
 		setInterval(async () => await this.mainLoop(), 1000);
 
@@ -70,6 +83,18 @@ class Merchant extends combineItems {
 		const now = Date.now();
 
 		if (character.rip) { this.resetFlags; }
+
+		if (now - this.lastRun.resetFlags > 10 * 60 * 1000) {
+			this.lastRun.resetFlags = now;
+			this.resetFlags();
+		}
+
+		if (now - this.lastRun.exchange > 5 * 60 * 1000) {
+			if (!this.checkIfDoingSOmething()) {
+				this.lastRun.exchange = now;
+				await this.exchangeItems();
+			}
+		}
 
 		if (now - this.lastRun.combine > 3 * 60 * 1000) {
 			if (!this.checkIfDoingSOmething()) {
@@ -154,11 +179,6 @@ class Merchant extends combineItems {
 					await this.bankItems();
 				}
 			}
-		}
-
-		if (now - this.lastRun.resetFlags > 10 * 60 * 1000) {
-			this.lastRun.resetFlags = now;
-			this.resetFlags();
 		}
 	}
 
@@ -278,7 +298,7 @@ class Merchant extends combineItems {
 	getItemSlot(name) {
 		for (let i = 0; i < character.items.length; i++) {
 			const item = character.items[i];
-			if (item && item.name === name) return i;
+			if (item && item.name === name) { return i; }
 		}
 
 		return -1;
@@ -426,6 +446,81 @@ class Merchant extends combineItems {
 			} catch (e) {
 				game_log(`Failed to dismantle slot ${slot}: ${e}`);
 			}
+		}
+
+		this.busy = false;
+	}
+
+	// Auto Exchange
+	async exchangeItems() {
+		this.busy = true;
+
+		await smart_move({ to: "bank" });
+
+		const exchangeableItems = [
+			{ item: "gem0", min: 1, x: 30.92, y: -381.1, map: "main" },
+			{ item: "gem1", min: 1, x: 30.92, y: -381.1, map: "main" },
+			{ item: "seashell", min: 20, x: -1496, y: 580, map: "main" }
+		];
+
+		let itemSlot = -1;
+		let currentKey = null;
+		let exchInfo = null;
+		const slots = [];
+
+		if (character.bank) {
+			for (const packName in character.bank) {
+				const pack = character.bank[packName];
+				if (!pack) { continue; }
+
+				for (let i = 0; i < pack.length; i++) {
+					const item = pack[i];
+					for (const exch of exchangeableItems) {
+						if (item && item.name === exch.item) {
+							slots.push({ location: "bank", pack: packName, slot: i });
+						}
+					}
+				}
+			}
+
+			await this.collectItems(slots);
+			await sleep(500);
+		}
+
+		// Find first exchangeable item
+		for (const exch of exchangeableItems) {
+			itemSlot = this.getItemSlot(exch.item);
+			if (itemSlot > -1) {
+				if (character.items[itemSlot].q < exch.min) {
+					itemSlot = -1;
+					continue;
+				}
+
+				currentKey = exch.item;
+				exchInfo = exch;
+				await smart_move({ x: exch.x, y: exch.y, map: exch.map });
+
+				game_log(`Exchanging item in slot ${itemSlot}: ${character.items[itemSlot].name}`);
+				break;
+			}
+		}
+
+
+
+		if (itemSlot === -1) { this.busy = false; return; } // nothing to exchange
+
+		const item = character.items[itemSlot];
+
+		for (let i = 0; i < item.q / exchInfo.min; i++) {
+
+			if (item.q < exchInfo.min) { break; } // not enough to exchange
+
+			exchange(itemSlot);
+			await sleep(6000);
+
+			// Re‑find slot
+			itemSlot = this.getItemSlot(currentKey);
+			if (itemSlot === -1) { break; } // no more to exchange
 		}
 
 		this.busy = false;

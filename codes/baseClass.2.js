@@ -22,7 +22,7 @@ class BaseClass {
             // Keep
             "spores", "seashell", "beewings", "gem0", "gem1", "whiteegg", "monstertoken", "spidersilk", "cscale", "spores",
             "rattail", "crabclaw", "bfur", "feather0", "gslime", "smush", "lostearring", "spiderkey", "snakeoil", "ascale",
-            "snakefang", "vitscroll", "offeringp", "offering", "essenceoffrost", "carrot", "snowball", "candy1",
+            "snakefang", "vitscroll", "offeringp", "offering", "essenceoffrost", "carrot", "snowball", "candy1", "frogt", "ink",
             // Upgrade
             "ringsj", "intbelt", "intearring", "strearring", "dexearring", "dexamulet", "stramulet", "intamulet",
             // Sell
@@ -469,11 +469,13 @@ class BaseClass {
 
         // If none found nearby, move toward this mob’s spawn
         if (!this.movingToNewMob) {
-            smart_move(mobEntry.travel);
+            let farm = mobData.find(m => m.target === this.currentMobFarm);
+            smart_move(farm.travel);
         }
+
         this.movingToNewMob = true;
         set_message(`No ${mobEntry.target} nearby, moving to farm`);
-        return; // ✅ stop here, don’t override with later targets
+        return;
 
     }
 
