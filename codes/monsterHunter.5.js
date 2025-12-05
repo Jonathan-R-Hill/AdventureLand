@@ -11,7 +11,7 @@ const mobData = [
     { travel: "squig", target: "Squig", map: "main" },
     { travel: "squigtoad", target: "Squigtoad", map: "main" },
     { travel: "poisio", target: "Poisio", map: "main" },
-    { travel: "articbee", target: "Artic Bee", map: "winterland" },
+    { travel: "arcticbee", target: "Arctic Bee", map: "winterland" },
     { travel: "iceroamer", target: "Water Spirit", map: "winterland" },
     { travel: "armadillo", target: "Armadillo", map: "main" },
     { travel: "croc", target: "Croc", map: "main" },

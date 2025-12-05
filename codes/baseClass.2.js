@@ -14,8 +14,8 @@ class BaseClass {
         this.attackMode = true;
         this.fightTogeather = false;
 
-        this.currentMobFarm = "Squigtoad";
-        this.secondaryTarget = "Squig";
+        this.currentMobFarm = "Arctic Bee";
+        this.secondaryTarget = "Arctic Bee";
         this.tank = "Jhlwarrior";
 
         this.whitelist = [
@@ -23,12 +23,13 @@ class BaseClass {
             "spores", "seashell", "beewings", "gem0", "gem1", "whiteegg", "monstertoken", "spidersilk", "cscale", "spores",
             "rattail", "crabclaw", "bfur", "feather0", "gslime", "smush", "lostearring", "spiderkey", "snakeoil", "ascale",
             "snakefang", "vitscroll", "offeringp", "offering", "essenceoffrost", "carrot", "snowball", "candy1", "frogt", "ink",
+            "sstinger",
             // Upgrade
             "ringsj", "intbelt", "intearring", "strearring", "dexearring", "dexamulet", "stramulet", "intamulet",
             // Sell
             "hpbelt", "hpamulet", "shoes", "coat", "pants", "strring", "intring", "vitring", "dexring",
             "wattire", "wshoes", "wcap", "cclaw", "mushroomstaff", "wbreeches", "slimestaff", "stinger",
-            "vitearring", "wgloves"
+            "vitearring", "wgloves", "quiver",
         ];
 
         this.returningToGroup = false;
@@ -41,6 +42,7 @@ class BaseClass {
             await this.handleCM(sender, data);
         });
 
+        setInterval(() => this.handleEvents(), 15 * 1000);
         setInterval(() => this.sendWhitelistedItemsToMerchant(), 3 * 1000);
         setInterval(() => this.askForLuck(), 20 * 1000);
         setInterval(() => this.callMerchant(), 20 * 1000);
@@ -49,6 +51,17 @@ class BaseClass {
         startSharedTasks();
 
         scaleUI(0.80);
+    }
+
+    async handleEvents() {
+        if (parent.S.snowman) {
+            if (!get_nearest_monster({ type: 'snowman' })) {
+                this.movingToNewMob = true;
+                await smart_move({ to: 'snowman' });
+            }
+        } else if (parent.S.icegolem) {
+            if (!get_nearest_monster({ type: 'icegolem' })) { join('icegolem'); }
+        }
     }
 
     async handleCM(sender, payload) {
@@ -89,6 +102,7 @@ class BaseClass {
             case "set_new_target": {
                 const dataSplit = data.split(',');
                 this.currentMobFarm = dataSplit[1];
+                this.secondaryTarget = dataSplit[1];
 
                 this.movingToNewMob = true;
                 await smart_move({ to: dataSplit[0] });
@@ -283,6 +297,8 @@ class BaseClass {
 
         target = this.getClosestMonsterByName("Phoenix")
             || this.getClosestMonsterByName("Green Jr.")
+            || this.getClosestMonsterByName("Snowman")
+            || this.getClosestMonsterByName("Ice Golem")
             || this.getClosestMonsterByName(this.currentMobFarm)
             || this.getClosestMonsterByName(this.secondaryTarget);
 
@@ -393,13 +409,12 @@ class BaseClass {
 
         let target = get_targeted_monster();
 
-        // Phoenix
-        const phoenix = get_nearest_monster({ type: "phoenix" });
-        if (phoenix) { return phoenix; }
+        const bosses = ["Phoenix", "Green Jr.", "Snowman", "Ice Golem",];
 
-        // Green Jr
-        const greenJr = get_nearest_monster({ type: "greenjr" });
-        if (greenJr) { return greenJr; }
+        bosses.forEach(mob => {
+            const boss = get_nearest_monster(mob);
+            if (boss) { return boss; }
+        });
 
         // Current farm mob
         if (target && target.name !== this.currentMobFarm && target.name !== this.secondaryTarget) {

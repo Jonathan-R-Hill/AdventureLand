@@ -9,7 +9,7 @@ class MyChar extends BaseClass {
     lastFarmCheck = 0;
 
     equipMainWeapons() {
-        if (["Poisio", "Wild Boar", "Water Spirit", "Hawk", "Scorpion", "Ice Golem", "Green Jr"].includes(this.currentMobFarm)
+        if (["Poisio", "Wild Boar", "Water Spirit", "Hawk", "Ice Golem", "Green Jr"].includes(this.currentMobFarm)
             || character.hp < character.max_hp * 0.5) {
 
             this.equipItem("sshield", 4);
@@ -81,6 +81,7 @@ const combat = async () => {
     if (["Poisio", "Wild Boar", "Water Spirit", "Hawk", "Scorpion", "Spider"].includes(myChar.currentMobFarm)) {
         if (get_nearest_monster({ target: "Jhlpriest" }) != null) { target = get_nearest_monster({ target: "Jhlpriest" }); }
         else if (get_nearest_monster({ target: "Jhlranger" }) != null) { target = get_nearest_monster({ target: "Jhlranger" }); }
+        else if (get_nearest_monster({ target: "Jhlrogue" }) != null) { target = get_nearest_monster({ target: "Jhlrogue" }); }
         else if (get_nearest_monster({ target: "Jhlwarrior" }) != null) { target = get_nearest_monster({ target: "Jhlwarrior" }); }
         else { target = await myChar.targetLogicTank(); }
     }

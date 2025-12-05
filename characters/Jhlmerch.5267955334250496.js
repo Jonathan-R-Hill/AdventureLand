@@ -8,8 +8,8 @@ const POTSMINSTOCK = 2000;
 const POT_BUFFER = 600;
 
 const sellWhiteList = [
-	"hpbelt", "hpamulet", "shoes", "coat", "pants", "strring", "intring", "vitring", "dexring",
-	"cclaw", "mushroomstaff", "slimestaff", "stinger", "vitearring", "glolipop",
+	"hpbelt", "hpamulet", "shoes", "coat", "pants", "vitring",
+	"cclaw", "mushroomstaff", "slimestaff", "stinger", "vitearring", "glolipop", "quiver",
 	"wattire", "wshoes", "wcap", "wbreeches", "wgloves", // Wanders set
 	"helmet1", "pants1", "coat1", "gloves1", "shoes1", // Rugged set
 ];
@@ -22,6 +22,7 @@ const bankWhitelist = [
 	// Upgrades
 	"ringsj", "lostearring", "intearring", "strearring", "dexearring",
 	"wbook0", "dexamulet", "stramulet", "intamulet", "candy1",
+	"strring", "intring", "dexring",
 	// Pots
 	"elixirint0", "elixirint1", "elixirint2",
 	"elixirstr0", "elixirstr1", "elixirstr2",
@@ -30,6 +31,7 @@ const bankWhitelist = [
 	// Mats
 	"spores", "beewings", "whiteegg", "spidersilk", "cscale", "rattail", "crabclaw", "bfur", "feather0", "gslime", "smush",
 	"snakeoil", "ascale", "snakefang", "vitscroll", "essenceoffire", "essenceoffrost", "carrot", "snowball", "frogt", "ink",
+	"sstinger",
 	// Misc
 	"offeringp", "offering",
 ];
@@ -101,9 +103,10 @@ class Merchant extends combineItems {
 				this.lastRun.combine = now;
 
 				const upgrades = [
-					"intearring", "strearring", "dexearring", "ringsj", // Rings
+					"intearring", "strearring", "dexearring", "ringsj", "strring", "intring", "dexring", // Rings & Earrings
 					"wbook0", // Books
 					"dexamulet", "stramulet", "intamulet", // Necks
+
 				];
 				const levels = [0, 1, 2];
 
