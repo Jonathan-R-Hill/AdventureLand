@@ -1,0 +1,11 @@
+@AdventureApi_HostAddress = http://localhost:5015
+
+GET {{AdventureApi_HostAddress}}
+Accept: application/json
+
+###
+
+GET {{AdventureApi_HostAddress}}
+Accept: application/json
+
+###

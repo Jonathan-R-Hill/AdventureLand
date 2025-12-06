@@ -16,7 +16,7 @@ const sellWhiteList = [
 
 const bankWhitelist = [
 	// Exchangables
-	"seashell", "gem0", "gem1", "monstertoken", "gemfragment", "armorbox", "weaponbox",
+	"seashell", "gem0", "gem1", "monstertoken", "gemfragment", "armorbox", "weaponbox", "candycane",
 	// Keyes
 	"spiderkey",
 	// Upgrades
@@ -177,7 +177,7 @@ class Merchant extends combineItems {
 			if (!this.checkIfDoingSOmething()) {
 				const { used } = this.getInventoryUsage();
 				if (used >= 15) {
-					await this.sellItems();
+					this.sellItems();
 
 					await this.bankItems();
 				}
@@ -369,7 +369,7 @@ class Merchant extends combineItems {
 	getInventoryUsage() {
 		let used = 0;
 		for (let i = 0; i < character.items.length; i++) {
-			if (character.items[i]) used++;
+			if (character.items[i]) { used++; }
 		}
 
 		return { used, total: character.items.length };
@@ -386,11 +386,16 @@ class Merchant extends combineItems {
 			this.busy = true;
 
 			await smart_move({ to: "potions" });
-			await this.sellItems();
+			await sleep(500);
+
+			this.sellItems();
 		}
 	}
 
-	async sellItems() {
+	sellItems() {
+		if (character.map !== "main") { return; }
+		if (this.distance(character, { x: 0, y: 0 }) > 220) { return; }
+
 		for (let i = 0; i < character.items.length; i++) {
 			const item = character.items[i];
 
@@ -414,6 +419,7 @@ class Merchant extends combineItems {
 
 			if (bankWhitelist.includes(item.name)) {
 				bank_store(i);
+				await sleep(10);
 			}
 		}
 
@@ -706,4 +712,4 @@ class Merchant extends combineItems {
 }
 
 // Instantiate manager
-const potionManager = new Merchant();
+const myChar = new Merchant();

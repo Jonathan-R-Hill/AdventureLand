@@ -26,7 +26,7 @@ class BaseClass {
             "spores", "seashell", "beewings", "gem0", "gem1", "whiteegg", "monstertoken", "spidersilk", "cscale", "spores",
             "rattail", "crabclaw", "bfur", "feather0", "gslime", "smush", "lostearring", "spiderkey", "snakeoil", "ascale",
             "snakefang", "vitscroll", "offeringp", "offering", "essenceoffrost", "carrot", "snowball", "candy1", "frogt", "ink",
-            "sstinger",
+            "sstinger", "candycane",
             // Upgrade
             "ringsj", "intbelt", "intearring", "strearring", "dexearring", "dexamulet", "stramulet", "intamulet",
             // Sell
@@ -446,7 +446,7 @@ class BaseClass {
             return;
         }
 
-        // Priority check Phoenix
+        // Priority check Bosses
         for (const id in parent.entities) {
             const ent = parent.entities[id];
             if (!ent || ent.type !== "monster" || ent.dead || !ent.visible) continue;
@@ -454,7 +454,7 @@ class BaseClass {
             const dist = parent.distance(character, ent);
             if (dist > 300) { continue; }
 
-            if (ent.name === "Phoenix") {
+            if (ent.name === "Phoenix" || ent.name === "Ice Golem" || ent.name === "Snowman") {
                 this.movingToNewMob = false;
                 stop();
                 set_message("Phoenix spotted nearby, engaging");

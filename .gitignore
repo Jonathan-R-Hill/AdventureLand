@@ -1,5 +1,41 @@
+# AL
 clash/*
 libraries/*
+
+.vs/*
+Properties/PublishProfiles/*
+config/*
+
+# Ignore local launch settings
+Properties/launchSettings.json
+
+
+# Build results
+bin/
+obj/
+
+# User-specific files
+*.user
+*.rsuser
+*.suo
+*.userosscache
+*.sln.docstates
+
+# IDE settings
+.vscode/
+.idea/
+*.swp
+
+# Logs
+*.log
+
+# Test results
+TestResults/
+
+# Packages
+*.nupkg
+*.snupkg
+packages/
 
 # Logs
 logs
@@ -140,3 +176,7 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+/AdventureApi/.vs
+/AdventureApi/Properties/launchSettings.json
+/AdventureApi/.config
+/AdventureApi/Properties/PublishProfiles
