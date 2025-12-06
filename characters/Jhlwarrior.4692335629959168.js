@@ -74,7 +74,7 @@ const combat = async () => {
 
     const now = Date.now();
     if (now - myChar.lastFarmCheck > 5000) {
-        myChar.checkNearbyFarmMob();
+        await myChar.checkNearbyFarmMob();
         myChar.lastFarmCheck = now;
     }
 

@@ -16,6 +16,9 @@ class BaseClass {
 
         this.currentMobFarm = "Arctic Bee";
         this.secondaryTarget = "Arctic Bee";
+
+        this.lastEvent = null;
+
         this.tank = "Jhlwarrior";
 
         this.whitelist = [
@@ -55,11 +58,13 @@ class BaseClass {
 
     async handleEvents() {
         if (parent.S.snowman) {
+            this.lastEvent = 'snowman';
             if (!get_nearest_monster({ type: 'snowman' })) {
                 this.movingToNewMob = true;
                 await smart_move({ to: 'snowman' });
             }
         } else if (parent.S.icegolem) {
+            this.lastEvent = 'icegolem';
             if (!get_nearest_monster({ type: 'icegolem' })) { join('icegolem'); }
         }
     }
@@ -427,13 +432,14 @@ class BaseClass {
 
         if (!target) {
             set_message(`No target, moving to farm ${myMobs[this.currentMobFarm]}`);
+
             return null;
         }
 
         return target;
     }
 
-    checkNearbyFarmMob() {
+    async checkNearbyFarmMob() {
         // If fighting together and not the tank, stop here for follow logic
         if (this.fightTogeather && get_player(this.tank) && character.name !== this.tank) {
             this.movingToNewMob = false;
@@ -485,10 +491,17 @@ class BaseClass {
         // If none found nearby, move toward this mob’s spawn
         if (!this.movingToNewMob) {
             let farm = mobData.find(m => m.target === this.currentMobFarm);
-            smart_move(farm.travel);
+            this.movingToNewMob = true;
+
+            if (this.lastEvent == "icegolem") {
+                use_skill("use_town");
+                await sleep(6000);
+                this.lastEvent = null;
+            }
+
+            await smart_move(farm.travel);
         }
 
-        this.movingToNewMob = true;
         set_message(`No ${mobEntry.target} nearby, moving to farm`);
         return;
 

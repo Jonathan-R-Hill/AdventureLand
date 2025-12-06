@@ -23,7 +23,7 @@ async function moveTowardTargetAvoiding(targetX = null, targetY = null) {
     let dirX = dx / length;
     let dirY = dy / length;
 
-    const stepSize = 40;
+    const stepSize = 60;
     targetX = character.real_x + dirX * stepSize;
     targetY = character.real_y + dirY * stepSize;
 
@@ -56,7 +56,7 @@ async function moveTowardTargetAvoiding(targetX = null, targetY = null) {
             } else {
                 // Remember this failed tile
                 recentBlocked.push(key);
-                if (recentBlocked.length > 10) { recentBlocked.shift(); } // keep history small
+                if (recentBlocked.length > 20) { recentBlocked.shift(); } // keep history small
             }
         }
 

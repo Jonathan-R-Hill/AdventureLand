@@ -19,3 +19,8 @@ function updateTarget(travelKey) {
         send_cm(name, `set_new_target ${mobEntry.travel},${mobEntry.target}`);
     }
 }
+
+
+function disconnectedChar(name) {
+    parent.api_call("disconnect_character", { name: name });
+}
