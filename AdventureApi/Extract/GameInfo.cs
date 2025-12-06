@@ -1,8 +1,6 @@
-﻿using System.Reflection;
-using System.Text.Json;
-using Microsoft.AspNetCore.Mvc;
-using MySql.Data.MySqlClient;
+﻿using MySql.Data.MySqlClient;
 using System.Data;
+using System.Reflection;
 
 namespace AdventureApi.Extract
 {
