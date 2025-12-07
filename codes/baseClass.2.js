@@ -310,12 +310,12 @@ class BaseClass {
 
         if (target) { return target; }
 
-        target = this.getClosestMonsterByName("Phoenix")
-            || this.getClosestMonsterByName("Green Jr.")
-            || this.getClosestMonsterByName("Snowman")
-            || this.getClosestMonsterByName("Ice Golem")
-            || this.getClosestMonsterByName(this.currentMobFarm)
-            || this.getClosestMonsterByName(this.secondaryTarget);
+        target = this.bosses
+            .map(name => this.getClosestMonsterByName(name))
+            .find(mon => mon) // first non-null result
+            || this.getClosestMonsterByName(this.currentMobFarm) || this.getClosestMonsterByName(this.secondaryTarget);
+
+
 
         if (target && !target.s.fullguardx) {
             change_target(target);
