@@ -22,7 +22,10 @@ function exportCharacterData() {
         InventorySpace: 42
     };
 
+    console.log(data);
+
     fetch("http://192.168.0.91:5015/extract/charInfo", {
+        //  fetch("http://localhost:5015/extract/charInfo", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data)

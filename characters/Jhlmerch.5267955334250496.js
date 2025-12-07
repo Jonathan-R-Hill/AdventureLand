@@ -12,11 +12,13 @@ const sellWhiteList = [
 	"cclaw", "mushroomstaff", "slimestaff", "stinger", "vitearring", "glolipop", "quiver",
 	"wattire", "wshoes", "wcap", "wbreeches", "wgloves", // Wanders set
 	"helmet1", "pants1", "coat1", "gloves1", "shoes1", // Rugged set
+	"xmace", "xbow",
 ];
 
 const bankWhitelist = [
 	// Exchangables
-	"seashell", "gem0", "gem1", "monstertoken", "gemfragment", "armorbox", "weaponbox", "candycane",
+	"seashell", "gem0", "gem1", "monstertoken", "gemfragment", "armorbox", "weaponbox",
+	"ornament", "mistletoe", "candycane",
 	// Keyes
 	"spiderkey",
 	// Upgrades
@@ -34,6 +36,7 @@ const bankWhitelist = [
 	"sstinger",
 	// Misc
 	"offeringp", "offering",
+	"x0", "x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x9",
 ];
 
 const dismantleList = [
@@ -70,6 +73,7 @@ class Merchant extends combineItems {
 		scaleUI(0.80);
 
 		setInterval(async () => await this.mainLoop(), 1000);
+		setInterval(exportCharacterData, 8 * 1000);
 
 		character.on("cm", async (sender, data) => {
 			await this.handleCM(sender, data);
@@ -675,6 +679,7 @@ class Merchant extends combineItems {
 	async healAndBuff() {
 		reviveSelf();
 		manageParty();
+
 
 		if (this.fishing || this.mining) { return; }
 		useHealthPotion();

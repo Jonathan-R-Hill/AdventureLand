@@ -19,6 +19,7 @@ class BaseClass {
 
         this.lastEvent = null;
 
+        this.bosses = ["Phoenix", "Green Jr.", "Snowman", "Ice Golem", "Grinch"];
         this.tank = "Jhlwarrior";
 
         this.whitelist = [
@@ -26,13 +27,14 @@ class BaseClass {
             "spores", "seashell", "beewings", "gem0", "gem1", "whiteegg", "monstertoken", "spidersilk", "cscale", "spores",
             "rattail", "crabclaw", "bfur", "feather0", "gslime", "smush", "lostearring", "spiderkey", "snakeoil", "ascale",
             "snakefang", "vitscroll", "offeringp", "offering", "essenceoffrost", "carrot", "snowball", "candy1", "frogt", "ink",
-            "sstinger", "candycane",
+            "sstinger", "candycane", "ornament", "mistletoe",
+            "x0", "x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x9",
             // Upgrade
             "ringsj", "intbelt", "intearring", "strearring", "dexearring", "dexamulet", "stramulet", "intamulet",
             // Sell
             "hpbelt", "hpamulet", "shoes", "coat", "pants", "strring", "intring", "vitring", "dexring",
             "wattire", "wshoes", "wcap", "cclaw", "mushroomstaff", "wbreeches", "slimestaff", "stinger",
-            "vitearring", "wgloves", "quiver",
+            "vitearring", "wgloves", "quiver", "xmace", "xbow",
         ];
 
         this.returningToGroup = false;
@@ -45,6 +47,7 @@ class BaseClass {
             await this.handleCM(sender, data);
         });
 
+        setInterval(() => this.handleHolidayBuffs(), 60 * 1000);
         setInterval(() => this.handleEvents(), 15 * 1000);
         setInterval(() => this.sendWhitelistedItemsToMerchant(), 3 * 1000);
         setInterval(() => this.askForLuck(), 20 * 1000);
@@ -57,15 +60,22 @@ class BaseClass {
     }
 
     async handleEvents() {
-        if (parent.S.snowman) {
+        if (parent.S.snowman.live && distance(character, { x: 1267, y: -860, map: 'winterland' }) > 500) {
             this.lastEvent = 'snowman';
             if (!get_nearest_monster({ type: 'snowman' })) {
                 this.movingToNewMob = true;
-                await smart_move({ to: 'snowman' });
+                await smart_move({ x: 1267, y: -860, map: 'winterland' });
             }
+
         } else if (parent.S.icegolem) {
             this.lastEvent = 'icegolem';
             if (!get_nearest_monster({ type: 'icegolem' })) { join('icegolem'); }
+        }
+    }
+
+    async handleHolidayBuffs() {
+        if (!hasChristmasBuff()) {
+            this.returningToGroup = await getChristmasBuff();
         }
     }
 
@@ -307,12 +317,13 @@ class BaseClass {
             || this.getClosestMonsterByName(this.currentMobFarm)
             || this.getClosestMonsterByName(this.secondaryTarget);
 
-        if (target) {
+        if (target && !target.s.fullguardx) {
             change_target(target);
             return target;
-        } else {
+        } else if (target && target.s.fullguardx) {
+            target = this.getClosestMonsterByName(this.currentMobFarm);
             set_message(`Not my target ${this.currentMobFarm}`);
-            return null;
+            return target;
         }
     }
 
@@ -414,13 +425,6 @@ class BaseClass {
 
         let target = get_targeted_monster();
 
-        const bosses = ["Phoenix", "Green Jr.", "Snowman", "Ice Golem",];
-
-        bosses.forEach(mob => {
-            const boss = get_nearest_monster(mob);
-            if (boss) { return boss; }
-        });
-
         // Current farm mob
         if (target && target.name !== this.currentMobFarm && target.name !== this.secondaryTarget) {
             target = null;
@@ -454,7 +458,7 @@ class BaseClass {
             const dist = parent.distance(character, ent);
             if (dist > 300) { continue; }
 
-            if (ent.name === "Phoenix" || ent.name === "Ice Golem" || ent.name === "Snowman") {
+            if (this.bosses.includes(ent.name)) {
                 this.movingToNewMob = false;
                 stop();
                 set_message("Phoenix spotted nearby, engaging");
@@ -477,7 +481,7 @@ class BaseClass {
                 if (!ent || ent.type !== "monster" || ent.dead || !ent.visible) continue;
 
                 const dist = parent.distance(character, ent);
-                if (dist > 200) continue;
+                if (dist > 300) continue;
 
                 if (ent.name === mobEntry.target) {
                     this.movingToNewMob = false;

@@ -1,12 +1,13 @@
 load_code("healAndPot")
 load_code("ApiInteraction");
+load_code("holidayBuffs");
 
 function startSharedTasks() {
     playKeepAliveSound();
     setInterval(manageParty, 2100);
     setInterval(reviveSelf, 7000);
     setInterval(playKeepAliveSound, 45 * 60 * 1000);
-    setInterval(exportCharacterData, 15 * 1000);
+    setInterval(exportCharacterData, 6 * 1000);
 
     if (character.name != "Jhlmerch") {
         setInterval(sendGoldToMerchant, 3 * 1000);
