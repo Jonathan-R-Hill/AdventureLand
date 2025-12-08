@@ -19,7 +19,7 @@ class BaseClass {
 
         this.lastEvent = null;
 
-        this.bosses = ["Phoenix", "Green Jr.", "Snowman", "Ice Golem", "Grinch"];
+        this.bosses = ["Phoenix", "Grinch", "Green Jr.", "Snowman", "Ice Golem"];
         this.tank = "Jhlwarrior";
 
         this.whitelist = [
@@ -27,7 +27,7 @@ class BaseClass {
             "spores", "seashell", "beewings", "gem0", "gem1", "whiteegg", "monstertoken", "spidersilk", "cscale", "spores",
             "rattail", "crabclaw", "bfur", "feather0", "gslime", "smush", "lostearring", "spiderkey", "snakeoil", "ascale",
             "snakefang", "vitscroll", "offeringp", "offering", "essenceoffrost", "carrot", "snowball", "candy1", "frogt", "ink",
-            "sstinger", "candycane", "ornament", "mistletoe",
+            "sstinger", "candycane", "ornament", "mistletoe", "frozenkey",
             "x0", "x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x9",
             // Upgrade
             "ringsj", "intbelt", "intearring", "strearring", "dexearring", "dexamulet", "stramulet", "intamulet",
@@ -319,10 +319,11 @@ class BaseClass {
 
         if (target && !target.s.fullguardx) {
             change_target(target);
+
             return target;
         } else if (target && target.s.fullguardx) {
-            target = this.getClosestMonsterByName(this.currentMobFarm);
-            set_message(`Not my target ${this.currentMobFarm}`);
+            target = this.getClosestMonsterByName(this.currentMobFarm) || this.getClosestMonsterByName(this.secondaryTarget);
+
             return target;
         }
     }
@@ -371,12 +372,13 @@ class BaseClass {
     async attack(target) {
         if (this.movingToNewMob) { return; }
         if (!this.is_in_range(target, "attack")) {
-            moveTowardTargetAvoiding(target.real_x, target.real_y);
+            // moveTowardTargetAvoiding(target.real_x, target.real_y);
+            moveTowardTargetAvoiding2(target.real_x, target.real_y);
 
             set_message("Moving to target");
         } else if (!is_on_cooldown("attack")) {
             set_message("Attacking");
-            // stop();
+            if (!this.kite) { stop(); }
             attack(target);
         }
     }

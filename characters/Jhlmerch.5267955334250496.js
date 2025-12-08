@@ -12,7 +12,8 @@ const sellWhiteList = [
 	"cclaw", "mushroomstaff", "slimestaff", "stinger", "vitearring", "glolipop", "quiver",
 	"wattire", "wshoes", "wcap", "wbreeches", "wgloves", // Wanders set
 	"helmet1", "pants1", "coat1", "gloves1", "shoes1", // Rugged set
-	"xmace", "xbow",
+	"xmace", "xbow", "merry", "snowball", "mittens", "xmashat", "rednose", "candycanesword", "xmassweater", "xmaspants", "xmasshoes", "warmscarf",
+	// "santasbelt", "ornamentstaff",
 ];
 
 const bankWhitelist = [
@@ -20,7 +21,7 @@ const bankWhitelist = [
 	"seashell", "gem0", "gem1", "monstertoken", "gemfragment", "armorbox", "weaponbox",
 	"ornament", "mistletoe", "candycane",
 	// Keyes
-	"spiderkey",
+	"spiderkey", "frozenkey",
 	// Upgrades
 	"ringsj", "lostearring", "intearring", "strearring", "dexearring",
 	"wbook0", "dexamulet", "stramulet", "intamulet", "candy1",

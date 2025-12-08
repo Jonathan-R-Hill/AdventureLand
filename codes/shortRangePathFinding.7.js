@@ -70,6 +70,113 @@ async function moveTowardTargetAvoiding(targetX = null, targetY = null) {
     move(targetX, targetY);
 }
 
+// -- A* Attempt 2
+class Node {
+    constructor(x, y, parent = null) {
+        this.x = x;
+        this.y = y;
+        this.parent = parent;
+        this.g = 0; // Cost from start
+        this.h = 0; // Heuristic est cost till end
+        this.f = 0; // Total cost
+    }
+}
+
+function getNextStepAStar(startX, startY, targetX, targetY, stepSize, range = 0) {
+    // Snap coordinates to grid
+    const startNode = new Node(Math.round(startX / stepSize) * stepSize, Math.round(startY / stepSize) * stepSize);
+    const endNode = new Node(Math.round(targetX / stepSize) * stepSize, Math.round(targetY / stepSize) * stepSize);
+
+    let openList = [startNode];
+    let closedSet = new Set();
+
+    let loops = 0;
+    const MAX_LOOPS = 500;
+
+    while (openList.length > 0 && loops < MAX_LOOPS) {
+        loops++;
+
+        openList.sort((a, b) => a.f - b.f);
+        let current = openList.shift();
+
+        // DISTANCE CHECK
+        const dist = Math.sqrt(Math.pow(current.x - targetX, 2) + Math.pow(current.y - targetY, 2));
+        if (dist <= range - 20) {
+            let path = [];
+            let temp = current;
+            while (temp.parent) {
+                path.push(temp);
+                temp = temp.parent;
+            }
+            return path.pop();
+        }
+
+        closedSet.add(`${current.x},${current.y}`);
+
+        // --- NEW: Added 4 diagonal neighbors ---
+        const neighbors = [
+            // Straight (Cost: 1.0)
+            { x: current.x + stepSize, y: current.y, cost: stepSize },
+            { x: current.x - stepSize, y: current.y, cost: stepSize },
+            { x: current.x, y: current.y + stepSize, cost: stepSize },
+            { x: current.x, y: current.y - stepSize, cost: stepSize },
+            // Diagonal (Cost: ~1.414 ish)
+            { x: current.x + stepSize, y: current.y + stepSize, cost: stepSize * 1.414 },
+            { x: current.x - stepSize, y: current.y - stepSize, cost: stepSize * 1.414 },
+            { x: current.x - stepSize, y: current.y + stepSize, cost: stepSize * 1.414 },
+            { x: current.x + stepSize, y: current.y - stepSize, cost: stepSize * 1.414 }
+        ];
+
+        for (let neighborPos of neighbors) {
+            if (closedSet.has(`${neighborPos.x},${neighborPos.y}`)) continue;
+
+            if (!can_move_to(neighborPos.x, neighborPos.y)) continue;
+
+            let neighbor = new Node(neighborPos.x, neighborPos.y, current);
+
+            // Use the specific cost defined in the neighbors array
+            neighbor.g = current.g + neighborPos.cost;
+
+            neighbor.h = Math.sqrt(Math.pow(neighbor.x - endNode.x, 2) + Math.pow(neighbor.y - endNode.y, 2));
+            neighbor.f = neighbor.g + neighbor.h;
+
+            let existing = openList.find(n => n.x === neighbor.x && n.y === neighbor.y);
+            if (existing && existing.g < neighbor.g) continue;
+
+            openList.push(neighbor);
+        }
+    }
+
+    return null;
+}
+
+async function moveTowardTargetAvoiding2(targetX = null, targetY = null) {
+    let tx, ty;
+
+    if (targetX === null || targetY === null) {
+        const war = get_player("Jhlwarrior");
+        if (!war) return;
+        tx = war.real_x;
+        ty = war.real_y;
+    } else {
+        tx = targetX;
+        ty = targetY;
+    }
+
+    const stepSize = 60;
+
+    // Run A* to get just the NEXT immediate tile we should go to
+    let nextStep = getNextStepAStar(character.real_x, character.real_y, tx, ty, stepSize);
+
+    if (nextStep) {
+        // Move to the next node.
+        move(nextStep.x, nextStep.y);
+    } else {
+        // Fallback
+        move(tx, ty);
+    }
+}
+
 
 // ---
 const TILE = 20;
@@ -166,7 +273,7 @@ async function moveAndWalk(x, y) {
     }
 }
 
-async function pathToWarriorFloodfill(opX = null, opY = null) {
+async function pathFloodfill(opX = null, opY = null) {
     const war = get_player("Jhlwarrior");
     let goal;
     if (!war && opX != null && opY != null) { goal = tileFromWorld(opX, opY); }
@@ -176,7 +283,7 @@ async function pathToWarriorFloodfill(opX = null, opY = null) {
     // Don't pathfind if we are already in the same tile
     if (start.tx === goal.tx && start.ty === goal.ty) { return; }
 
-    const path = floodfillPath(start, goal); //findPathAStar(start, goal);
+    const path = floodfillPath(start, goal);
 
     if (!path) {
         game_log("Floodfill: no path found");
@@ -199,96 +306,4 @@ async function pathToWarriorFloodfill(opX = null, opY = null) {
         // We use our wrapper that waits for arrival
         await moveAndWalk(x, y);
     }
-}
-
-// -- A* attempt
-// Helper to calculate H
-function getHeuristic(start, end) {
-    // Manhattan distance
-    return Math.abs(start.tx - end.tx) + Math.abs(start.ty - end.ty);
-}
-
-function findPathAStar(start, goal) {
-    const openSet = [start];
-
-    // Map to keep track of visited nodes and their best "g" score (cost from start)
-    const gScore = {};
-    const fScore = {}; // f = g + h (cost from start + est. dist to end)
-    const parent = {};
-
-    const startKey = `${start.tx},${start.ty}`;
-    const goalKey = `${goal.tx},${goal.ty}`;
-
-    gScore[startKey] = 0;
-    fScore[startKey] = getHeuristic(start, goal);
-
-    let iterations = 0;
-    const MAX_ITERATIONS = 3000;
-
-    while (openSet.length > 0) {
-        iterations++;
-        if (iterations > MAX_ITERATIONS) {
-            console.log("A* Limit Reached - Path too complex or blocked");
-            return null;
-        }
-
-        // Get the node in openSet with the LOWEST fScore
-        let currentIndex = 0;
-        for (let i = 1; i < openSet.length; i++) {
-            const keyI = `${openSet[i].tx},${openSet[i].ty}`;
-            const keyCurr = `${openSet[currentIndex].tx},${openSet[currentIndex].ty}`;
-
-            // Default to Infinity if not yet scored
-            const fI = fScore[keyI] || Infinity;
-            const fCurr = fScore[keyCurr] || Infinity;
-
-            if (fI < fCurr) {
-                currentIndex = i;
-            }
-        }
-
-        const current = openSet[currentIndex];
-        const currentKey = `${current.tx},${current.ty}`;
-
-        // Check if goal
-        if (currentKey === goalKey) {
-            return reconstructPath(parent, currentKey);
-        }
-
-        // Remove current from openSet
-        openSet.splice(currentIndex, 1);
-
-        // Check neighbors
-        const currentWorld = worldFromTile(current.tx, current.ty);
-
-        for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
-            const neighbor = { tx: current.tx + dx, ty: current.ty + dy };
-            const nKey = `${neighbor.tx},${neighbor.ty}`;
-
-            // Calculate tentative G score (Current G + distance to neighbor)
-            const currentG = gScore[currentKey] || 0;
-            const tentativeG = currentG + 1;
-
-            // If we found a cheaper path to this neighbor
-            if (tentativeG < (gScore[nKey] || Infinity)) {
-
-                // Only run the expensive can_move check if the math looks good
-                const nextWorld = worldFromTile(neighbor.tx, neighbor.ty);
-                if (!canMoveBetween(currentWorld.x, currentWorld.y, nextWorld.x, nextWorld.y)) {
-                    continue;
-                }
-
-                parent[nKey] = currentKey;
-                gScore[nKey] = tentativeG;
-                fScore[nKey] = tentativeG + getHeuristic(neighbor, goal);
-
-                // Add to openSet if not already there
-                if (!openSet.some(n => n.tx === neighbor.tx && n.ty === neighbor.ty)) {
-                    openSet.push(neighbor);
-                }
-            }
-        }
-    }
-
-    return null;
 }
