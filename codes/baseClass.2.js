@@ -13,6 +13,7 @@ class BaseClass {
         this.kite = false;
         this.attackMode = true;
         this.fightTogeather = false;
+        this.gettingBuff = false;
 
         this.currentMobFarm = "Arctic Bee";
         this.secondaryTarget = "Arctic Bee";
@@ -27,14 +28,14 @@ class BaseClass {
             "spores", "seashell", "beewings", "gem0", "gem1", "whiteegg", "monstertoken", "spidersilk", "cscale", "spores",
             "rattail", "crabclaw", "bfur", "feather0", "gslime", "smush", "lostearring", "spiderkey", "snakeoil", "ascale",
             "snakefang", "vitscroll", "offeringp", "offering", "essenceoffrost", "carrot", "snowball", "candy1", "frogt", "ink",
-            "sstinger", "candycane", "ornament", "mistletoe", "frozenkey",
+            "sstinger", "candycane", "ornament", "mistletoe", "frozenkey", "funtoken",
             "x0", "x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x9",
             // Upgrade
             "ringsj", "intbelt", "intearring", "strearring", "dexearring", "dexamulet", "stramulet", "intamulet",
             // Sell
             "hpbelt", "hpamulet", "shoes", "coat", "pants", "strring", "intring", "vitring", "dexring",
             "wattire", "wshoes", "wcap", "cclaw", "mushroomstaff", "wbreeches", "slimestaff", "stinger",
-            "vitearring", "wgloves", "quiver", "xmace", "xbow",
+            "vitearring", "wgloves", "quiver", "xmace", "xbow", "iceskates",
         ];
 
         this.returningToGroup = false;
@@ -47,7 +48,7 @@ class BaseClass {
             await this.handleCM(sender, data);
         });
 
-        setInterval(() => this.handleHolidayBuffs(), 60 * 1000);
+        setInterval(() => this.handleHolidayBuffs(), 11 * 1000);
         setInterval(() => this.handleEvents(), 15 * 1000);
         setInterval(() => this.sendWhitelistedItemsToMerchant(), 3 * 1000);
         setInterval(() => this.askForLuck(), 20 * 1000);
@@ -74,8 +75,12 @@ class BaseClass {
     }
 
     async handleHolidayBuffs() {
-        if (!hasChristmasBuff()) {
-            this.returningToGroup = await getChristmasBuff();
+        if (needChristmasBuff()) {
+            this.gettingBuff = true;
+            await getChristmasBuff();
+        }
+        else {
+            this.gettingBuff = false;
         }
     }
 
@@ -372,8 +377,7 @@ class BaseClass {
     async attack(target) {
         if (this.movingToNewMob) { return; }
         if (!this.is_in_range(target, "attack")) {
-            // moveTowardTargetAvoiding(target.real_x, target.real_y);
-            moveTowardTargetAvoiding2(target.real_x, target.real_y);
+            moveTowardTargetAvoiding3(target.real_x, target.real_y);
 
             set_message("Moving to target");
         } else if (!is_on_cooldown("attack")) {

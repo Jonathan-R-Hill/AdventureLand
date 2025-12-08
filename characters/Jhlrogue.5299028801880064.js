@@ -44,6 +44,8 @@ const myChar = new MyChar(character.name);
 setInterval(() => myChar.buffNearbyPlayers(), 3 * 1000);
 
 setInterval(async function () {
+	if (myChar.gettingBuff) { return; }
+
 	const now = Date.now();
 	if (now - myChar.lastFarmCheck > 5000) {
 		myChar.checkNearbyFarmMob();

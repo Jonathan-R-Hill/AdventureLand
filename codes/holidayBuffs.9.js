@@ -1,11 +1,11 @@
 
 // Christmas buffs
-function hasChristmasBuff() {
-    return character.s?.holidayspirit != null && parent.S.holidayseason == true;
+function needChristmasBuff() {
+    console.log(character.s?.holidayspirit == undefined, parent.S.holidayseason == true)
+    return character.s?.holidayspirit == undefined && parent.S.holidayseason == true;
 }
 
 async function getChristmasBuff() {
-    if (hasChristmasBuff) { return true; }
     await smart_move(`main`);
 
     parent.socket.emit("interaction", { type: "newyear_tree" });

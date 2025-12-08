@@ -7,9 +7,9 @@ class MyChar extends BaseClass {
 
 const myChar = new MyChar(character.name);
 
-myChar.currentMobFarm = "Tiny Crab";
-
 setInterval(function () {
+	if (myChar.gettingBuff) { return; }
+
 	const target = myChar.targetLogicNonTank();
 	if (target == null) { return; }
 

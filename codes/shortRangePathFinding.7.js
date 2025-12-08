@@ -70,6 +70,82 @@ async function moveTowardTargetAvoiding(targetX = null, targetY = null) {
     move(targetX, targetY);
 }
 
+// take 2
+let lastAvoidBias = 1;
+const MAX_BLOCKED_HISTORY = 20;
+async function moveTowardTargetAvoiding3(targetX = null, targetY = null) {
+    let tx, ty;
+
+    if (targetX !== null && targetY !== null) {
+        tx = targetX;
+        ty = targetY;
+    } else {
+        const war = get_player("Jhlwarrior");
+        if (!war) { return; }
+        tx = war.real_x;
+        ty = war.real_y;
+    }
+
+    const dx = tx - character.real_x;
+    const dy = ty - character.real_y;
+    const length = Math.sqrt(dx * dx + dy * dy);
+    if (length === 0) { return; }
+
+    let dirX = dx / length;
+    let dirY = dy / length;
+    const stepSize = 60;
+    targetX = character.real_x + dirX * stepSize;
+    targetY = character.real_y + dirY * stepSize;
+
+    // If blocked, rotate dir until clear
+    if (!can_move_to(targetX, targetY)) {
+        const angleStep = Math.PI / 12;
+        let angle = Math.atan2(dirY, dirX);
+        let found = false;
+
+        // Use the last successful avoidance direction
+        const bias = lastAvoidBias;
+
+        for (let i = 1; i <= 12; i++) {
+            const newAngle = angle + bias * i * angleStep;
+            const nx = Math.cos(newAngle);
+            const ny = Math.sin(newAngle);
+
+            const tx = character.real_x + nx * stepSize;
+            const ty = character.real_y + ny * stepSize;
+
+            const key = `${Math.round(tx)},${Math.round(ty)}`;
+            if (recentBlocked.includes(key)) continue;
+
+            if (can_move_to(tx, ty)) {
+                // Update bias to reinforce this turn direction
+                lastAvoidBias = bias;
+
+                targetX = tx;
+                targetY = ty;
+                found = true;
+                break;
+            } else {
+                // Remember this failed tile
+                recentBlocked.push(key);
+                if (recentBlocked.length > MAX_BLOCKED_HISTORY) { recentBlocked.shift(); }
+            }
+        }
+
+        // If the preferred bias failed, flip it for the next time
+        if (!found) {
+            lastAvoidBias *= -1;
+
+            // If still blocked after 360 rotation, shrink step size
+            targetX = character.real_x + dirX * (stepSize / 2);
+            targetY = character.real_y + dirY * (stepSize / 2);
+        }
+    }
+
+    move(targetX, targetY);
+}
+
+
 // -- A* Attempt 2
 class Node {
     constructor(x, y, parent = null) {
@@ -113,7 +189,6 @@ function getNextStepAStar(startX, startY, targetX, targetY, stepSize, range = 0)
 
         closedSet.add(`${current.x},${current.y}`);
 
-        // --- NEW: Added 4 diagonal neighbors ---
         const neighbors = [
             // Straight (Cost: 1.0)
             { x: current.x + stepSize, y: current.y, cost: stepSize },

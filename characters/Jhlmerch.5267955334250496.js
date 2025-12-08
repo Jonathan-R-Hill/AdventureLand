@@ -13,6 +13,7 @@ const sellWhiteList = [
 	"wattire", "wshoes", "wcap", "wbreeches", "wgloves", // Wanders set
 	"helmet1", "pants1", "coat1", "gloves1", "shoes1", // Rugged set
 	"xmace", "xbow", "merry", "snowball", "mittens", "xmashat", "rednose", "candycanesword", "xmassweater", "xmaspants", "xmasshoes", "warmscarf",
+	"iceskates",
 	// "santasbelt", "ornamentstaff",
 ];
 
@@ -36,7 +37,7 @@ const bankWhitelist = [
 	"snakeoil", "ascale", "snakefang", "vitscroll", "essenceoffire", "essenceoffrost", "carrot", "snowball", "frogt", "ink",
 	"sstinger",
 	// Misc
-	"offeringp", "offering",
+	"offeringp", "offering", "funtoken",
 	"x0", "x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x9",
 ];
 
@@ -69,6 +70,7 @@ class Merchant extends combineItems {
 			mining: 0,
 			combine: 0,
 			exchange: 0,
+			buffs: 0,
 		};
 
 		scaleUI(0.80);
@@ -94,6 +96,11 @@ class Merchant extends combineItems {
 		if (now - this.lastRun.resetFlags > 10 * 60 * 1000) {
 			this.lastRun.resetFlags = now;
 			this.resetFlags();
+		}
+
+		if (now - this.lastRun.buffs > 10_000) {
+			this.lastRun.buffs = now;
+			await this.handleHolidayBuffs();
 		}
 
 		if (now - this.lastRun.exchange > 5 * 60 * 1000) {
@@ -190,7 +197,6 @@ class Merchant extends combineItems {
 		}
 	}
 
-
 	async handleCM(sender, payload) {
 		if (this.busy || this.fishing || this.mining) return;
 		if (!sender.name.startsWith("Jhl")) return;
@@ -283,6 +289,17 @@ class Merchant extends combineItems {
 		}
 	}
 
+	async handleHolidayBuffs() {
+		if (needChristmasBuff()) {
+			this.busy = true;
+			await getChristmasBuff();
+		}
+		else {
+			this.busy = false;
+		}
+	}
+
+	// Util
 	distance(a, b) {
 		if (!a || !b) return 99999999;
 		// map/instance checks for safety

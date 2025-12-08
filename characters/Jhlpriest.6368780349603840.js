@@ -26,7 +26,9 @@ setInterval(() => {
 }, 8 * 60 * 1000);
 
 // Combat
-setInterval(async function () {
+setInterval(async () => {
+    if (myChar.gettingBuff) { return; }
+
     const now = Date.now();
     if (now - myChar.lastFarmCheck > 5000) {
         myChar.checkNearbyFarmMob();

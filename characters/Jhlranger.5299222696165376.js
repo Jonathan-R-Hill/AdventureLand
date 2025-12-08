@@ -2,7 +2,6 @@ load_code("baseClass");
 load_code("helpers");
 
 class MyChar extends BaseClass {
-
     lastFarmCheck = 0;
 
     markTarget(target) {
@@ -19,7 +18,9 @@ class MyChar extends BaseClass {
 
 const myChar = new MyChar(character.name);
 
-setInterval(async function () {
+setInterval(async () => {
+    if (myChar.gettingBuff) { return; }
+
     const now = Date.now();
     if (now - myChar.lastFarmCheck > 5000) {
         myChar.checkNearbyFarmMob();
