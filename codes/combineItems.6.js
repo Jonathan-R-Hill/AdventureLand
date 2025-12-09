@@ -155,5 +155,53 @@ class combineItems {
 
         this.busy = false;
     }
+
+    async buyAndUpgrade(itemName, targetLevel) {
+        this.busy = true;
+        await smart_move({ to: "potions" });
+
+        // Buy the item
+        await buy(itemName, 1);
+        let itemSlot = locate_item(itemName);
+
+        if (itemSlot === -1) {
+            game_log("Couldn't find " + itemName + " in inventory!");
+            this.busy = false;
+            return;
+        }
+
+        // Step 2: Upgrade loop
+        while (character.items[itemSlot].level < targetLevel) {
+            // Decide which scroll to use based on current level
+            let scrollName = character.items[itemSlot].level >= 4 ? "scroll1" : "scroll0";
+            let scrollSlot = locate_item(scrollName);
+
+            if (scrollSlot === -1) {
+                game_log("No " + scrollName + " left!");
+                this.busy = false;
+                break;
+            }
+
+            use_skill("massproduction");
+            await upgrade(itemSlot, scrollSlot);
+            await sleep(1000);
+
+            // Refresh slot reference
+            itemSlot = locate_item(itemName);
+            if (itemSlot === -1) {
+                this.busy = false;
+                game_log(itemName + " broke or disappeared!");
+                break;
+            }
+        }
+
+        if (itemSlot !== -1 && character.items[itemSlot].level >= targetLevel) {
+            this.busy = false;
+            game_log(itemName + " reached level " + targetLevel + "!");
+        }
+    }
+
 }
+
+
 

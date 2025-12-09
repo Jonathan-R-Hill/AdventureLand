@@ -12,10 +12,10 @@ class MyChar extends BaseClass {
 
     equipMainWeapons() {
         if (this.aoeTaunt) {
-            this.equipItem("glolipop", 6);
-            this.equipItem("glolipop", 6);
+            this.equipItem("glolipop", 6, "mainhand");
+            this.equipItem("glolipop", 6, "offhand");
         }
-        else if (["Poisio", "Wild Boar", "Water Spirit", "Hawk"].includes(this.currentMobFarm)
+        else if (["Poisio", "Hawk"].includes(this.currentMobFarm)
             || character.hp < character.max_hp * 0.45) {
 
             this.equipItem("sshield", 4);
@@ -36,17 +36,28 @@ class MyChar extends BaseClass {
     }
 
     skillHardShell() {
+        // Don't use if on cooldown
         if (is_on_cooldown("hardshell")) return;
-        if (character.hp > character.max_hp * 0.5) return;
 
-        use_skill("hardshell");
+        // Count how many monsters are targeting you
+        let targetingCount = 0;
+        for (let id in parent.entities) {
+            let entity = parent.entities[id];
+            if (entity.target === character.id) {
+                targetingCount++;
+            }
+        }
+
+        if (character.hp <= character.max_hp * 0.5 || targetingCount > 2) {
+            use_skill("hardshell");
+        }
     }
 
     skillAoeTaunt() {
         const now = Date.now();
 
         // Only run if 6 seconds have passed since last cast
-        if (now - this.lastTaunt < 6000) return;
+        if (now - this.lastTaunt < 9000) return;
 
         use_skill("agitate");
         this.lastTaunt = now;
@@ -95,6 +106,7 @@ let combatLoop = null;
 let target;
 
 const combat = async () => {
+    if (myChar.movingToEvent) { return; }
     if (myChar.currentMobFarm == undefined || myChar.currentMobFarm == `Porcupine`) { myChar.currentMobFarm = 'Squig'; }
     useHealthPotion();
     useManaPotion();

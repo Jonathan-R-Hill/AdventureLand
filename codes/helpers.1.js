@@ -27,7 +27,10 @@ function getPartyHealth() {
 }
 
 async function manageParty() {
-    const partyMembers = ["Jhlpriest", "Jhlranger", "Jhlmerch", "Jhlmage", "Jhlwarrior", "Jhlrogue"];
+    const partyMembers = [
+        "Jhlpriest", "Jhlranger", "Jhlmerch", "Jhlmage", "Jhlwarrior", "Jhlrogue",
+        // "trololol", "YTFAN", "derped", "Knight", "Bonjour"
+    ];
     const leaderName = "Jhlpriest"
 
     const party = get_party() || {};

@@ -14,9 +14,12 @@ class BaseClass {
         this.attackMode = true;
         this.fightTogeather = false;
         this.gettingBuff = false;
+        this.movingToEvent = false;
 
         this.currentMobFarm = "Arctic Bee";
         this.secondaryTarget = "Arctic Bee";
+
+        this.lastTarget = "";
 
         this.lastEvent = null;
 
@@ -28,7 +31,7 @@ class BaseClass {
             "spores", "seashell", "beewings", "gem0", "gem1", "whiteegg", "monstertoken", "spidersilk", "cscale", "spores",
             "rattail", "crabclaw", "bfur", "feather0", "gslime", "smush", "lostearring", "spiderkey", "snakeoil", "ascale",
             "snakefang", "vitscroll", "offeringp", "offering", "essenceoffrost", "carrot", "snowball", "candy1", "frogt", "ink",
-            "sstinger", "candycane", "ornament", "mistletoe", "frozenkey", "funtoken",
+            "sstinger", "candycane", "ornament", "mistletoe", "frozenkey", "funtoken", "leather",
             "x0", "x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x9",
             // Upgrade
             "ringsj", "intbelt", "intearring", "strearring", "dexearring", "dexamulet", "stramulet", "intamulet",
@@ -61,16 +64,35 @@ class BaseClass {
     }
 
     async handleEvents() {
-        if (parent.S.snowman.live && distance(character, { x: 1267, y: -860, map: 'winterland' }) > 500) {
+        if (parent.S.snowman.live && distance(character, { x: 1267, y: -860, map: 'winterland' }) > 300) {
             this.lastEvent = 'snowman';
             if (!get_nearest_monster({ type: 'snowman' })) {
-                this.movingToNewMob = true;
+                if (this.lastTarget == "") {
+                    this.lastTarget = this.currentMobFarm;
+                    this.currentMobFarm = 'Arctic Bee';
+                    this.secondaryTarget = 'Arctic Bee';
+                }
+
+                this.movingToEvent = true;
                 await smart_move({ x: 1267, y: -860, map: 'winterland' });
             }
+            else if (get_nearest_monster({ type: 'snowman' }) && parent.S.snowman.live) {
+                if (this.lastTarget == "") { this.lastTarget = this.currentMobFarm; }
+                this.movingToEvent = false;
+                this.currentMobFarm = "Arctic Bee";
+                this.secondaryTarget = "Arctic Bee";
 
+            }
         } else if (parent.S.icegolem) {
             this.lastEvent = 'icegolem';
             if (!get_nearest_monster({ type: 'icegolem' })) { join('icegolem'); }
+        }
+        else {
+            if (this.lastTarget != "") {
+                this.currentMobFarm = this.lastTarget;
+                this.secondaryTarget = this.lastTarget;
+                this.lastTarget = "";
+            }
         }
     }
 
@@ -398,7 +420,9 @@ class BaseClass {
             target = currentTarget;
         }
 
-        if (!target || target.name?.startsWith("Jhl")) {
+        if (!target ||
+            target.name?.startsWith("Jhl") || ["trololol", "YTFAN", "derped", "Knight", "Bonjour"].includes(target.name)) {
+
             if (target == null && get_player(this.tank) == null) {
                 target = get_targeted_monster();
                 target = this.findTarget(target);
@@ -441,7 +465,7 @@ class BaseClass {
         }
 
         if (!target) {
-            set_message(`No target, moving to farm ${myMobs[this.currentMobFarm]}`);
+            set_message(`No target, moving to farm ${mobData[this.currentMobFarm]}`);
 
             return null;
         }

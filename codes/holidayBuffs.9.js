@@ -1,7 +1,6 @@
 
 // Christmas buffs
 function needChristmasBuff() {
-    console.log(character.s?.holidayspirit == undefined, parent.S.holidayseason == true)
     return character.s?.holidayspirit == undefined && parent.S.holidayseason == true;
 }
 

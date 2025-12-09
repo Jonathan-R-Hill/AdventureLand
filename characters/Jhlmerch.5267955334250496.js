@@ -8,7 +8,7 @@ const POTSMINSTOCK = 2000;
 const POT_BUFFER = 600;
 
 const sellWhiteList = [
-	"hpbelt", "hpamulet", "shoes", "coat", "pants", "vitring",
+	"hpbelt", "hpamulet", "shoes", "coat", "vitring", //"pants",
 	"cclaw", "mushroomstaff", "slimestaff", "stinger", "vitearring", "glolipop", "quiver",
 	"wattire", "wshoes", "wcap", "wbreeches", "wgloves", // Wanders set
 	"helmet1", "pants1", "coat1", "gloves1", "shoes1", // Rugged set
@@ -20,7 +20,7 @@ const sellWhiteList = [
 const bankWhitelist = [
 	// Exchangables
 	"seashell", "gem0", "gem1", "monstertoken", "gemfragment", "armorbox", "weaponbox",
-	"ornament", "mistletoe", "candycane",
+	"ornament", "mistletoe", "candycane", "leather",
 	// Keyes
 	"spiderkey", "frozenkey",
 	// Upgrades
@@ -71,6 +71,7 @@ class Merchant extends combineItems {
 			combine: 0,
 			exchange: 0,
 			buffs: 0,
+			autoUpgrade: 0,
 		};
 
 		scaleUI(0.80);
@@ -98,9 +99,18 @@ class Merchant extends combineItems {
 			this.resetFlags();
 		}
 
+		// if (now - this.lastRun.autoUpgrade > 15 * 60 * 1000) {
+		// 	if (!this.checkIfDoingSOmething()) {
+		// 		this.lastRun.autoUpgrade = now;
+		// 		await this.buyAndUpgrade("pants", 7);
+		// 	}
+		// }
+
 		if (now - this.lastRun.buffs > 10_000) {
-			this.lastRun.buffs = now;
-			await this.handleHolidayBuffs();
+			if (!this.checkIfDoingSOmething()) {
+				this.lastRun.buffs = now;
+				await this.handleHolidayBuffs();
+			}
 		}
 
 		if (now - this.lastRun.exchange > 5 * 60 * 1000) {

@@ -17,6 +17,22 @@ class MyChar extends BaseClass {
             use_skill("heal", lowMembers[0].name);
         }
     }
+
+    revivePartyMembers() {
+        for (const id in parent.party) {
+            const member = get_player(id);
+            if (!member) continue;
+
+            // Check if dead
+            if (member.rip) {
+                // Only cast if revive is ready
+                if (!is_on_cooldown("revive")) {
+                    use_skill("revive", member);
+                    game_log("Revived " + member.name);
+                }
+            }
+        }
+    }
 }
 
 const myChar = new MyChar(character.name);
@@ -28,6 +44,11 @@ setInterval(() => {
 // Combat
 setInterval(async () => {
     if (myChar.gettingBuff) { return; }
+
+    myChar.healParty();
+    myChar.revivePartyMembers();
+
+    if (myChar.movingToEvent) { return; }
 
     const now = Date.now();
     if (now - myChar.lastFarmCheck > 5000) {
@@ -42,8 +63,6 @@ setInterval(async () => {
 
     const target = await myChar.targetLogicNonTank();
     if (target == null) { return; }
-
-    myChar.healParty();
 
     myChar.movingToNewMob = false;
     if (myChar.kite) { myChar.kiteTarget(); }

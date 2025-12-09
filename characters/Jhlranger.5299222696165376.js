@@ -4,14 +4,33 @@ load_code("helpers");
 class MyChar extends BaseClass {
     lastFarmCheck = 0;
 
+    skillThreeShot() {
+        // Don't use if on cooldown
+        if (is_on_cooldown("3shot") || character.mp <= character.max_mp * 0.70) return;
+
+        let targets = [];
+        for (let id in parent.entities) {
+            let entity = parent.entities[id];
+            if (entity.target === "Jhlwarrior" && entity.type === "monster") {
+                targets.push(entity);
+            }
+        }
+
+        if (targets.length > 3) {
+            let chosen = targets.slice(0, 3);
+            use_skill("3shot", chosen);
+        }
+    }
+
     markTarget(target) {
         if (!is_on_cooldown("huntersmark") && target.hp > 10_000 && character.mp > 675 && !target.name.startsWith("Jhl")) {
             use_skill("huntersmark", target);
-            this.attack(target);
         }
-        else {
-            this.attack(target);
-        }
+
+        this.skillThreeShot();
+
+        this.attack(target);
+
     }
 
 }
@@ -19,7 +38,7 @@ class MyChar extends BaseClass {
 const myChar = new MyChar(character.name);
 
 setInterval(async () => {
-    if (myChar.gettingBuff) { return; }
+    if (myChar.gettingBuff || myChar.movingToEvent) { return; }
 
     const now = Date.now();
     if (now - myChar.lastFarmCheck > 5000) {
