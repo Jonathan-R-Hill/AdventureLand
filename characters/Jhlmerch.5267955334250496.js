@@ -13,8 +13,8 @@ const sellWhiteList = [
 	"wattire", "wshoes", "wcap", "wbreeches", "wgloves", // Wanders set
 	"helmet1", "pants1", "coat1", "gloves1", "shoes1", // Rugged set
 	"xmace", "xbow", "merry", "snowball", "mittens", "xmashat", "rednose", "candycanesword", "xmassweater", "xmaspants", "xmasshoes", "warmscarf",
-	"iceskates",
-	// "santasbelt", "ornamentstaff",
+	"iceskates", "gcape",
+	"santasbelt", "ornamentstaff",
 ];
 
 const bankWhitelist = [
@@ -26,7 +26,7 @@ const bankWhitelist = [
 	// Upgrades
 	"ringsj", "lostearring", "intearring", "strearring", "dexearring",
 	"wbook0", "dexamulet", "stramulet", "intamulet", "candy1",
-	"strring", "intring", "dexring",
+	"strring", "intring", "dexring", "wbookhs",
 	// Pots
 	"elixirint0", "elixirint1", "elixirint2",
 	"elixirstr0", "elixirstr1", "elixirstr2",
@@ -35,7 +35,7 @@ const bankWhitelist = [
 	// Mats
 	"spores", "beewings", "whiteegg", "spidersilk", "cscale", "rattail", "crabclaw", "bfur", "feather0", "gslime", "smush",
 	"snakeoil", "ascale", "snakefang", "vitscroll", "essenceoffire", "essenceoffrost", "carrot", "snowball", "frogt", "ink",
-	"sstinger",
+	"sstinger", "btusk",
 	// Misc
 	"offeringp", "offering", "funtoken",
 	"x0", "x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x9",
@@ -75,6 +75,8 @@ class Merchant extends combineItems {
 		};
 
 		scaleUI(0.80);
+
+		// setInterval(async () => await this.holidayExchangeAndSell(), 7 * 1000);
 
 		setInterval(async () => await this.mainLoop(), 1000);
 		setInterval(exportCharacterData, 8 * 1000);
@@ -205,6 +207,19 @@ class Merchant extends combineItems {
 				}
 			}
 		}
+	}
+
+	async holidayExchangeAndSell() {
+		this.busy = true;
+
+		if (character.map !== "winter_inn") {
+			await smart_move({ to: "winter_inn" });
+		}
+
+		await exchange(0);
+		this.sellItems();
+
+		this.busy = false;
 	}
 
 	async handleCM(sender, payload) {
@@ -425,8 +440,8 @@ class Merchant extends combineItems {
 	}
 
 	sellItems() {
-		if (character.map !== "main") { return; }
-		if (this.distance(character, { x: 0, y: 0 }) > 220) { return; }
+		// if (character.map !== "main") { return; }
+		// if (this.distance(character, { x: 0, y: 0 }) > 220) { return; }
 
 		for (let i = 0; i < character.items.length; i++) {
 			const item = character.items[i];

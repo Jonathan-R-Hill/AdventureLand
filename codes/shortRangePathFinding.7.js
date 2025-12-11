@@ -93,7 +93,9 @@ async function moveTowardTargetAvoiding3(targetX = null, targetY = null) {
 
     let dirX = dx / length;
     let dirY = dy / length;
-    const stepSize = 60;
+
+    const stepSize = 40;
+
     targetX = character.real_x + dirX * stepSize;
     targetY = character.real_y + dirY * stepSize;
 

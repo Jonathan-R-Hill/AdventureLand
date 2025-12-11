@@ -22,6 +22,9 @@ const mobData = [
     { travel: "boar", target: "Wild Boar", map: "winterland" },
     { travel: "wolf", target: "White Wolf", map: "winterland" },
     { travel: "stompy", target: "Stompy", map: "winterland" },
+    { travel: "crabx", target: "Huge Crab", map: "main" },
+    { travel: "tortoise", target: "Tortoise", map: "main" },
+    { travel: "rharpy", target: "Rebel Harpy", map: "winterland" },
     // { travel: "cgoo", target: "Irradiated Goo", map: "arena" }
 ];
 

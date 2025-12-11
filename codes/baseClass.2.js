@@ -16,8 +16,8 @@ class BaseClass {
         this.gettingBuff = false;
         this.movingToEvent = false;
 
-        this.currentMobFarm = "Arctic Bee";
-        this.secondaryTarget = "Arctic Bee";
+        this.currentMobFarm = "Spider";
+        this.secondaryTarget = "Spider";
 
         this.lastTarget = "";
 
@@ -31,14 +31,14 @@ class BaseClass {
             "spores", "seashell", "beewings", "gem0", "gem1", "whiteegg", "monstertoken", "spidersilk", "cscale", "spores",
             "rattail", "crabclaw", "bfur", "feather0", "gslime", "smush", "lostearring", "spiderkey", "snakeoil", "ascale",
             "snakefang", "vitscroll", "offeringp", "offering", "essenceoffrost", "carrot", "snowball", "candy1", "frogt", "ink",
-            "sstinger", "candycane", "ornament", "mistletoe", "frozenkey", "funtoken", "leather",
+            "sstinger", "candycane", "ornament", "mistletoe", "frozenkey", "funtoken", "leather", "btusk",
             "x0", "x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x9",
             // Upgrade
-            "ringsj", "intbelt", "intearring", "strearring", "dexearring", "dexamulet", "stramulet", "intamulet",
+            "ringsj", "intbelt", "intearring", "strearring", "dexearring", "dexamulet", "stramulet", "intamulet", "wbookhs",
             // Sell
             "hpbelt", "hpamulet", "shoes", "coat", "pants", "strring", "intring", "vitring", "dexring",
             "wattire", "wshoes", "wcap", "cclaw", "mushroomstaff", "wbreeches", "slimestaff", "stinger",
-            "vitearring", "wgloves", "quiver", "xmace", "xbow", "iceskates",
+            "vitearring", "wgloves", "quiver", "xmace", "xbow", "iceskates", "gcape",
         ];
 
         this.returningToGroup = false;
@@ -52,7 +52,7 @@ class BaseClass {
         });
 
         setInterval(() => this.handleHolidayBuffs(), 11 * 1000);
-        setInterval(() => this.handleEvents(), 15 * 1000);
+        // setInterval(() => this.handleEvents(), 15 * 1000);
         setInterval(() => this.sendWhitelistedItemsToMerchant(), 3 * 1000);
         setInterval(() => this.askForLuck(), 20 * 1000);
         setInterval(() => this.callMerchant(), 20 * 1000);
@@ -74,9 +74,9 @@ class BaseClass {
                 }
 
                 this.movingToEvent = true;
-                await smart_move({ x: 1267, y: -860, map: 'winterland' });
+                await smart_move({ x: 1119, y: -886, map: 'winterland' });
             }
-            else if (get_nearest_monster({ type: 'snowman' }) && parent.S.snowman.live) {
+            else if (this.getClosestMonsterByName('Snowman') && parent.S.snowman.live) {
                 if (this.lastTarget == "") { this.lastTarget = this.currentMobFarm; }
                 this.movingToEvent = false;
                 this.currentMobFarm = "Arctic Bee";
@@ -93,6 +93,8 @@ class BaseClass {
                 this.secondaryTarget = this.lastTarget;
                 this.lastTarget = "";
             }
+
+            this.movingToEvent = false;
         }
     }
 
@@ -261,7 +263,7 @@ class BaseClass {
 
     // Equip / un-equip weapons
     equipItem(itemName, targetLevel, equipSlot = null) {
-        if (this.isEquipped(itemName, targetLevel)) { return; }
+        if (this.isEquipped(itemName, targetLevel, equipSlot)) { return; }
         let slot = -1;
 
         for (let i = 0; i < character.items.length; i++) {
@@ -272,7 +274,7 @@ class BaseClass {
             }
         }
 
-        if (slot !== -1 && !this.isEquipped(itemName, targetLevel)) {
+        if (slot !== -1 && !this.isEquipped(itemName, targetLevel, equipSlot)) {
             if (equipSlot != null) { equip(slot, equipSlot); }
             else { equip(slot); }
 
@@ -280,16 +282,24 @@ class BaseClass {
         }
     }
 
-    isEquipped(itemName, level) {
-        for (const slot in character.slots) {
-            const equipped = character.slots[slot];
-
-            if (equipped && equipped.name === itemName && equipped.level === level) {
-                return true;
+    isEquipped(itemName, level, slotName = null) {
+        if (slotName) {
+            const equipped = character.slots[slotName];
+            return (
+                equipped &&
+                equipped.name === itemName &&
+                equipped.level === level
+            );
+        } else {
+            for (const slot in character.slots) {
+                const equipped = character.slots[slot];
+                if (equipped && equipped.name === itemName && equipped.level === level) {
+                    return true;
+                }
             }
-        }
 
-        return false;
+            return false;
+        }
     }
 
     removeWeapons() {

@@ -41,7 +41,7 @@ setInterval(async () => {
     if (myChar.gettingBuff || myChar.movingToEvent) { return; }
 
     const now = Date.now();
-    if (now - myChar.lastFarmCheck > 5000) {
+    if (now - myChar.lastFarmCheck > 5000 && !myChar.gettingBuff) {
         myChar.checkNearbyFarmMob();
         myChar.lastFarmCheck = now;
     }

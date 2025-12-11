@@ -15,7 +15,7 @@ function startSharedTasks() {
     }
 }
 
-function sleep(ms) {
+async function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
@@ -32,6 +32,7 @@ async function manageParty() {
         // "trololol", "YTFAN", "derped", "Knight", "Bonjour"
     ];
     const leaderName = "Jhlpriest"
+    // const leaderName = "trololol";
 
     const party = get_party() || {};
     const currentSize = Object.keys(party).length;
@@ -90,7 +91,7 @@ function returnToLeader() {
         return null;
     }
 
-    if (distance(character, leader) > 100) { return; }
+    if (distance(character, leader) > 200) { return; }
     const target = get_targeted_monster();
     let offsetX = 0;
     let offsetY = 0;

@@ -15,12 +15,10 @@ class MyChar extends BaseClass {
             this.equipItem("glolipop", 6, "mainhand");
             this.equipItem("glolipop", 6, "offhand");
         }
-        else if (["Poisio", "Hawk"].includes(this.currentMobFarm)
-            || character.hp < character.max_hp * 0.45) {
-
-            this.equipItem("sshield", 4);
-            this.equipItem(`hammer`, 6, "mainhand");
-        }
+        // else if (["Poisio", "Hawk"].includes(this.currentMobFarm)) {
+        //     this.equipItem("sshield", 4);
+        //     this.equipItem(`hammer`, 6, "mainhand");
+        // }
         else {
             // this.equipItem(`hammer`, 6, "offhand");
             this.equipItem(`fireblade`, 7, "mainhand");
@@ -85,6 +83,15 @@ class MyChar extends BaseClass {
         }
     }
 
+    useSkillWarCry() {
+        if (is_on_cooldown("warcry")) { return; }
+
+        if (character.s.warcry) { return; }
+
+        use_skill("warcry");
+    }
+
+
     async attackLogic(target) {
         this.skillCharge();
 
@@ -95,6 +102,7 @@ class MyChar extends BaseClass {
 
         if (character.hp < character.max_hp * 0.65) { await this.skillStun(); }
         this.equipMainWeapons();
+        this.useSkillWarCry();
         this.attack(target);
     }
 }
@@ -121,7 +129,7 @@ const combat = async () => {
     }
 
     const now = Date.now();
-    if (now - myChar.lastFarmCheck > 5000) {
+    if (now - myChar.lastFarmCheck > 5000 && !myChar.gettingBuff) {
         await myChar.checkNearbyFarmMob();
         myChar.lastFarmCheck = now;
     }
