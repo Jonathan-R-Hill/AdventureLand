@@ -25,6 +25,8 @@ const mobData = [
     { travel: "crabx", target: "Huge Crab", map: "main" },
     { travel: "tortoise", target: "Tortoise", map: "main" },
     { travel: "rharpy", target: "Rebel Harpy", map: "winterland" },
+    { travel: "bat", target: "Bat", map: "cave" },
+    { travel: "nerfedBat", target: "Bat", map: "cave" },
     // { travel: "cgoo", target: "Irradiated Goo", map: "arena" }
 ];
 

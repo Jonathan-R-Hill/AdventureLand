@@ -12,18 +12,18 @@ class BaseClass {
 
         this.kite = false;
         this.attackMode = true;
-        this.fightTogeather = false;
+        this.fightTogeather = true;
         this.gettingBuff = false;
         this.movingToEvent = false;
 
-        this.currentMobFarm = "Spider";
-        this.secondaryTarget = "Spider";
+        this.currentMobFarm = "Bat";
+        this.secondaryTarget = "Bat";
 
         this.lastTarget = "";
 
         this.lastEvent = null;
 
-        this.bosses = ["Phoenix", "Grinch", "Green Jr.", "Snowman", "Ice Golem"];
+        this.bosses = ["Phoenix", "Grinch", "Green Jr.", "Snowman", "Ice Golem", "Dracul"];
         this.tank = "Jhlwarrior";
 
         this.whitelist = [
@@ -34,7 +34,7 @@ class BaseClass {
             "sstinger", "candycane", "ornament", "mistletoe", "frozenkey", "funtoken", "leather", "btusk",
             "x0", "x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x9",
             // Upgrade
-            "ringsj", "intbelt", "intearring", "strearring", "dexearring", "dexamulet", "stramulet", "intamulet", "wbookhs",
+            "ringsj", "intbelt", "intearring", "strearring", "dexearring", "dexamulet", "stramulet", "intamulet", "wbookhs", "wbook0",
             // Sell
             "hpbelt", "hpamulet", "shoes", "coat", "pants", "strring", "intring", "vitring", "dexring",
             "wattire", "wshoes", "wcap", "cclaw", "mushroomstaff", "wbreeches", "slimestaff", "stinger",
@@ -352,8 +352,6 @@ class BaseClass {
             .find(mon => mon) // first non-null result
             || this.getClosestMonsterByName(this.currentMobFarm) || this.getClosestMonsterByName(this.secondaryTarget);
 
-
-
         if (target && !target.s.fullguardx) {
             change_target(target);
 
@@ -362,60 +360,6 @@ class BaseClass {
             target = this.getClosestMonsterByName(this.currentMobFarm) || this.getClosestMonsterByName(this.secondaryTarget);
 
             return target;
-        }
-    }
-
-    is_in_range(target) {
-        if (!target || !target.visible) return false;
-
-        // Calculate the MAX distance the character can be from the target's center
-        // Max Range = (My Range) + (Target Radius) + (Your Character Radius)
-
-        const character_radius = get_width(character) / 2;
-        const target_radius = target.width / 2;
-        const desired_buffer = 1;
-
-        // The maximum dist that still allows an attack
-        const maxCenter2CenterRange = character.range + target_radius + character_radius;
-
-        // The actual distance we check (max range - buffer)
-        const check_distance = maxCenter2CenterRange - desired_buffer;
-
-        return this.distance(character, target) < check_distance;
-    }
-
-    // Center-to-Center Distance Calculation
-    distance(a, b) {
-        if (!a || !b) return 99999999;
-        // map/instance checks for safety
-        if ("in" in a && "in" in b && a.in != b.in) return 99999999;
-        if ("map" in a && "map" in b && a.map != b.map) return 99999999;
-
-        // Get the center coordinates for both entities
-        const a_x = get_x(a);
-        const a_y = get_y(a);
-        const b_x = get_x(b);
-        const b_y = get_y(b);
-
-        // Calculate the difference in coordinates
-        const dx = a_x - b_x;
-        const dy = a_y - b_y;
-
-        // Return the distance (Pythagorean theorem)
-        return Math.sqrt(dx * dx + dy * dy);
-    }
-
-    // ATTTACKING
-    async attack(target) {
-        if (this.movingToNewMob) { return; }
-        if (!this.is_in_range(target, "attack")) {
-            moveTowardTargetAvoiding3(target.real_x, target.real_y);
-
-            set_message("Moving to target");
-        } else if (!is_on_cooldown("attack")) {
-            set_message("Attacking");
-            if (!this.kite) { stop(); }
-            attack(target);
         }
     }
 
@@ -549,6 +493,61 @@ class BaseClass {
         set_message(`No ${mobEntry.target} nearby, moving to farm`);
         return;
 
+    }
+
+    is_in_range(target) {
+        if (!target || !target.visible) return false;
+
+        // Calculate the MAX distance the character can be from the target's center
+        // Max Range = (My Range) + (Target Radius) + (Your Character Radius)
+
+        const character_radius = get_width(character) / 2;
+        const target_radius = target.width / 2;
+        const desired_buffer = 1;
+
+        // The maximum dist that still allows an attack
+        const maxCenter2CenterRange = character.range + target_radius + character_radius;
+
+        // The actual distance we check (max range - buffer)
+        const check_distance = maxCenter2CenterRange - desired_buffer;
+
+        return this.distance(character, target) < check_distance;
+    }
+
+    // Center-to-Center Distance Calculation
+    distance(a, b) {
+        if (!a || !b) return 99999999;
+        // map/instance checks for safety
+        if ("in" in a && "in" in b && a.in != b.in) return 99999999;
+        if ("map" in a && "map" in b && a.map != b.map) return 99999999;
+
+        // Get the center coordinates for both entities
+        const a_x = get_x(a);
+        const a_y = get_y(a);
+        const b_x = get_x(b);
+        const b_y = get_y(b);
+
+        // Calculate the difference in coordinates
+        const dx = a_x - b_x;
+        const dy = a_y - b_y;
+
+        // Return the distance (Pythagorean theorem)
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    // ATTTACKING
+    async attack(target) {
+        if (this.movingToNewMob) { return; }
+        if (!this.is_in_range(target, "attack")) {
+            // moveTowardTargetAvoiding3(target.real_x, target.real_y);
+            await moveTowardTargetSmart(target.real_x, target.real_y);
+
+            set_message("Moving to target");
+        } else if (!is_on_cooldown("attack")) {
+            set_message("Attacking");
+            if (!this.kite) { stop(); }
+            attack(target);
+        }
     }
 
     // Movement

@@ -21,6 +21,6 @@ function updateTarget(travelKey) {
 }
 
 
-function disconnectedChar(name) {
+function disconnectChar(name) {
     parent.api_call("disconnect_character", { name: name });
 }

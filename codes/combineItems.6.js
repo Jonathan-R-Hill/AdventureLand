@@ -161,6 +161,12 @@ class combineItems {
         await smart_move({ to: "potions" });
 
         // Buy the item
+        if (locate_item(itemName) !== -1) {
+            game_log("Already have " + itemName + " in inventory!");
+            this.busy = false;
+            return;
+        }
+
         await buy(itemName, 1);
         let itemSlot = locate_item(itemName);
 

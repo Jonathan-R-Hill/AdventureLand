@@ -8,7 +8,7 @@ class MyChar extends BaseClass {
 
     lastFarmCheck = 0;
     lastTaunt = 0;
-    aoeTaunt = false;
+    aoeTaunt = true;
 
     equipMainWeapons() {
         if (this.aoeTaunt) {
@@ -46,7 +46,7 @@ class MyChar extends BaseClass {
             }
         }
 
-        if (character.hp <= character.max_hp * 0.5 || targetingCount > 2) {
+        if (character.hp <= character.max_hp * 0.65) { //|| targetingCount > 2
             use_skill("hardshell");
         }
     }
@@ -55,7 +55,7 @@ class MyChar extends BaseClass {
         const now = Date.now();
 
         // Only run if 6 seconds have passed since last cast
-        if (now - this.lastTaunt < 9000) return;
+        if (now - this.lastTaunt < 6000) return;
 
         use_skill("agitate");
         this.lastTaunt = now;

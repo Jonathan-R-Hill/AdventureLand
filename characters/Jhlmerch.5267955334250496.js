@@ -8,13 +8,13 @@ const POTSMINSTOCK = 2000;
 const POT_BUFFER = 600;
 
 const sellWhiteList = [
-	"hpbelt", "hpamulet", "shoes", "coat", "vitring", //"pants",
+	"hpbelt", "hpamulet", "vitring", //"pants", "shoes", "coat",
 	"cclaw", "mushroomstaff", "slimestaff", "stinger", "vitearring", "glolipop", "quiver",
 	"wattire", "wshoes", "wcap", "wbreeches", "wgloves", // Wanders set
 	"helmet1", "pants1", "coat1", "gloves1", "shoes1", // Rugged set
 	"xmace", "xbow", "merry", "snowball", "mittens", "xmashat", "rednose", "candycanesword", "xmassweater", "xmaspants", "xmasshoes", "warmscarf",
-	"iceskates", "gcape",
-	"santasbelt", "ornamentstaff",
+	"iceskates", "gcape", "santasbelt", "ornamentstaff",
+
 ];
 
 const bankWhitelist = [
@@ -101,10 +101,15 @@ class Merchant extends combineItems {
 			this.resetFlags();
 		}
 
-		// if (now - this.lastRun.autoUpgrade > 15 * 60 * 1000) {
+		// if (now - this.lastRun.autoUpgrade > 4 * 60 * 1000) {
 		// 	if (!this.checkIfDoingSOmething()) {
 		// 		this.lastRun.autoUpgrade = now;
 		// 		await this.buyAndUpgrade("pants", 7);
+		// 		await this.buyAndUpgrade("gloves", 7);
+		// 		await this.buyAndUpgrade("pants", 7);
+		// 		await this.buyAndUpgrade("gloves", 7);
+		// 		await this.buyAndUpgrade("pants", 7);
+		// 		await this.buyAndUpgrade("gloves", 7);
 		// 	}
 		// }
 

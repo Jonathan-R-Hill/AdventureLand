@@ -72,7 +72,7 @@ async function moveTowardTargetAvoiding(targetX = null, targetY = null) {
 
 // take 2
 let lastAvoidBias = 1;
-const MAX_BLOCKED_HISTORY = 20;
+const MAX_BLOCKED_HISTORY = 33;
 async function moveTowardTargetAvoiding3(targetX = null, targetY = null) {
     let tx, ty;
 
@@ -145,6 +145,83 @@ async function moveTowardTargetAvoiding3(targetX = null, targetY = null) {
     }
 
     move(targetX, targetY);
+}
+
+// ---
+async function moveTowardTargetSmart(targetX = null, targetY = null) {
+    // Determine target
+    let tx, ty;
+    if (targetX !== null && targetY !== null) {
+        tx = targetX;
+        ty = targetY;
+    } else {
+        const war = get_player("Jhlwarrior");
+        if (!war) return;
+        tx = war.real_x;
+        ty = war.real_y;
+    }
+
+    const px = character.real_x;
+    const py = character.real_y;
+
+    let dx = tx - px;
+    let dy = ty - py;
+    const dist = Math.hypot(dx, dy);
+    if (dist < 1) return;
+
+    // Normalize
+    dx /= dist;
+    dy /= dist;
+
+    const step = 40;
+    const baseAngle = Math.atan2(dy, dx);
+
+    // If direct path is clear, go straight.
+    const straightX = px + dx * step;
+    const straightY = py + dy * step;
+    if (can_move_to(straightX, straightY)) {
+        return move(straightX, straightY);
+    }
+
+    // Otherwise: try angles around the forward direction
+    // scanning left/right from smallest adjustment to largest
+    const angleStep = Math.PI / 18; // 10° steps
+    const maxSweeps = 12; // 120° to each side
+
+    let bestScore = -99999;
+    let bestMove = null;
+
+    for (let i = 1; i <= maxSweeps; i++) {
+        for (const sign of [1, -1]) {
+            const angle = baseAngle + sign * i * angleStep;
+            const nx = Math.cos(angle);
+            const ny = Math.sin(angle);
+
+            const tx2 = px + nx * step;
+            const ty2 = py + ny * step;
+
+            if (!can_move_to(tx2, ty2)) continue;
+
+            // Score = how much it reduces the distance to target
+            const newDist = Math.hypot(tx - tx2, ty - ty2);
+            const score = dist - newDist;
+
+            if (score > bestScore) {
+                bestScore = score;
+                bestMove = { x: tx2, y: ty2 };
+            }
+        }
+    }
+
+    // If we found a reasonable alternative movement:
+    if (bestMove) {
+        return move(bestMove.x, bestMove.y);
+    }
+
+    // Last resort: small step directly toward target
+    const fallbackX = px + dx * (step / 2);
+    const fallbackY = py + dy * (step / 2);
+    return move(fallbackX, fallbackY);
 }
 
 
