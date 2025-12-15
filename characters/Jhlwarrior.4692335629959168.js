@@ -7,7 +7,7 @@ class MyChar extends BaseClass {
 
     lastFarmCheck = 0;
     lastTaunt = 0;
-    aoeTaunt = true;
+    aoeTaunt = false;
 
     equipMainWeapons() {
         if (this.aoeTaunt) {
@@ -85,16 +85,21 @@ class MyChar extends BaseClass {
     }
 
     async attackLogic(target) {
-        this.skillCharge();
+        if (character.mp > 450) {
+            if (character.hp < character.max_hp * 0.65) { await this.skillStun(); }
 
-        this.skillTaunt();
-        if (this.aoeTaunt && get_player("Jhlpriest")) { this.skillAoeTaunt(); }
+            this.skillCharge();
 
-        this.skillHardShell();
+            this.skillTaunt();
+            if (this.aoeTaunt && get_player("Jhlpriest")) { this.skillAoeTaunt(); }
 
-        if (character.hp < character.max_hp * 0.65) { await this.skillStun(); }
+            this.skillHardShell();
+
+            this.useSkillWarCry();
+        }
+
         this.equipMainWeapons();
-        this.useSkillWarCry();
+
         await this.attack(target);
     }
 }

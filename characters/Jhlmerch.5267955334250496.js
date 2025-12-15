@@ -12,8 +12,9 @@ const sellWhiteList = [
 	"cclaw", "mushroomstaff", "slimestaff", "stinger", "vitearring", "glolipop", "quiver",
 	"wattire", "wshoes", "wcap", "wbreeches", "wgloves", // Wanders set
 	"helmet1", "pants1", "coat1", "gloves1", "shoes1", // Rugged set
-	"xmace", "xbow", "merry", "snowball", "mittens", "xmashat", "rednose", "candycanesword", "xmassweater", "xmaspants", "xmasshoes", "warmscarf",
+	"xmace", "xbow", "merry", "snowball", "xmashat", "rednose", "candycanesword", "xmassweater", "xmaspants", "xmasshoes", "warmscarf",
 	"iceskates", "gcape", "santasbelt", "ornamentstaff",
+	"mittens",
 
 ];
 
@@ -34,12 +35,13 @@ const bankWhitelist = [
 	"elixirstr0", "elixirstr1", "elixirstr2",
 	"elixirdex0", "elixirdex1", "elixirdex2",
 	"elixirvit0", "elixirvit1", "elixirvit2",
+	"eggnog", "hotchocolate",
 	// Mats
 	"spores", "beewings", "whiteegg", "spidersilk", "cscale", "rattail", "crabclaw", "bfur", "feather0", "gslime", "smush",
 	"snakeoil", "ascale", "snakefang", "vitscroll", "essenceoffire", "essenceoffrost", "carrot", "snowball", "frogt", "ink",
-	"sstinger", "btusk", "bwing",
+	"sstinger", "btusk", "bwing", "forscroll",
 	// Misc
-	"offeringp", "offering", "funtoken",
+	"offeringp", "offering", "funtoken", "cryptkey",
 	"x0", "x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x9",
 ];
 
@@ -74,6 +76,7 @@ class Merchant extends combineItems {
 			exchange: 0,
 			buffs: 0,
 			autoUpgrade: 0,
+			holidayExchange: 0,
 		};
 
 		scaleUI(0.80);
@@ -176,6 +179,13 @@ class Merchant extends combineItems {
 			}
 		}
 
+		if (now - this.lastRun.holidayExchange > (15 * 60 * 1000)) {
+			if (!this.checkIfDoingSOmething()) {
+				this.lastRun.holidayExchange = now;
+				await this.exchangeHolidayItems();
+			}
+		}
+
 		if (now - this.lastRun.dismantle > 200_000) {
 			if (!this.checkIfDoingSOmething()) {
 				this.lastRun.dismantle = now;
@@ -213,6 +223,94 @@ class Merchant extends combineItems {
 				}
 			}
 		}
+	}
+
+	async exchangeHolidayItems() {
+		this.busy = true;
+
+		if (character.map !== "bank") {
+			await smart_move({ to: "bank" });
+		}
+
+		const holidayItems = [
+			// { item: "ornament", min: 1, x: -183, y: -105, map: "winter_inn" },
+			{ item: "mistletoe", min: 1, x: -183, y: -105, map: "winter_inn" },
+			// { item: "candycane", min: 1, x: -183, y: -105, map: "winter_inn" }
+		];
+
+		const slots = [];
+		if (character.bank) {
+			for (const packName in character.bank) {
+				const pack = character.bank[packName];
+				if (!pack) continue;
+
+				for (let i = 0; i < pack.length; i++) {
+					const item = pack[i];
+					for (const exch of holidayItems) {
+						if (item && item.name === exch.item) {
+							slots.push({ location: "bank", pack: packName, slot: i });
+						}
+					}
+				}
+			}
+			await this.collectItems(slots);
+			await sleep(500);
+		}
+
+		// move to location
+		if (character.map !== "winter_inn") {
+			await smart_move({ to: "winter_inn" });
+		}
+
+		// loop through holiday items
+		let itemSlot = -1;
+		let currentKey = null;
+		let exchInfo = null;
+
+		for (const exch of holidayItems) {
+			itemSlot = this.getItemSlot(exch.item);
+			if (itemSlot > -1) {
+				if (character.items[itemSlot].q < exch.min) {
+					itemSlot = -1;
+					continue;
+				}
+				currentKey = exch.item;
+				exchInfo = exch;
+				break;
+			}
+		}
+
+		if (itemSlot === -1) {
+			this.busy = false;
+			return; // nothing to exchange
+		}
+
+		// calculate how many trades based on free inventory slots
+		const freeSpaces = this.getInventoryUsage();
+		let tradesToDo = Math.max(0, 42 - freeSpaces.used - 1); // leave 1 slot free
+
+		const item = character.items[itemSlot];
+		let maxTrades = Math.floor(item.q / exchInfo.min);
+		let trades = Math.min(tradesToDo, maxTrades);
+
+		for (let i = 0; i < trades; i++) {
+			if (item.q < exchInfo.min) break;
+
+			if (!character.q.exchange) {
+				exchange(itemSlot);
+			}
+
+			await sleep(6000);
+
+			// Re‑find slot
+			itemSlot = this.getItemSlot(currentKey);
+			if (itemSlot === -1) break;
+		}
+
+		// Step 5: sell leftovers
+		this.sellItems();
+
+		this.busy = false;
 	}
 
 	async holidayExchangeAndSell() {
