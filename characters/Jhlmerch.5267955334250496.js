@@ -35,7 +35,7 @@ const bankWhitelist = [
 	// Mats
 	"spores", "beewings", "whiteegg", "spidersilk", "cscale", "rattail", "crabclaw", "bfur", "feather0", "gslime", "smush",
 	"snakeoil", "ascale", "snakefang", "vitscroll", "essenceoffire", "essenceoffrost", "carrot", "snowball", "frogt", "ink",
-	"sstinger", "btusk",
+	"sstinger", "btusk", "bwing",
 	// Misc
 	"offeringp", "offering", "funtoken",
 	"x0", "x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x9",
@@ -77,7 +77,6 @@ class Merchant extends combineItems {
 		scaleUI(0.80);
 
 		// setInterval(async () => await this.holidayExchangeAndSell(), 7 * 1000);
-
 		setInterval(async () => await this.mainLoop(), 1000);
 		setInterval(exportCharacterData, 8 * 1000);
 

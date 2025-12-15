@@ -43,7 +43,7 @@ class MyChar extends BaseClass {
 
     useSkillCurse(target) {
         if (is_on_cooldown("curse") || target.s.curse) { return; }
-        if (target.hp < target.max_hp * 0.2 || target.s.cursed) { return; }
+        if (target.hp < target.max_hp * 0.2 || target.hp < 12000 || target.s.cursed) { return; }
 
         use_skill("curse", target);
     }
@@ -65,7 +65,7 @@ setInterval(async () => {
     if (myChar.movingToEvent) { return; }
 
     const now = Date.now();
-    if (now - myChar.lastFarmCheck > 5000 && !myChar.gettingBuff) {
+    if (now - myChar.lastFarmCheck > 5000 && !myChar.gettingBuff && myChar.currentMobFarm != "") {
         myChar.checkNearbyFarmMob();
         myChar.lastFarmCheck = now;
     }

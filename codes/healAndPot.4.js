@@ -31,7 +31,7 @@ function useHealthPotion() {
 function useManaPotion() {
     if (is_on_cooldown("regen_mp")) { return; }
 
-    if (character.mp < character.max_mp * 0.60) {
+    if (character.mp < character.max_mp * 0.65) {
         use_skill('use_mp');
     }
 }

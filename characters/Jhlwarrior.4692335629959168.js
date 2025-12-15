@@ -1,6 +1,5 @@
 load_code("baseClass");
 load_code("helpers");
-load_code("monsterHunter");
 
 class MyChar extends BaseClass {
     monsterHunter = false;
@@ -15,10 +14,6 @@ class MyChar extends BaseClass {
             this.equipItem("glolipop", 6, "mainhand");
             this.equipItem("glolipop", 6, "offhand");
         }
-        // else if (["Poisio", "Hawk"].includes(this.currentMobFarm)) {
-        //     this.equipItem("sshield", 4);
-        //     this.equipItem(`hammer`, 6, "mainhand");
-        // }
         else {
             // this.equipItem(`hammer`, 6, "offhand");
             this.equipItem(`fireblade`, 7, "mainhand");
@@ -35,7 +30,7 @@ class MyChar extends BaseClass {
 
     skillHardShell() {
         // Don't use if on cooldown
-        if (is_on_cooldown("hardshell")) return;
+        if (is_on_cooldown("hardshell")) { return; }
 
         // Count how many monsters are targeting you
         let targetingCount = 0;
@@ -55,7 +50,7 @@ class MyChar extends BaseClass {
         const now = Date.now();
 
         // Only run if 6 seconds have passed since last cast
-        if (now - this.lastTaunt < 6000) return;
+        if (now - this.lastTaunt < 6000) { return; }
 
         use_skill("agitate");
         this.lastTaunt = now;
@@ -84,26 +79,23 @@ class MyChar extends BaseClass {
     }
 
     useSkillWarCry() {
-        if (is_on_cooldown("warcry")) { return; }
-
-        if (character.s.warcry) { return; }
+        if (is_on_cooldown("warcry") || character.s.warcry) { return; }
 
         use_skill("warcry");
     }
-
 
     async attackLogic(target) {
         this.skillCharge();
 
         this.skillTaunt();
-        if (this.aoeTaunt) { this.skillAoeTaunt(); }
+        if (this.aoeTaunt && get_player("Jhlpriest")) { this.skillAoeTaunt(); }
 
         this.skillHardShell();
 
         if (character.hp < character.max_hp * 0.65) { await this.skillStun(); }
         this.equipMainWeapons();
         this.useSkillWarCry();
-        this.attack(target);
+        await this.attack(target);
     }
 }
 
@@ -129,7 +121,7 @@ const combat = async () => {
     }
 
     const now = Date.now();
-    if (now - myChar.lastFarmCheck > 5000 && !myChar.gettingBuff) {
+    if (now - myChar.lastFarmCheck > 5000 && !myChar.gettingBuff && myChar.currentMobFarm != "") {
         await myChar.checkNearbyFarmMob();
         myChar.lastFarmCheck = now;
     }
@@ -147,7 +139,7 @@ const combat = async () => {
 
     if (!target) return;
 
-    await myChar.attackLogic(target);
+    myChar.attackLogic(target);
 };
 
 const newMonsterHunter = async () => {

@@ -1,9 +1,190 @@
 load_code("helpers");
 load_code("commCommands");
-load_code("shortRangePathFinding");
+load_code("floodFill");
 
-class BaseClass {
+class TargetLogic {
+    currentMobFarm;
+    secondaryTarget;
+    tank;
+    bosses;
+    attackMode;
+    fightTogeather;
+    movingToNewMob;
+
+    // TARGETING
+    getClosestMonsterByName(name) {
+        let closest = null;
+        let minDist = Infinity;
+
+        for (const id in parent.entities) {
+            const ent = parent.entities[id];
+            if (ent.type !== "monster" || ent.dead || !ent.visible) continue;
+            if (ent.name !== name) continue;
+
+            const dist = parent.distance(character, ent);
+            if (dist < minDist) {
+                minDist = dist;
+                closest = ent;
+            }
+        }
+
+        return closest;
+    }
+
+    getTankTarget() {
+        const tank = get_player(this.tank);
+        if (tank) {
+            console.log(tank);
+            if (get_nearest_monster({ target: "Jhlpriest" }) != null) {
+                return get_nearest_monster({ target: "Jhlpriest" });
+            }
+            else if (get_nearest_monster({ target: "Jhlranger" }) != null) {
+                return get_nearest_monster({ target: "Jhlranger" });
+            }
+            else if (get_nearest_monster({ target: "Jhlmerch" }) != null) {
+                return get_nearest_monster({ target: "Jhlmerch" });
+            }
+            else if (get_nearest_monster({ target: "Jhlmage" }) != null) {
+                return get_nearest_monster({ target: "Jhlmage" });
+            }
+            else if (get_nearest_monster({ target: "Jhlrogue" }) != null) {
+                return get_nearest_monster({ target: "Jhlrogue" });
+            }
+            else if (get_nearest_monster({ target: "trololol" }) != null) {
+                return get_nearest_monster({ target: "trololol" });
+            }
+            else if (get_nearest_monster({ target: "YTFAN" }) != null) {
+                return get_nearest_monster({ target: "YTFAN" });
+            }
+            else if (get_nearest_monster({ target: "derped" }) != null) {
+                return get_nearest_monster({ target: "derped" });
+            }
+            else if (get_nearest_monster({ target: "Knight" }) != null) {
+                return get_nearest_monster({ target: "Knight" });
+            }
+            else if (get_nearest_monster({ target: "Bonjour" }) != null) {
+                return get_nearest_monster({ target: "Bonjour" });
+            }
+            else if (get_nearest_monster({ target: "Jhlwarrior" }) != null) {
+                return get_nearest_monster({ target: "Jhlwarrior" });
+            }
+            else {
+                return get_target_of(tank);
+            }
+        }
+
+        return null;
+    }
+
+    findTarget(target) {
+        target = this.bosses
+            .map(name => this.getClosestMonsterByName(name))
+            .find(mon => mon) // first non-null result
+            || this.getClosestMonsterByName(this.currentMobFarm) || this.getClosestMonsterByName(this.secondaryTarget);
+
+        if (target) {
+            change_target(target);
+
+            return target;
+        }
+
+        if (this.currentMobFarm == "") {
+            target = get_nearest_monster();
+            if (target) {
+                change_target(target);
+            }
+
+            return target;
+        }
+
+        if (target && !target.s.fullguardx) {
+            change_target(target);
+
+            return target;
+        } else if (target && target.s.fullguardx) {
+            target = this.getClosestMonsterByName(this.currentMobFarm) || this.getClosestMonsterByName(this.secondaryTarget);
+
+            return target;
+        }
+
+        if (target && target.name != this.currentMobFarm) {
+            target = null;
+        }
+
+        if (target) { return target; }
+
+        return null;
+    }
+
+    farmTogeather(target = null) {
+        const currentTarget = get_target_of(character.name);
+        target = this.getTankTarget();
+
+        if (character.name != "Jhlwarrior") { returnToLeader(); }
+
+        // Fallback to current target if tank target is invalid or a player
+        if (!target || target.name?.startsWith("Jhl")) {
+            target = currentTarget;
+        }
+
+        if (!target ||
+            target.name?.startsWith("Jhl") || ["trololol", "YTFAN", "derped", "Knight", "Bonjour"].includes(target.name)) {
+
+            if (target == null && get_player(this.tank) == null) {
+                target = get_targeted_monster();
+                target = this.findTarget(target);
+
+                if (!target) {
+                    target = null;
+                }
+            }
+        }
+
+        return target;
+    }
+
+    async targetLogicNonTank() {
+        if (!this.attackMode || character.rip) { return null; }
+
+        let target = null;
+
+        if (this.fightTogeather) {
+            target = this.farmTogeather();
+        } else {
+            target = await this.targetLogicTank();
+        }
+
+        return target;
+    }
+
+    async targetLogicTank() {
+        if (!this.attackMode || character.rip || this.movingToNewMob) return null;
+
+        let target = get_targeted_monster();
+
+        // Current farm mob
+        if (target && target.name !== this.currentMobFarm && target.name !== this.secondaryTarget) {
+            target = null;
+        }
+
+        if (!target) {
+            target = this.findTarget();
+        }
+
+        if (!target) {
+            set_message(`No target, moving to farm ${mobData[this.currentMobFarm]}`);
+
+            return null;
+        }
+
+        return target;
+    }
+
+}
+
+class BaseClass extends TargetLogic {
     constructor(name) {
+        super();
         this.name = name;
         this.char = get_player(name);
 
@@ -12,7 +193,7 @@ class BaseClass {
 
         this.kite = false;
         this.attackMode = true;
-        this.fightTogeather = true;
+        this.fightTogeather = false;
         this.gettingBuff = false;
         this.movingToEvent = false;
 
@@ -31,7 +212,7 @@ class BaseClass {
             "spores", "seashell", "beewings", "gem0", "gem1", "whiteegg", "monstertoken", "spidersilk", "cscale", "spores",
             "rattail", "crabclaw", "bfur", "feather0", "gslime", "smush", "lostearring", "spiderkey", "snakeoil", "ascale",
             "snakefang", "vitscroll", "offeringp", "offering", "essenceoffrost", "carrot", "snowball", "candy1", "frogt", "ink",
-            "sstinger", "candycane", "ornament", "mistletoe", "frozenkey", "funtoken", "leather", "btusk",
+            "sstinger", "candycane", "ornament", "mistletoe", "frozenkey", "funtoken", "leather", "btusk", "bwing",
             "x0", "x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x9",
             // Upgrade
             "ringsj", "intbelt", "intearring", "strearring", "dexearring", "dexamulet", "stramulet", "intamulet", "wbookhs", "wbook0",
@@ -232,10 +413,6 @@ class BaseClass {
 
     }
 
-    setCurrentMobFarm(mobFarmName) {
-        this.currentMobFarm = mobFarmName;
-    }
-
     sendWhitelistedItemsToMerchant() {
         if (!this.sendItems) { return; }
 
@@ -307,126 +484,6 @@ class BaseClass {
         unequip("offhand");
     }
 
-    // TARGETING
-    getClosestMonsterByName(name) {
-        let closest = null;
-        let minDist = Infinity;
-
-        for (const id in parent.entities) {
-            const ent = parent.entities[id];
-            if (ent.type !== "monster" || ent.dead || !ent.visible) continue;
-            if (ent.name !== name) continue;
-
-            const dist = parent.distance(character, ent);
-            if (dist < minDist) {
-                minDist = dist;
-                closest = ent;
-            }
-        }
-
-        return closest;
-    }
-
-    getTankTarget() {
-        const tank = get_player(this.tank);
-        if (tank) {
-            console.log(tank);
-            if (get_nearest_monster({ target: "Jhlpriest" }) != null) { return get_nearest_monster({ target: "Jhlpriest" }); }
-            else if (get_nearest_monster({ target: "Jhlranger" }) != null) { return get_nearest_monster({ target: "Jhlranger" }); }
-            else if (get_nearest_monster({ target: "Jhlwarrior" }) != null) { return get_nearest_monster({ target: "Jhlwarrior" }); }
-            else { return get_target_of(tank); }
-        }
-
-        return null;
-    }
-
-    findTarget(target) {
-        if (target && target.name != this.currentMobFarm) {
-            target = null;
-        }
-
-        if (target) { return target; }
-
-        target = this.bosses
-            .map(name => this.getClosestMonsterByName(name))
-            .find(mon => mon) // first non-null result
-            || this.getClosestMonsterByName(this.currentMobFarm) || this.getClosestMonsterByName(this.secondaryTarget);
-
-        if (target && !target.s.fullguardx) {
-            change_target(target);
-
-            return target;
-        } else if (target && target.s.fullguardx) {
-            target = this.getClosestMonsterByName(this.currentMobFarm) || this.getClosestMonsterByName(this.secondaryTarget);
-
-            return target;
-        }
-    }
-
-    farmTogeather(target = null) {
-        const currentTarget = get_target_of(character.name);
-        target = this.getTankTarget();
-
-        if (character.name != "Jhlwarrior") { returnToLeader(); }
-
-        // Fallback to current target if tank target is invalid or a player
-        if (!target || target.name?.startsWith("Jhl")) {
-            target = currentTarget;
-        }
-
-        if (!target ||
-            target.name?.startsWith("Jhl") || ["trololol", "YTFAN", "derped", "Knight", "Bonjour"].includes(target.name)) {
-
-            if (target == null && get_player(this.tank) == null) {
-                target = get_targeted_monster();
-                target = this.findTarget(target);
-
-                if (!target) {
-                    target = null;
-                }
-            }
-        }
-
-        return target;
-    }
-
-    async targetLogicNonTank() {
-        if (!this.attackMode || character.rip) { return null; }
-
-        let target = null;
-
-        if (this.fightTogeather) {
-            target = this.farmTogeather();
-        } else {
-            target = await this.targetLogicTank();
-        }
-
-        return target;
-    }
-
-    async targetLogicTank() {
-        if (!this.attackMode || character.rip || this.movingToNewMob) return null;
-
-        let target = get_targeted_monster();
-
-        // Current farm mob
-        if (target && target.name !== this.currentMobFarm && target.name !== this.secondaryTarget) {
-            target = null;
-        }
-
-        if (!target) {
-            target = this.findTarget();
-        }
-
-        if (!target) {
-            set_message(`No target, moving to farm ${mobData[this.currentMobFarm]}`);
-
-            return null;
-        }
-
-        return target;
-    }
-
     async checkNearbyFarmMob() {
         // If fighting together and not the tank, stop here for follow logic
         if (this.fightTogeather && get_player(this.tank) && character.name !== this.tank) {
@@ -445,7 +502,7 @@ class BaseClass {
             if (this.bosses.includes(ent.name)) {
                 this.movingToNewMob = false;
                 stop();
-                set_message("Phoenix spotted nearby, engaging");
+                set_message("Boss spotted nearby, engaging");
                 return;
             }
         }
@@ -539,12 +596,14 @@ class BaseClass {
     async attack(target) {
         if (this.movingToNewMob) { return; }
         if (!this.is_in_range(target, "attack")) {
-            // moveTowardTargetAvoiding3(target.real_x, target.real_y);
-            await moveTowardTargetSmart(target.real_x, target.real_y);
+            moveTowardTargetFloodfill(target.real_x, target.real_y);
+
 
             set_message("Moving to target");
         } else if (!is_on_cooldown("attack")) {
             set_message("Attacking");
+            clearFloodfillPath();
+
             if (!this.kite) { stop(); }
             attack(target);
         }

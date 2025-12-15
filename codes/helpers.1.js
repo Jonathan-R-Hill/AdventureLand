@@ -1,6 +1,5 @@
 load_code("healAndPot")
 load_code("ApiInteraction");
-load_code("holidayBuffs");
 
 function startSharedTasks() {
     playKeepAliveSound();
@@ -191,3 +190,16 @@ function playKeepAliveSound() {
     }
 }
 
+// ----- Holidasy Buffs ----- //
+// Christmas buffs
+function needChristmasBuff() {
+    return character.s?.holidayspirit == undefined && parent.S.holidayseason == true;
+}
+
+async function getChristmasBuff() {
+    await smart_move(`main`);
+
+    parent.socket.emit("interaction", { type: "newyear_tree" });
+
+    return false;
+}

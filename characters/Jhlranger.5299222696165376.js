@@ -23,7 +23,7 @@ class MyChar extends BaseClass {
     }
 
     markTarget(target) {
-        if (!is_on_cooldown("huntersmark") && target.hp > 10_000 && character.mp > 675 && !target.name.startsWith("Jhl")) {
+        if (!is_on_cooldown("huntersmark") && target.hp > 18_000 && character.mp > 675 && !target.name.startsWith("Jhl")) {
             use_skill("huntersmark", target);
         }
 
@@ -41,7 +41,7 @@ setInterval(async () => {
     if (myChar.gettingBuff || myChar.movingToEvent) { return; }
 
     const now = Date.now();
-    if (now - myChar.lastFarmCheck > 5000 && !myChar.gettingBuff) {
+    if (now - myChar.lastFarmCheck > 5000 && !myChar.gettingBuff && myChar.currentMobFarm != "") {
         myChar.checkNearbyFarmMob();
         myChar.lastFarmCheck = now;
     }
