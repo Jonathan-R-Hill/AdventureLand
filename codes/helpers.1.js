@@ -83,24 +83,23 @@ function sendGoldToMerchant() {
 }
 
 function returnToLeader() {
-    let leader = get_player("Jhlwarrior");
-
+    const leader = get_player("Jhlwarrior");
     if (!leader) {
         set_message("Leader not found");
         return null;
     }
 
-    if (distance(character, leader) > 200) { return; }
+    // Only act if leader is far enough
+    if (distance(character, leader) < 85) { return; }
+
     const target = get_targeted_monster();
+
+    // Compute offset to avoid collisions
     let offsetX = 0;
     let offsetY = 0;
 
-    // Collect points to avoid: mob + leader
     const avoidPoints = [];
-    if (target && !target.dead) {
-        avoidPoints.push({ x: target.x, y: target.y });
-    }
-
+    if (target && !target.dead) avoidPoints.push({ x: target.x, y: target.y });
     avoidPoints.push({ x: leader.x, y: leader.y });
 
     for (const point of avoidPoints) {
@@ -108,7 +107,7 @@ function returnToLeader() {
         const dy = character.y - point.y;
         const dist = Math.max(Math.sqrt(dx * dx + dy * dy), 1);
 
-        const awayFactor = 30;
+        const awayFactor = 30; // adjust for spacing
         offsetX += (dx / dist) * awayFactor;
         offsetY += (dy / dist) * awayFactor;
     }
@@ -116,21 +115,23 @@ function returnToLeader() {
     let safeX = leader.x + offsetX;
     let safeY = leader.y + offsetY;
 
+    // Ensure minimum separation along main axis
     const dxLeader = safeX - leader.x;
     const dyLeader = safeY - leader.y;
+    const minDist = 30;
 
-    const dist = 40;
-    if (Math.abs(dxLeader) < dist && Math.abs(dyLeader) < dist) {
-        // Push further along whichever axis has more room
+    if (Math.abs(dxLeader) < minDist && Math.abs(dyLeader) < minDist) {
         if (Math.abs(dxLeader) >= Math.abs(dyLeader)) {
-            safeX = leader.x + (dxLeader >= 0 ? dist : -dist);
+            safeX = leader.x + (dxLeader >= 0 ? minDist : -minDist);
         } else {
-            safeY = leader.y + (dyLeader >= 0 ? dist : -dist);
+            safeY = leader.y + (dyLeader >= 0 ? minDist : -minDist);
         }
     }
 
-    move(safeX, safeY);
+    // ---------- Path to safe spot using floodfill ----------
+    moveTowardTargetFloodfill(safeX, safeY);
 }
+
 
 function scaleUI(factor = 0.75) {
     const body = parent.document.body;
