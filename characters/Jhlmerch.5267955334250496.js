@@ -4,8 +4,8 @@ load_code("combineItems");
 
 const HP_POTION = "hpot1";
 const MP_POTION = "mpot1";
-const POTSMINSTOCK = 2000;
-const POT_BUFFER = 600;
+const POTSMINSTOCK = 9999;
+const POT_BUFFER = 6000;
 
 const sellWhiteList = [
 	"hpbelt", "hpamulet", "vitring", //"pants", "shoes", "coat",
@@ -23,6 +23,8 @@ const bankWhitelist = [
 	"ornament", "mistletoe", "candycane", "leather",
 	// Keyes
 	"spiderkey", "frozenkey",
+	// Weapons & Armor
+	"handofmidas", "mcape", "sweaterhs",
 	// Upgrades
 	"ringsj", "lostearring", "intearring", "strearring", "dexearring",
 	"wbook0", "dexamulet", "stramulet", "intamulet", "candy1",
@@ -380,10 +382,12 @@ class Merchant extends combineItems {
 		}
 		await smart_move({ x: request.x, y: request.y });
 
+		const amountToSend = 3000;
+
 		if (request.type === "need_Hpots") {
-			await this.sendPotionsTo(request.name, HP_POTION, MP_POTION, 350, 0);
+			await this.sendPotionsTo(request.name, HP_POTION, MP_POTION, amountToSend, 0);
 		} else if (request.type === "need_Mpots") {
-			await this.sendPotionsTo(request.name, HP_POTION, MP_POTION, 0, 350);
+			await this.sendPotionsTo(request.name, HP_POTION, MP_POTION, 0, amountToSend);
 		}
 
 		this.deliveryList.shift();
@@ -394,9 +398,10 @@ class Merchant extends combineItems {
 		}
 	}
 
-	async sendPotionsTo(name, hpPotion, mpPotion, hpAmount = 200, mpAmount = 200) {
+	async sendPotionsTo(name, hpPotion, mpPotion, hpAmount = 2000, mpAmount = 2000) {
 		let player = get_player(name);
 		const start = Date.now();
+
 		while ((!player || parent.distance(character, player) > 400) && Date.now() - start < 5000) {
 			await sleep(250);
 			player = get_player(name);

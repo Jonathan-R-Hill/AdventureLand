@@ -39,7 +39,7 @@ function useManaPotion() {
 function checkPotions() {
     const HP_POTION = "hpot1";
     const MP_POTION = "mpot1";
-    const MIN_POTIONS = 100;
+    const MIN_POTIONS = 750;
 
     const hpCount = countItem(HP_POTION);
     const mpCount = countItem(MP_POTION);
