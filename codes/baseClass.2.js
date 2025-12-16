@@ -599,7 +599,6 @@ class BaseClass extends TargetLogic {
         if (!this.is_in_range(target, "attack")) {
             moveTowardTargetFloodfill(target.real_x, target.real_y);
 
-
             set_message("Moving to target");
         } else if (!is_on_cooldown("attack")) {
             set_message("Attacking");

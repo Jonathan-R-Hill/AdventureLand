@@ -13,7 +13,7 @@ const sellWhiteList = [
 	"wattire", "wshoes", "wcap", "wbreeches", "wgloves", // Wanders set
 	"helmet1", "pants1", "coat1", "gloves1", "shoes1", // Rugged set
 	"xmace", "xbow", "merry", "snowball", "xmashat", "rednose", "candycanesword", "xmassweater", "xmaspants", "xmasshoes", "warmscarf",
-	"iceskates", "gcape", "santasbelt", "ornamentstaff",
+	"iceskates", "gcape", "santasbelt", "ornamentstaff", "angelwings",
 	"mittens",
 
 ];
@@ -25,7 +25,7 @@ const bankWhitelist = [
 	// Keyes
 	"spiderkey", "frozenkey",
 	// Weapons & Armor
-	"handofmidas", "mcape", "sweaterhs",
+	"handofmidas", "mcape", "sweaterhs", "mshield",
 	// Upgrades
 	"ringsj", "lostearring", "intearring", "strearring", "dexearring",
 	"wbook0", "dexamulet", "stramulet", "intamulet", "candy1",
@@ -233,17 +233,17 @@ class Merchant extends combineItems {
 		}
 
 		const holidayItems = [
-			// { item: "ornament", min: 1, x: -183, y: -105, map: "winter_inn" },
+			{ item: "ornament", min: 20, x: -125.4, y: -144.5, map: "winterland" },
+			{ item: "candycane", min: 1, x: 1310.5, y: -1584, map: "winterland" },
 			{ item: "mistletoe", min: 1, x: -183, y: -105, map: "winter_inn" },
-			// { item: "candycane", min: 1, x: -183, y: -105, map: "winter_inn" }
 		];
 
+		// Collect from bank
 		const slots = [];
 		if (character.bank) {
 			for (const packName in character.bank) {
 				const pack = character.bank[packName];
 				if (!pack) continue;
-
 				for (let i = 0; i < pack.length; i++) {
 					const item = pack[i];
 					for (const exch of holidayItems) {
@@ -257,16 +257,9 @@ class Merchant extends combineItems {
 			await sleep(500);
 		}
 
-		// move to location
-		if (character.map !== "winter_inn") {
-			await smart_move({ to: "winter_inn" });
-		}
-
-		// loop through holiday items
+		// find first holiday item in inv
 		let itemSlot = -1;
-		let currentKey = null;
 		let exchInfo = null;
-
 		for (const exch of holidayItems) {
 			itemSlot = this.getItemSlot(exch.item);
 			if (itemSlot > -1) {
@@ -274,7 +267,6 @@ class Merchant extends combineItems {
 					itemSlot = -1;
 					continue;
 				}
-				currentKey = exch.item;
 				exchInfo = exch;
 				break;
 			}
@@ -283,6 +275,11 @@ class Merchant extends combineItems {
 		if (itemSlot === -1) {
 			this.busy = false;
 			return; // nothing to exchange
+		}
+
+		// move to the correct  location for le item
+		if (character.map !== exchInfo.map) {
+			await smart_move({ x: exchInfo.x, y: exchInfo.y, map: exchInfo.map });
 		}
 
 		// calculate how many trades based on free inventory slots
@@ -295,19 +292,22 @@ class Merchant extends combineItems {
 
 		for (let i = 0; i < trades; i++) {
 			if (item.q < exchInfo.min) break;
-
 			if (!character.q.exchange) {
 				exchange(itemSlot);
 			}
-
 			await sleep(6000);
 
-			// Re‑find slot
-			itemSlot = this.getItemSlot(currentKey);
+			// re‑find
+			itemSlot = this.getItemSlot(exchInfo.item);
 			if (itemSlot === -1) break;
 		}
 
 		// Step 5: sell leftovers
+		this.sellItems();
+
+		if (character.map !== "main") {
+			await smart_move({ to: "potions" });
+		}
 		this.sellItems();
 
 		this.busy = false;

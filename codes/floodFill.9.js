@@ -166,10 +166,21 @@ function planFloodfillPath(goalX, goalY) {
 
     if (!shouldReplanFloodfill(goal)) return;
 
-    const startSeeds = getFloodfillStartSeeds(3);
-    if (!startSeeds.length) return;
+    const originTile = tileFromWorld(character.real_x, character.real_y);
 
-    const path = floodfillPathMultiStart(startSeeds, goal);
+    let path = null;
+
+    // Try from exact position
+    path = floodfillPathSingleStart(originTile, goal);
+
+    // Fallback: nearby ttiles
+    if (!path || !path.length) {
+        const startSeeds = getFloodfillStartSeeds(3);
+        if (!startSeeds.length) return;
+
+        path = floodfillPathMultiStart(startSeeds, goal);
+    }
+
     if (!path || !path.length) return;
 
     ffPath = path;
@@ -177,7 +188,6 @@ function planFloodfillPath(goalX, goalY) {
     ffGoal = goal;
     ffLastPlan = Date.now();
 
-    // draw path
     clear_drawings();
     for (let i = 0; i < path.length - 1; i++) {
         const a = worldFromTile(path[i].tx, path[i].ty);
@@ -185,6 +195,7 @@ function planFloodfillPath(goalX, goalY) {
         draw_line(a.x, a.y, b.x, b.y, 1, 0xFF0000);
     }
 }
+
 
 
 // ---------- Fast path following ----------
@@ -222,6 +233,9 @@ function followFloodfillPath() {
     }
 }
 
+function floodfillPathSingleStart(start, goal) {
+    return floodfillPathMultiStart([start], goal);
+}
 
 // ---------- Public entry ----------
 
