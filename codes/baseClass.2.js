@@ -194,11 +194,12 @@ class BaseClass extends TargetLogic {
         this.kite = false;
         this.attackMode = true;
         this.fightTogeather = false;
+
         this.gettingBuff = false;
         this.movingToEvent = false;
 
-        this.currentMobFarm = "Spider";
-        this.secondaryTarget = "Spider";
+        this.currentMobFarm = "Hawk"; //"Mech-a Gnome"; //"Targetron",
+        this.secondaryTarget = "Hawk";
 
         this.lastTarget = "";
 
@@ -213,7 +214,7 @@ class BaseClass extends TargetLogic {
             "rattail", "crabclaw", "bfur", "feather0", "gslime", "smush", "lostearring", "spiderkey", "snakeoil", "ascale",
             "snakefang", "vitscroll", "offeringp", "offering", "essenceoffrost", "carrot", "snowball", "candy1", "frogt", "ink",
             "sstinger", "candycane", "ornament", "mistletoe", "frozenkey", "funtoken", "leather", "btusk", "bwing",
-            "x0", "x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x9",
+            "x0", "x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x9", "electronics",
             "handofmidas", "mcape", "sweaterhs", "cryptkey", "forscroll",
             // Upgrade
             "ringsj", "intbelt", "intearring", "strearring", "dexearring", "dexamulet", "stramulet", "intamulet", "wbookhs", "wbook0",
@@ -557,7 +558,7 @@ class BaseClass extends TargetLogic {
         if (!target || !target.visible) return false;
 
         // Calculate the MAX distance the character can be from the target's center
-        // Max Range = (My Range) + (Target Radius) + (Your Character Radius)
+        // Max Range = (My Range) + (Target Radius) + (My Character Radius)
 
         const character_radius = get_width(character) / 2;
         const target_radius = target.width / 2;

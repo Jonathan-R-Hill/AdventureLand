@@ -5,18 +5,17 @@ class MyChar extends BaseClass {
     lastFarmCheck = 0;
 
     skillThreeShot() {
-        // Don't use if on cooldown
         if (is_on_cooldown("3shot") || character.mp <= character.max_mp * 0.70) return;
 
         let targets = [];
         for (let id in parent.entities) {
             let entity = parent.entities[id];
-            if (entity.target === "Jhlwarrior" && entity.type === "monster") {
+            if ((entity.target === "Jhlwarrior" || entity.target === "trololol") && entity.type === "monster") {
                 targets.push(entity);
             }
         }
 
-        if (targets.length > 3) {
+        if (targets.length >= 3) {
             let chosen = targets.slice(0, 3);
             use_skill("3shot", chosen);
         }

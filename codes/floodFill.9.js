@@ -44,6 +44,36 @@ function canMoveBetween(x1, y1, x2, y2) {
 
 // ---------- Start-tile fix ----------
 
+function findReachablePathIndex(path, maxCheck = 6) {
+    const origin = { x: character.real_x, y: character.real_y };
+
+    for (let i = 0; i < Math.min(maxCheck, path.length); i++) {
+        const { x, y } = worldFromTile(path[i].tx, path[i].ty);
+        if (canMoveBetween(origin.x, origin.y, x, y)) {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+function nudgeDownIfBlocked(targetWorld) {
+    // Only if target is below us
+    if (targetWorld.y <= character.real_y) return false;
+
+    const step = 8; // small nudge
+    const nx = character.real_x;
+    const ny = character.real_y + step;
+
+    if (can_move_to(nx, ny)) {
+        move(nx, ny);
+        return true;
+    }
+
+    return false;
+}
+
+
 function getFloodfillStartSeeds(radius = 2) {
     const origin = tileFromWorld(character.real_x, character.real_y);
     const seeds = [];
@@ -196,26 +226,29 @@ function planFloodfillPath(goalX, goalY) {
     }
 }
 
-
-
 // ---------- Fast path following ----------
 
 function followFloodfillPath() {
     if (!ffPath || ffIndex >= ffPath.length) return;
 
     const LOOKAHEAD = 6;
-    let bestIndex = ffIndex;
-    let lastGood = null;
 
-    // First, check if we can reach the first tile at all -- I hate the wall colision boundries D:
-    const firstTileWorld = worldFromTile(ffPath[ffIndex].tx, ffPath[ffIndex].ty);
-    if (!can_move_to(firstTileWorld.x, firstTileWorld.y)) {
-        move(firstTileWorld.x, firstTileWorld.y);
+    const reachableIndex = findReachablePathIndex(ffPath, 6);
 
+    if (reachableIndex === -1) {
+        const firstTileWorld = worldFromTile(ffPath[ffIndex].tx, ffPath[ffIndex].ty);
+        if (nudgeDownIfBlocked(firstTileWorld)) return;
         return;
     }
 
-    // Otherwise, normal lookahead movement
+    // Snap path index forward
+    if (reachableIndex > ffIndex) {
+        ffIndex = reachableIndex;
+    }
+
+    let bestIndex = ffIndex;
+    let lastGood = null;
+
     for (let i = ffIndex; i < Math.min(ffIndex + LOOKAHEAD, ffPath.length); i++) {
         const { x, y } = worldFromTile(ffPath[i].tx, ffPath[i].ty);
         if (!can_move_to(x, y)) break;
@@ -232,6 +265,7 @@ function followFloodfillPath() {
         ffIndex = bestIndex + 1;
     }
 }
+
 
 function floodfillPathSingleStart(start, goal) {
     return floodfillPathMultiStart([start], goal);

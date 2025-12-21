@@ -27,6 +27,9 @@ const mobData = [
     { travel: "rharpy", target: "Rebel Harpy", map: "winterland" },
     { travel: "bat", target: "Bat", map: "cave" },
     { travel: "nerfedBat", target: "Bat", map: "cave" },
+    { travel: "sparkbot", target: "Spark Bot", map: "Underground" },
+    { travel: "targetron", target: "Targetron", map: "Underground" },
+    { travel: "mechagnome", target: "Mech-a Gnome", map: "cyberland" }
     // { travel: "cgoo", target: "Irradiated Goo", map: "arena" }
 ];
 

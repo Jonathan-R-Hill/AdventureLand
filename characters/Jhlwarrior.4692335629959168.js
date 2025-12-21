@@ -18,6 +18,7 @@ class MyChar extends BaseClass {
             // this.equipItem(`hammer`, 6, "offhand");
             this.equipItem(`fireblade`, 7, "mainhand");
             this.equipItem(`fireblade`, 6, "offhand");
+            // this.equipItem(`sshield`, 4, "offhand");
         }
     }
 
@@ -41,7 +42,7 @@ class MyChar extends BaseClass {
             }
         }
 
-        if (character.hp <= character.max_hp * 0.65) { //|| targetingCount > 2
+        if (character.hp <= character.max_hp * 0.50) { //|| targetingCount > 2
             use_skill("hardshell");
         }
     }
@@ -58,6 +59,7 @@ class MyChar extends BaseClass {
 
     async skillStun() {
         if (is_on_cooldown(`stomp`)) { return; }
+        if (character.s.hardshell) { return; }
 
         this.removeWeapons();
         equip(locate_item(`basher`));

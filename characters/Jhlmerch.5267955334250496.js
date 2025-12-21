@@ -13,8 +13,8 @@ const sellWhiteList = [
 	"wattire", "wshoes", "wcap", "wbreeches", "wgloves", // Wanders set
 	"helmet1", "pants1", "coat1", "gloves1", "shoes1", // Rugged set
 	"xmace", "xbow", "merry", "snowball", "xmashat", "rednose", "candycanesword", "xmassweater", "xmaspants", "xmasshoes", "warmscarf",
-	"iceskates", "gcape", "santasbelt", "ornamentstaff", "angelwings",
-	"mittens",
+	"iceskates", "gcape", "santasbelt", "angelwings",
+	"mittens", "snowflakes", "ornamentstaff", "mshield",
 
 ];
 
@@ -25,7 +25,7 @@ const bankWhitelist = [
 	// Keyes
 	"spiderkey", "frozenkey",
 	// Weapons & Armor
-	"handofmidas", "mcape", "sweaterhs", "mshield",
+	"handofmidas", "mcape", "sweaterhs", //"firebow","mshield", "ornamentstaff",
 	// Upgrades
 	"ringsj", "lostearring", "intearring", "strearring", "dexearring",
 	"wbook0", "dexamulet", "stramulet", "intamulet", "candy1",
@@ -39,14 +39,14 @@ const bankWhitelist = [
 	// Mats
 	"spores", "beewings", "whiteegg", "spidersilk", "cscale", "rattail", "crabclaw", "bfur", "feather0", "gslime", "smush",
 	"snakeoil", "ascale", "snakefang", "vitscroll", "essenceoffire", "essenceoffrost", "carrot", "snowball", "frogt", "ink",
-	"sstinger", "btusk", "bwing", "forscroll",
+	"sstinger", "btusk", "bwing", "forscroll", "electronics",
 	// Misc
 	"offeringp", "offering", "funtoken", "cryptkey",
 	"x0", "x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x9",
 ];
 
 const dismantleList = [
-	"firebow", "fireblade", "firestaff",
+	"fireblade", "firestaff", "firebow",
 ];
 
 class Merchant extends combineItems {

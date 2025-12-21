@@ -26,9 +26,12 @@ class MyChar extends BaseClass {
             // Check if dead
             if (member.rip) {
                 // Only cast if revive is ready
-                if (!is_on_cooldown("revive")) {
+                if (!is_on_cooldown("revive") && member.hp >= member.max_hp) {
                     use_skill("revive", member);
                     game_log("Revived " + member.name);
+                }
+                else {
+                    this.healParty();
                 }
             }
         }
