@@ -28,7 +28,8 @@ function getPartyHealth() {
 async function manageParty() {
     const partyMembers = [
         "Jhlpriest", "Jhlranger", "Jhlmerch", "Jhlmage", "Jhlwarrior", "Jhlrogue",
-        // "trololol", "YTFAN", "derped", "Knight", "Bonjour"
+        // "trololol", "YTFAN", "derped", "Knight", "Bonjour",
+        // "Bravo", "Tostitos", "iniwa",
     ];
     const leaderName = "Jhlpriest"
     // const leaderName = "trololol";
@@ -188,6 +189,21 @@ function playKeepAliveSound() {
         oscillator.stop(ctx.currentTime + 0.1); // play for 0.1s
     } catch (e) {
         console.log("Audio keep-alive failed:", e);
+    }
+}
+
+async function snowballBosses() {
+    const bosses = ["spiderr", "spiderbr", "spiderbl"];
+
+    for (const boss of bosses) {
+        const target = get_nearest_monster({ type: boss });
+
+        if (target) {
+            change_target(target);
+            use_skill("snowball");
+
+            await sleep(190);
+        }
     }
 }
 

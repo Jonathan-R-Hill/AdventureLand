@@ -5,7 +5,7 @@ class MyChar extends BaseClass {
     lastFarmCheck = 0;
 
     skillThreeShot() {
-        if (is_on_cooldown("3shot") || character.mp <= character.max_mp * 0.70) return;
+        if (is_on_cooldown("3shot") || character.mp <= character.max_mp * 0.50) { return; }
 
         let targets = [];
         for (let id in parent.entities) {

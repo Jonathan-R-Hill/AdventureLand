@@ -83,6 +83,7 @@ class Merchant extends combineItems {
 
 		// setInterval(async () => await this.holidayExchangeAndSell(), 7 * 1000);
 		setInterval(async () => await this.mainLoop(), 1000);
+		// setInterval(snowball, 4200);
 		setInterval(exportCharacterData, 8 * 1000);
 
 		character.on("cm", async (sender, data) => {
@@ -233,9 +234,9 @@ class Merchant extends combineItems {
 		}
 
 		const holidayItems = [
+			{ item: "mistletoe", min: 1, x: -183, y: -105, map: "winter_inn" },
 			{ item: "ornament", min: 20, x: -125.4, y: -144.5, map: "winterland" },
 			{ item: "candycane", min: 1, x: 1310.5, y: -1584, map: "winterland" },
-			{ item: "mistletoe", min: 1, x: -183, y: -105, map: "winter_inn" },
 		];
 
 		// Collect from bank

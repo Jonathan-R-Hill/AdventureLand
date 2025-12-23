@@ -25,6 +25,7 @@ class MyChar extends BaseClass {
 
             // Check if dead
             if (member.rip) {
+                if (member.s.reviving) { continue; }
                 // Only cast if revive is ready
                 if (!is_on_cooldown("revive") && member.hp >= member.max_hp) {
                     use_skill("revive", member);
