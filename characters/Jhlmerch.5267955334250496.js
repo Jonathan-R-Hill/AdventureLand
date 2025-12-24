@@ -586,6 +586,10 @@ class Merchant extends combineItems {
 			}
 		}
 
+		if (character.gold > 200000) {
+			bank_deposit(character.gold - 200000)
+		}
+
 		this.busy = false;
 	}
 
