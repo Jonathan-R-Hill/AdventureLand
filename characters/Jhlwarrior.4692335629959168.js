@@ -2,7 +2,7 @@ load_code("baseClass");
 load_code("helpers");
 
 class MyChar extends BaseClass {
-    monsterHunter = true;
+    monsterHunter = false;
     gettingNewTask = false;
 
     lastFarmCheck = 0;
@@ -177,7 +177,7 @@ const newMonsterHunter = async () => {
 
     myChar.gettingNewTask = false;
 
-    combatLoop = setInterval(() => combat(), 250);
+    combatLoop = setInterval(() => combat(), ((1 / character.frequency) * 1000) / 8);
 };
 
-combatLoop = setInterval(() => combat(), 250);
+combatLoop = setInterval(() => combat(), ((1 / character.frequency) * 1000) / 8);

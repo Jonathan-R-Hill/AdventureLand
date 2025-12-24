@@ -79,5 +79,5 @@ setInterval(async () => {
 
     myChar.markTarget(target);
 
-}, 1000 / 4);
+}, ((1 / character.frequency) * 1000) / 8);
 

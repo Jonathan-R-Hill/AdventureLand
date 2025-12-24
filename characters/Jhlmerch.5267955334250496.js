@@ -14,7 +14,7 @@ const sellWhiteList = [
 	"helmet1", "pants1", "coat1", "gloves1", "shoes1", // Rugged set
 	"xmace", "xbow", "merry", "snowball", "xmashat", "rednose", "candycanesword", "xmassweater", "xmaspants", "xmasshoes", "warmscarf",
 	"iceskates", "gcape", "santasbelt", "angelwings", "swifty",
-	"mittens", "snowflakes", "ornamentstaff", "mshield",
+	"mittens", "snowflakes", "ornamentstaff", "mshield", "ringsj",
 
 ];
 
@@ -27,7 +27,7 @@ const bankWhitelist = [
 	// Weapons & Armor
 	"handofmidas", "mcape", "sweaterhs", //"firebow","mshield", "ornamentstaff",
 	// Upgrades
-	"ringsj", "lostearring", "intearring", "strearring", "dexearring",
+	"lostearring", "intearring", "strearring", "dexearring",
 	"wbook0", "dexamulet", "stramulet", "intamulet", "candy1",
 	"strring", "intring", "dexring", "wbookhs",
 	"intbelt", "strbelt", "dexbelt",
@@ -150,7 +150,7 @@ class Merchant extends combineItems {
 				this.lastRun.combine = now;
 
 				const upgrades = [
-					"intearring", "strearring", "dexearring", "ringsj", "strring", "intring", "dexring", // Rings & Earrings
+					"intearring", "strearring", "dexearring", "strring", "intring", "dexring", // Rings & Earrings
 					"wbook0", // Books
 					"dexamulet", "stramulet", "intamulet", // Necks
 					"intbelt", "strbelt", "dexbelt",

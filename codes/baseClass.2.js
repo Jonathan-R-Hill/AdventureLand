@@ -198,8 +198,8 @@ class BaseClass extends TargetLogic {
         this.gettingBuff = false;
         this.movingToEvent = false;
 
-        this.currentMobFarm = "Spider";
-        this.secondaryTarget = "Spider";
+        this.currentMobFarm = "Hawk";
+        this.secondaryTarget = "Hawk";
 
         this.lastTarget = "";
 
