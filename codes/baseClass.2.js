@@ -82,12 +82,6 @@ class TargetLogic {
             .find(mon => mon) // first non-null result
             || this.getClosestMonsterByName(this.currentMobFarm) || this.getClosestMonsterByName(this.secondaryTarget);
 
-        if (target) {
-            change_target(target);
-
-            return target;
-        }
-
         if (this.currentMobFarm == "") {
             target = get_nearest_monster();
             if (target) {
@@ -103,6 +97,12 @@ class TargetLogic {
             return target;
         } else if (target && target.s.fullguardx) {
             target = this.getClosestMonsterByName(this.currentMobFarm) || this.getClosestMonsterByName(this.secondaryTarget);
+
+            return target;
+        }
+
+        if (target) {
+            change_target(target);
 
             return target;
         }
@@ -198,8 +198,8 @@ class BaseClass extends TargetLogic {
         this.gettingBuff = false;
         this.movingToEvent = false;
 
-        this.currentMobFarm = "Hawk";
-        this.secondaryTarget = "Hawk";
+        this.currentMobFarm = "Stone Worm";
+        this.secondaryTarget = "Stone Worm";
 
         this.lastTarget = "";
 
@@ -215,6 +215,7 @@ class BaseClass extends TargetLogic {
             "snakefang", "vitscroll", "offeringp", "offering", "essenceoffrost", "carrot", "snowball", "candy1", "frogt", "ink",
             "sstinger", "candycane", "ornament", "mistletoe", "frozenkey", "funtoken", "leather", "btusk", "bwing",
             "x0", "x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x9", "electronics", "cocoon",
+            "intbelt", "strbelt", "dexbelt", "dstones", "poison",
             "handofmidas", "mcape", "sweaterhs", "cryptkey", "forscroll",
             // Upgrade
             "ringsj", "intbelt", "intearring", "strearring", "dexearring", "dexamulet", "stramulet", "intamulet", "wbookhs", "wbook0",
@@ -247,7 +248,7 @@ class BaseClass extends TargetLogic {
     }
 
     async handleEvents() {
-        if (parent.S.snowman.live && distance(character, { x: 1267, y: -860, map: 'winterland' }) > 300) {
+        if (parent.S.snowman.live && distance(character, { x: 1175, y: -903, map: 'winterland' }) > 300) {
             this.lastEvent = 'snowman';
             if (!get_nearest_monster({ type: 'snowman' })) {
                 if (this.lastTarget == "") {
@@ -385,6 +386,14 @@ class BaseClass extends TargetLogic {
                 }
 
                 break;
+            }
+
+            case "portMe": {
+                const target = data;
+
+                if (character.name == "Jhlmage") {
+                    this.useSkillPort(target);
+                }
             }
 
             default:

@@ -9,11 +9,13 @@ class MyChar extends BaseClass {
         let partyHealth = getPartyHealth();
 
         // Filter members below 75% HP
-        let lowMembers = partyHealth.filter(m => m.hp < m.max_hp * 0.85);
+        let lowMembers = partyHealth.filter(m => m.hp < m.max_hp * 0.55);
         if (lowMembers.length >= 2 && !is_on_cooldown("partyheal")) {
             use_skill("partyheal");
         }
-        else if (lowMembers.length > 0 && !is_on_cooldown("heal")) {
+
+        lowMembers = partyHealth.filter(m => m.hp < m.max_hp * 0.85);
+        if (lowMembers.length > 0 && !is_on_cooldown("heal")) {
             use_skill("heal", lowMembers[0].name);
         }
     }
@@ -51,6 +53,25 @@ class MyChar extends BaseClass {
 
         use_skill("curse", target);
     }
+
+    useSkillAbsorb() {
+        const partyMembers = ["Jhlrogue", "Jhlmage", "Jhlranger", "Jhlpally"];
+        for (const id of partyMembers) {
+            const member = get_player(id);
+            if (!member || !member.map || member.rip) { continue; }
+
+            for (const id in parent.entities) {
+                const ent = parent.entities[id];
+
+                if (!ent.target || ent.type !== "monster") { continue; }
+                if (ent.target === member.name && !is_on_cooldown("absorb")) {
+                    use_skill("absorb", member);
+
+                    return;
+                }
+            }
+        }
+    }
 }
 
 const myChar = new MyChar(character.name);
@@ -86,6 +107,7 @@ setInterval(async () => {
     if (myChar.kite) { myChar.kiteTarget(); }
     myChar.moveAwayFromWarrior();
 
+    // myChar.useSkillAbsorb();
     myChar.useSkillDarkBlessing();
     myChar.useSkillCurse(target);
     myChar.attack(target);

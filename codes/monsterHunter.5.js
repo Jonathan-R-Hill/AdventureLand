@@ -29,7 +29,8 @@ const mobData = [
     { travel: "nerfedBat", target: "Bat", map: "cave" },
     { travel: "sparkbot", target: "Spark Bot", map: "Underground" },
     { travel: "targetron", target: "Targetron", map: "Underground" },
-    { travel: "mechagnome", target: "Mech-a Gnome", map: "cyberland" }
+    { travel: "mechagnome", target: "Mech-a Gnome", map: "cyberland" },
+    { travel: "bbpompom", target: "Pom Pom", map: "frozencave" }
     // { travel: "cgoo", target: "Irradiated Goo", map: "arena" }
 ];
 

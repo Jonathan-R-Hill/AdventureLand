@@ -30,6 +30,7 @@ const bankWhitelist = [
 	"ringsj", "lostearring", "intearring", "strearring", "dexearring",
 	"wbook0", "dexamulet", "stramulet", "intamulet", "candy1",
 	"strring", "intring", "dexring", "wbookhs",
+	"intbelt", "strbelt", "dexbelt",
 	// Pots
 	"elixirint0", "elixirint1", "elixirint2",
 	"elixirstr0", "elixirstr1", "elixirstr2",
@@ -39,9 +40,9 @@ const bankWhitelist = [
 	// Mats
 	"spores", "beewings", "whiteegg", "spidersilk", "cscale", "rattail", "crabclaw", "bfur", "feather0", "gslime", "smush",
 	"snakeoil", "ascale", "snakefang", "vitscroll", "essenceoffire", "essenceoffrost", "carrot", "snowball", "frogt", "ink",
-	"sstinger", "btusk", "bwing", "forscroll", "electronics",
+	"sstinger", "btusk", "bwing", "forscroll", "electronics", "dstones",
 	// Misc
-	"offeringp", "offering", "funtoken", "cryptkey",
+	"offeringp", "offering", "funtoken", "cryptkey", "poison",
 	"x0", "x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x9",
 ];
 
@@ -84,6 +85,12 @@ class Merchant extends combineItems {
 		// setInterval(async () => await this.holidayExchangeAndSell(), 7 * 1000);
 		setInterval(async () => await this.mainLoop(), 1000);
 		// setInterval(snowball, 4200);
+
+		setInterval(() => {
+			if (character.s.magiport) {
+				accept_magiport("Jhlmage");
+			}
+		}, 2000);
 		setInterval(exportCharacterData, 8 * 1000);
 
 		character.on("cm", async (sender, data) => {
@@ -109,12 +116,7 @@ class Merchant extends combineItems {
 		// if (now - this.lastRun.autoUpgrade > 4 * 60 * 1000) {
 		// 	if (!this.checkIfDoingSOmething()) {
 		// 		this.lastRun.autoUpgrade = now;
-		// 		await this.buyAndUpgrade("pants", 7);
-		// 		await this.buyAndUpgrade("gloves", 7);
-		// 		await this.buyAndUpgrade("pants", 7);
-		// 		await this.buyAndUpgrade("gloves", 7);
-		// 		await this.buyAndUpgrade("pants", 7);
-		// 		await this.buyAndUpgrade("gloves", 7);
+		// 		await this.buyAndUpgrade("coat", 6);
 		// 	}
 		// }
 
@@ -140,7 +142,7 @@ class Merchant extends combineItems {
 					"intearring", "strearring", "dexearring", "ringsj", "strring", "intring", "dexring", // Rings & Earrings
 					"wbook0", // Books
 					"dexamulet", "stramulet", "intamulet", // Necks
-
+					"intbelt", "strbelt", "dexbelt",
 				];
 				const levels = [0, 1, 2];
 
@@ -373,6 +375,8 @@ class Merchant extends combineItems {
 
 				this.busy = true;
 
+				send_cm("Jhlmage", "portMe Jhlmerch");
+
 				console.log(xStr, yStr, map)
 				if (map && character.map !== map) {
 					await smart_move({ to: map });
@@ -394,6 +398,8 @@ class Merchant extends combineItems {
 				const y = Number(yStr);
 
 				this.busy = true;
+
+				send_cm("Jhlmage", "portMe Jhlmerch");
 
 				if (map && character.map !== map) {
 					await smart_move({ to: map });

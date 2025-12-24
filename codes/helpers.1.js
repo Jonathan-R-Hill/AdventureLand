@@ -7,6 +7,11 @@ function startSharedTasks() {
     setInterval(reviveSelf, 7000);
     setInterval(playKeepAliveSound, 45 * 60 * 1000);
     setInterval(exportCharacterData, 6 * 1000);
+    setInterval(() => {
+        if (character.s.magiport) {
+            accept_magiport("Jhlmage");
+        }
+    }, 2000);
 
     if (character.name != "Jhlmerch") {
         setInterval(sendGoldToMerchant, 3 * 1000);
