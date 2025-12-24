@@ -4,10 +4,11 @@ load_code("helpers");
 class MyChar extends BaseClass {
 
 	lastFarmCheck = 0;
+	cburstpull = false;
 
 	useSkillCBurst() {
 		const USE_ABOVE_MANA = 3000;
-		if (character.mp > USE_ABOVE_MANA && !is_on_cooldown("cburst") && cburstpull === 1) {
+		if (character.mp > USE_ABOVE_MANA && !is_on_cooldown("cburst") && this.cburstpull) {
 
 			let targets = [];
 			let totalCost = 0

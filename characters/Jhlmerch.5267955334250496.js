@@ -85,13 +85,15 @@ class Merchant extends combineItems {
 		// setInterval(async () => await this.holidayExchangeAndSell(), 7 * 1000);
 		setInterval(async () => await this.mainLoop(), 1000);
 		// setInterval(snowball, 4200);
-
-		setInterval(() => {
-			if (character.s.magiport) {
-				accept_magiport("Jhlmage");
-			}
-		}, 2000);
 		setInterval(exportCharacterData, 8 * 1000);
+
+		parent.socket.on("magiport", (d) => {
+			const mage = "Jhlmage";
+
+			if (d.name == mage) {
+				accept_magiport(mage)
+			}
+		});
 
 		character.on("cm", async (sender, data) => {
 			await this.handleCM(sender, data);

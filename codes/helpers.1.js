@@ -7,17 +7,21 @@ function startSharedTasks() {
     setInterval(reviveSelf, 7000);
     setInterval(playKeepAliveSound, 45 * 60 * 1000);
     setInterval(exportCharacterData, 6 * 1000);
-    setInterval(() => {
-        if (character.s.magiport) {
-            accept_magiport("Jhlmage");
+
+    parent.socket.on("magiport", (d) => {
+        const mage = "Jhlmage";
+
+        if (d.name == mage) {
+            accept_magiport(mage)
         }
-    }, 2000);
+    });
 
     if (character.name != "Jhlmerch") {
         setInterval(sendGoldToMerchant, 3 * 1000);
         setInterval(checkPotions, 9 * 1000);
     }
 }
+
 
 async function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
