@@ -8,12 +8,12 @@ const POTSMINSTOCK = 9999;
 const POT_BUFFER = 6000;
 
 const sellWhiteList = [
-	"hpbelt", "hpamulet", "vitring", //"pants", "shoes", "coat",
+	"hpbelt", "hpamulet", "vitring", "pants", "shoes", "coat", "helmet",
 	"cclaw", "mushroomstaff", "slimestaff", "stinger", "vitearring", "glolipop", "quiver",
 	"wattire", "wshoes", "wcap", "wbreeches", "wgloves", // Wanders set
 	"helmet1", "pants1", "coat1", "gloves1", "shoes1", // Rugged set
 	"xmace", "xbow", "merry", "snowball", "xmashat", "rednose", "candycanesword", "xmassweater", "xmaspants", "xmasshoes", "warmscarf",
-	"iceskates", "gcape", "santasbelt", "angelwings",
+	"iceskates", "gcape", "santasbelt", "angelwings", "swifty",
 	"mittens", "snowflakes", "ornamentstaff", "mshield",
 
 ];
@@ -40,7 +40,7 @@ const bankWhitelist = [
 	// Mats
 	"spores", "beewings", "whiteegg", "spidersilk", "cscale", "rattail", "crabclaw", "bfur", "feather0", "gslime", "smush",
 	"snakeoil", "ascale", "snakefang", "vitscroll", "essenceoffire", "essenceoffrost", "carrot", "snowball", "frogt", "ink",
-	"sstinger", "btusk", "bwing", "forscroll", "electronics", "dstones",
+	"sstinger", "btusk", "bwing", "forscroll", "electronics", "dstones", "pleather",
 	// Misc
 	"offeringp", "offering", "funtoken", "cryptkey", "poison",
 	"x0", "x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x9",
@@ -86,12 +86,14 @@ class Merchant extends combineItems {
 		setInterval(async () => await this.mainLoop(), 1000);
 		// setInterval(snowball, 4200);
 		setInterval(exportCharacterData, 8 * 1000);
+		setInterval(useSkillJacko, 1200);
 
+		parent.socket.off("magiport");
 		parent.socket.on("magiport", (d) => {
 			const mage = "Jhlmage";
 
 			if (d.name == mage) {
-				accept_magiport(mage)
+				accept_magiport(mage);
 			}
 		});
 
@@ -122,10 +124,17 @@ class Merchant extends combineItems {
 		// 	}
 		// }
 
-		if (now - this.lastRun.buffs > 10_000) {
+		if (now - this.lastRun.buffs > 30 * 1000) {
 			if (!this.checkIfDoingSOmething()) {
 				this.lastRun.buffs = now;
 				await this.handleHolidayBuffs();
+			}
+		}
+
+		if (now - this.lastRun.processDeliveries > 8 * 1000) {
+			if (!this.checkIfDoingSOmething() && this.deliveryList.length > 0) {
+				this.lastRun.processDeliveries = now;
+				await this.processDeliveries();
 			}
 		}
 
@@ -156,28 +165,21 @@ class Merchant extends combineItems {
 			}
 		}
 
-		if (now - this.lastRun.processDeliveries > 10_000) {
-			if (!this.checkIfDoingSOmething() && this.deliveryList.length > 0) {
-				this.lastRun.processDeliveries = now;
-				await this.processDeliveries();
-			}
-		}
-
-		if (now - this.lastRun.fishing > 11_000) {
+		if (now - this.lastRun.fishing > 11 * 1000) {
 			if (!this.busy && !this.mining) {
 				this.lastRun.fishing = now;
 				await this.goFishing();
 			}
 		}
 
-		if (now - this.lastRun.mining > 12_000) {
+		if (now - this.lastRun.mining > 12 * 1000) {
 			if (!this.busy && !this.fishing) {
 				this.lastRun.mining = now;
 				await this.goMining();
 			}
 		}
 
-		if (now - this.lastRun.restock > 300_000) {
+		if (now - this.lastRun.restock > 250 * 1000) {
 			if (!this.checkIfDoingSOmething()) {
 				this.lastRun.restock = now;
 				await this.restockPotions();
@@ -191,33 +193,33 @@ class Merchant extends combineItems {
 			}
 		}
 
-		if (now - this.lastRun.dismantle > 200_000) {
+		if (now - this.lastRun.dismantle > 200 * 1000) {
 			if (!this.checkIfDoingSOmething()) {
 				this.lastRun.dismantle = now;
 				await this.dismantleFireWeapons();
 			}
 		}
 
-		if (now - this.lastRun.manageInventory > 300_000) {
+		if (now - this.lastRun.manageInventory > 300 * 1000) {
 			if (!this.checkIfDoingSOmething()) {
 				this.lastRun.manageInventory = now;
 				await this.manageInventory();
 			}
 		}
 
-		if (now - this.lastRun.healBuff > 1_000) {
+		if (now - this.lastRun.healBuff > 1000) {
 			this.lastRun.healBuff = now;
 			await this.healAndBuff();
 		}
 
-		if (now - this.lastRun.returnHome > 20_000) {
+		if (now - this.lastRun.returnHome > 30 * 1000) {
 			this.lastRun.returnHome = now;
 			if (!this.checkIfDoingSOmething()) {
 				await this.returnHome();
 			}
 		}
 
-		if (now - this.lastRun.sellCheck > 10_000) {
+		if (now - this.lastRun.sellCheck > 10 * 1000) {
 			this.lastRun.sellCheck = now;
 			if (!this.checkIfDoingSOmething()) {
 				const { used } = this.getInventoryUsage();
@@ -230,6 +232,106 @@ class Merchant extends combineItems {
 		}
 	}
 
+	async handleCM(sender, payload) {
+		if (this.busy || this.fishing || this.mining) return;
+		if (!sender.name.startsWith("Jhl")) return;
+
+		this.equipBroom();
+
+		const [command, data] = sender.message.split(" ");
+
+		switch (command.trim()) {
+			case "need_Hpots": {
+				const [xStr, yStr, map] = data.split(",");
+				const x = Number(xStr);
+				const y = Number(yStr);
+
+				await this.handlePotionRequest(sender.name, "need_Hpots", x, y, map);
+
+				const player = get_player(sender.name);
+				if (!player) {
+					this.busy = false;
+				}
+
+				break;
+			}
+
+			case "need_Mpots": {
+				const [xStr, yStr, map] = data.split(",");
+				const x = Number(xStr);
+				const y = Number(yStr);
+
+				this.handlePotionRequest(sender.name, "need_Mpots", x, y, map);
+
+				const player = get_player(sender.name);
+				if (!player) {
+					this.busy = false;
+				}
+
+				break;
+			}
+
+			case "come_to_me": {
+				const [xStr, yStr, map] = data.split(",");
+				const x = Number(xStr);
+				const y = Number(yStr);
+
+				this.busy = true;
+
+				send_cm("Jhlmage", "portMe Jhlmerch");
+
+				await sleep(2000);
+
+				console.log(xStr, yStr, map)
+				if (map && character.map !== map) {
+					await smart_move({ to: map });
+				}
+
+				await xmove(x, y);
+
+				if (this.distance(character, { x, y }) <= 2) {
+					set_message(`Arrived at group location (${x}, ${y})`);
+					this.busy = false;
+				}
+
+				break;
+			}
+
+			case "need_luck": {
+				const [xStr, yStr, map] = data.split(",");
+				const x = Number(xStr);
+				const y = Number(yStr);
+
+				this.busy = true;
+
+				send_cm("Jhlmage", "portMe Jhlmerch");
+				await sleep(2000);
+
+				if (map && character.map !== map) {
+					await smart_move({ to: map });
+				}
+				await xmove(x, y);
+
+				if (character.x === x && character.y === y) {
+					const target = get_player(sender.name);
+					if (target && !is_on_cooldown("mluck")) {
+						use_skill("mluck", target);
+						set_message(`Buffed ${sender.name} with MLuck`);
+					}
+
+					this.busy = false;
+				}
+
+				break;
+			}
+
+			default:
+				// Unknown command — ignore
+				break;
+		}
+	}
+
+	// Holiday stuff
 	async exchangeHolidayItems() {
 		this.busy = true;
 
@@ -331,102 +433,6 @@ class Merchant extends combineItems {
 		this.busy = false;
 	}
 
-	async handleCM(sender, payload) {
-		if (this.busy || this.fishing || this.mining) return;
-		if (!sender.name.startsWith("Jhl")) return;
-
-		this.equipBroom();
-
-		const [command, data] = sender.message.split(" ");
-
-		switch (command.trim()) {
-			case "need_Hpots": {
-				const [xStr, yStr, map] = data.split(",");
-				const x = Number(xStr);
-				const y = Number(yStr);
-
-				await this.handlePotionRequest(sender.name, "need_Hpots", x, y, map);
-
-				const player = get_player(sender.name);
-				if (!player) {
-					this.busy = false;
-				}
-
-				break;
-			}
-
-			case "need_Mpots": {
-				const [xStr, yStr, map] = data.split(",");
-				const x = Number(xStr);
-				const y = Number(yStr);
-
-				this.handlePotionRequest(sender.name, "need_Mpots", x, y, map);
-
-				const player = get_player(sender.name);
-				if (!player) {
-					this.busy = false;
-				}
-
-				break;
-			}
-
-			case "come_to_me": {
-				const [xStr, yStr, map] = data.split(",");
-				const x = Number(xStr);
-				const y = Number(yStr);
-
-				this.busy = true;
-
-				send_cm("Jhlmage", "portMe Jhlmerch");
-
-				console.log(xStr, yStr, map)
-				if (map && character.map !== map) {
-					await smart_move({ to: map });
-				}
-
-				await xmove(x, y);
-
-				if (this.distance(character, { x, y }) <= 2) {
-					set_message(`Arrived at group location (${x}, ${y})`);
-					this.busy = false;
-				}
-
-				break;
-			}
-
-			case "need_luck": {
-				const [xStr, yStr, map] = data.split(",");
-				const x = Number(xStr);
-				const y = Number(yStr);
-
-				this.busy = true;
-
-				send_cm("Jhlmage", "portMe Jhlmerch");
-
-				if (map && character.map !== map) {
-					await smart_move({ to: map });
-				}
-				await xmove(x, y);
-
-				if (character.x === x && character.y === y) {
-					const target = get_player(sender.name);
-					if (target && !is_on_cooldown("mluck")) {
-						use_skill("mluck", target);
-						set_message(`Buffed ${sender.name} with MLuck`);
-					}
-
-					this.busy = false;
-				}
-
-				break;
-			}
-
-			default:
-				// Unknown command — ignore
-				break;
-		}
-	}
-
 	async handleHolidayBuffs() {
 		if (needChristmasBuff()) {
 			this.busy = true;
@@ -472,6 +478,7 @@ class Merchant extends combineItems {
 		const alreadyQueued = this.deliveryList.some(
 			req => req.name === name && req.type === type
 		);
+
 		if (!alreadyQueued) {
 			game_log(`Added request for ${type} from ${name}`);
 			this.deliveryList.push({ name, type, x, y, map });
@@ -479,7 +486,7 @@ class Merchant extends combineItems {
 	}
 
 	async processDeliveries() {
-		if ((this.busy || this.mining || this.fishing) || this.deliveryList.length === 0) return;
+		if ((this.busy || this.mining || this.fishing) || this.deliveryList.length === 0) { return; }
 
 		const request = this.deliveryList[0];
 		this.busy = true;
@@ -709,6 +716,13 @@ class Merchant extends combineItems {
 
 		if (currentHp < POT_BUFFER || currentMp < POT_BUFFER) {
 			this.busy = true;
+
+			if (character.gold < 2_000_000) {
+				set_message(`Getting gold to buy pots`);
+				await smart_move("bank");
+				bank_withdraw(2_000_000);
+			}
+
 			set_message("Restocking potions...");
 			await smart_move({ to: "potions" });
 

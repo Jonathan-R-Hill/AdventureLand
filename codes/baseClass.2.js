@@ -198,8 +198,8 @@ class BaseClass extends TargetLogic {
         this.gettingBuff = false;
         this.movingToEvent = false;
 
-        this.currentMobFarm = "Stone Worm";
-        this.secondaryTarget = "Stone Worm";
+        this.currentMobFarm = "Spider";
+        this.secondaryTarget = "Spider";
 
         this.lastTarget = "";
 
@@ -215,14 +215,14 @@ class BaseClass extends TargetLogic {
             "snakefang", "vitscroll", "offeringp", "offering", "essenceoffrost", "carrot", "snowball", "candy1", "frogt", "ink",
             "sstinger", "candycane", "ornament", "mistletoe", "frozenkey", "funtoken", "leather", "btusk", "bwing",
             "x0", "x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x9", "electronics", "cocoon",
-            "intbelt", "strbelt", "dexbelt", "dstones", "poison",
+            "intbelt", "strbelt", "dexbelt", "dstones", "poison", "pleather",
             "handofmidas", "mcape", "sweaterhs", "cryptkey", "forscroll",
             // Upgrade
             "ringsj", "intbelt", "intearring", "strearring", "dexearring", "dexamulet", "stramulet", "intamulet", "wbookhs", "wbook0",
             // Sell
             "hpbelt", "hpamulet", "shoes", "coat", "pants", "strring", "intring", "vitring", "dexring",
             "wattire", "wshoes", "wcap", "cclaw", "mushroomstaff", "wbreeches", "slimestaff", "stinger",
-            "vitearring", "wgloves", "quiver", "xmace", "xbow", "iceskates", "gcape",
+            "vitearring", "wgloves", "quiver", "xmace", "xbow", "iceskates", "gcape", "swifty",
         ];
 
         this.returningToGroup = false;
@@ -235,12 +235,12 @@ class BaseClass extends TargetLogic {
             await this.handleCM(sender, data);
         });
 
-        setInterval(() => this.handleHolidayBuffs(), 11 * 1000);
+        setInterval(() => this.handleHolidayBuffs(), 45 * 1000);
         // setInterval(() => this.handleEvents(), 15 * 1000);
         setInterval(() => this.sendWhitelistedItemsToMerchant(), 3 * 1000);
         setInterval(() => this.askForLuck(), 20 * 1000);
         setInterval(() => this.callMerchant(), 20 * 1000);
-        setInterval(() => parent.socket.emit("send_updates", {}), 30000); // Clear ghost entities
+        setInterval(() => parent.socket.emit("send_updates", {}), 21 * 1000); // Clear ghost entities
 
         startSharedTasks();
 
@@ -343,6 +343,7 @@ class BaseClass extends TargetLogic {
                 const [travel, target, map] = data.split(',');
 
                 this.currentMobFarm = target;
+                this.secondaryTarget = target;
                 this.movingToNewMob = true;
 
                 if (character.map !== map) {
@@ -555,7 +556,12 @@ class BaseClass extends TargetLogic {
                 this.lastEvent = null;
             }
 
-            await smart_move(farm.travel);
+            if (this.currentMobFarm == `Irradiated Goo`) {
+                await smart_move(`arena`);
+            }
+            else {
+                await smart_move(farm.travel);
+            }
         }
 
         set_message(`No ${mobEntry.target} nearby, moving to farm`);

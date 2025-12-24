@@ -8,11 +8,12 @@ function startSharedTasks() {
     setInterval(playKeepAliveSound, 45 * 60 * 1000);
     setInterval(exportCharacterData, 6 * 1000);
 
+    parent.socket.off("magiport");
     parent.socket.on("magiport", (d) => {
         const mage = "Jhlmage";
 
         if (d.name == mage) {
-            accept_magiport(mage)
+            accept_magiport(mage);
         }
     });
 
@@ -142,7 +143,6 @@ function returnToLeader() {
     moveTowardTargetFloodfill(safeX, safeY);
 }
 
-
 function scaleUI(factor = 0.75) {
     const body = parent.document.body;
     const canvas = parent.document.querySelector("canvas");
@@ -216,7 +216,22 @@ async function snowballBosses() {
     }
 }
 
-// ----- Holidasy Buffs ----- //
+function useSkillJacko() {
+    const mobs = Object.values(parent.entities).filter(e =>
+        e.type === "monster" &&
+        e.target === character.name &&
+        !e.dead &&
+        can_use("scare")
+    );
+
+    for (const mob of mobs) {
+        if (is_on_cooldown("scare")) { return; }
+        change_target(mob);
+        use_skill("scare");
+    }
+}
+
+// ----- Holiday Buffs ----- //
 // Christmas buffs
 function needChristmasBuff() {
     return character.s?.holidayspirit == undefined && parent.S.holidayseason == true;

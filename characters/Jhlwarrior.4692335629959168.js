@@ -2,7 +2,7 @@ load_code("baseClass");
 load_code("helpers");
 
 class MyChar extends BaseClass {
-    monsterHunter = false;
+    monsterHunter = true;
     gettingNewTask = false;
 
     lastFarmCheck = 0;
@@ -114,7 +114,14 @@ let target;
 
 const combat = async () => {
     if (myChar.movingToEvent) { return; }
-    if (myChar.currentMobFarm == undefined || myChar.currentMobFarm == `Porcupine`) { myChar.currentMobFarm = 'Squig'; }
+    if (myChar.currentMobFarm == undefined || myChar.currentMobFarm == `Porcupine` || myChar.secondaryTarget == `porcupine`) {
+
+        myChar.currentMobFarm = 'Squigtoad';
+        myChar.secondaryTarget = 'Squig'
+
+        target = null;
+    }
+
     useHealthPotion();
     useManaPotion();
     recoverOutOfCombat();

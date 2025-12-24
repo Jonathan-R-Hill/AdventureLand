@@ -3,6 +3,7 @@ load_code("helpers");
 
 class MyChar extends BaseClass {
     lastFarmCheck = 0;
+    aoeFarming = false;
 
     skillThreeShot() {
         if (is_on_cooldown("3shot") || character.mp <= character.max_mp * 0.50) { return; }
@@ -10,7 +11,26 @@ class MyChar extends BaseClass {
         let targets = [];
         for (let id in parent.entities) {
             let entity = parent.entities[id];
-            if ((entity.target === "Jhlwarrior" || entity.target === "trololol") && entity.type === "monster") {
+            if ((entity.target === "Jhlwarrior" || entity.target === "trololol")
+                && entity.type === "monster" && this.is_in_range(entity)) {
+                targets.push(entity);
+            }
+        }
+
+        if (targets.length >= 3) {
+            let chosen = targets.slice(0, 3);
+            use_skill("3shot", chosen);
+        }
+    }
+
+    aoeFarm() {
+        if (is_on_cooldown("3shot") || character.mp <= character.max_mp * 0.50) { return; }
+
+        let targets = [];
+        for (let id in parent.entities) {
+            let entity = parent.entities[id];
+            if ((entity.name === this.currentMobFarm || entity.name == this.secondaryTarget)
+                && entity.type === "monster" && this.is_in_range(entity)) {
                 targets.push(entity);
             }
         }
@@ -27,6 +47,7 @@ class MyChar extends BaseClass {
         }
 
         this.skillThreeShot();
+        if (this.aoeFarming) { this.aoeFarm(); }
 
         this.attack(target);
 
