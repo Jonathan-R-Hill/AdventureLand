@@ -1,9 +1,11 @@
 load_code("baseClass");
 load_code("helpers");
+load_code("dpsMeter");
 
 class MyChar extends BaseClass {
     monsterHunter = false;
     gettingNewTask = false;
+    pullThree = false;
 
     lastFarmCheck = 0;
     lastTaunt = 0;
@@ -18,7 +20,7 @@ class MyChar extends BaseClass {
             // this.equipItem(`hammer`, 6, "offhand");
             this.equipItem(`fireblade`, 7, "mainhand");
             this.equipItem(`fireblade`, 6, "offhand");
-            // this.equipItem(`sshield`, 4, "offhand");
+            // this.equipItem(`sshield`, 7, "offhand");
         }
     }
 
@@ -140,15 +142,19 @@ const combat = async () => {
         myChar.lastFarmCheck = now;
     }
 
-    if (["Poisio", "Wild Boar", "Water Spirit", "Hawk", "Scorpion", "Spider"].includes(myChar.currentMobFarm)) {
+    if (["Poisio", "Wild Boar", "Water Spirit", "Hawk", "Scorpion", "Spider", "Mole"].includes(myChar.currentMobFarm) || this.fightTogeather) {
         if (get_nearest_monster({ target: "Jhlpriest" }) != null) { target = get_nearest_monster({ target: "Jhlpriest" }); }
         else if (get_nearest_monster({ target: "Jhlranger" }) != null) { target = get_nearest_monster({ target: "Jhlranger" }); }
         else if (get_nearest_monster({ target: "Jhlrogue" }) != null) { target = get_nearest_monster({ target: "Jhlrogue" }); }
-        else if (get_nearest_monster({ target: "Jhlwarrior" }) != null) { target = get_nearest_monster({ target: "Jhlwarrior" }); }
-        else { target = await myChar.targetLogicTank(); }
+        // else if (get_nearest_monster({ target: "Jhlwarrior" }) != null) { target = get_nearest_monster({ target: "Jhlwarrior" }); }
+        else {
+            if (this.pullThree) { target = await myChar.targetLogicTank3(); }
+            else { target = await myChar.targetLogicTank(); }
+        }
     }
     else {
-        target = await myChar.targetLogicTank();
+        if (this.pullThree) { target = await myChar.targetLogicTank3(); }
+        else { target = await myChar.targetLogicTank(); }
     }
 
     if (!target) return;

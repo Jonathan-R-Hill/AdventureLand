@@ -11,6 +11,8 @@ class TargetLogic {
     fightTogeather;
     movingToNewMob;
 
+    allies = ["trololol", "YTFAN", "derped", "Knight", "Bonjour"];
+
     // TARGETING
     getClosestMonsterByName(name) {
         let closest = null;
@@ -34,7 +36,6 @@ class TargetLogic {
     getTankTarget() {
         const tank = get_player(this.tank);
         if (tank) {
-            console.log(tank);
             if (get_nearest_monster({ target: "Jhlpriest" }) != null) {
                 return get_nearest_monster({ target: "Jhlpriest" });
             }
@@ -50,21 +51,6 @@ class TargetLogic {
             else if (get_nearest_monster({ target: "Jhlrogue" }) != null) {
                 return get_nearest_monster({ target: "Jhlrogue" });
             }
-            else if (get_nearest_monster({ target: "trololol" }) != null) {
-                return get_nearest_monster({ target: "trololol" });
-            }
-            else if (get_nearest_monster({ target: "YTFAN" }) != null) {
-                return get_nearest_monster({ target: "YTFAN" });
-            }
-            else if (get_nearest_monster({ target: "derped" }) != null) {
-                return get_nearest_monster({ target: "derped" });
-            }
-            else if (get_nearest_monster({ target: "Knight" }) != null) {
-                return get_nearest_monster({ target: "Knight" });
-            }
-            else if (get_nearest_monster({ target: "Bonjour" }) != null) {
-                return get_nearest_monster({ target: "Bonjour" });
-            }
             else if (get_nearest_monster({ target: "Jhlwarrior" }) != null) {
                 return get_nearest_monster({ target: "Jhlwarrior" });
             }
@@ -74,6 +60,29 @@ class TargetLogic {
         }
 
         return null;
+    }
+
+    findStunnedTarget() {
+        let closest = null;
+        let closestDist = Infinity;
+
+        for (let id in parent.entities) {
+            const e = parent.entities[id];
+
+            if (
+                e.type === "monster" &&
+                e.s && e.s.stunned &&      // must be stunned
+                !e.dead                    // ignore dead mobs
+            ) {
+                const d = distance(character, e);
+                if (d < closestDist) {
+                    closest = e;
+                    closestDist = d;
+                }
+            }
+        }
+
+        return closest;
     }
 
     findTarget(target) {
@@ -122,13 +131,12 @@ class TargetLogic {
 
         if (character.name != "Jhlwarrior") { returnToLeader(); }
 
-        // Fallback to current target if tank target is invalid or a player
         if (!target || target.name?.startsWith("Jhl")) {
             target = currentTarget;
         }
 
         if (!target ||
-            target.name?.startsWith("Jhl") || ["trololol", "YTFAN", "derped", "Knight", "Bonjour"].includes(target.name)) {
+            target.name?.startsWith("Jhl") || allies.includes(target.name)) {
 
             if (target == null && get_player(this.tank) == null) {
                 target = get_targeted_monster();
@@ -180,6 +188,69 @@ class TargetLogic {
         return target;
     }
 
+
+    findTargetNotAttackingMe() {
+        let closest = null;
+        let closestDist = Infinity;
+
+        for (let id in parent.entities) {
+            const e = parent.entities[id];
+
+            if (
+                e.type === "monster" &&
+                !e.dead &&
+                (e.name === this.currentMobFarm || e.name === this.secondaryTarget) &&
+                e.target !== character.name
+            ) {
+                const d = distance(character, e);
+                if (d < closestDist) {
+                    closest = e;
+                    closestDist = d;
+                }
+            }
+        }
+
+        return closest;
+    }
+
+    async targetLogicTank3() {
+        if (!this.attackMode || character.rip || this.movingToNewMob) return null;
+
+        const attackers = Object.values(parent.entities).filter(e =>
+            e.type === "monster" &&
+            !e.dead &&
+            e.target === character.name
+        );
+
+        const attackerCount = attackers.length;
+
+        // If already tanking 3+, STOP pulling new mobs
+        if (attackerCount >= 3) {
+            let target = get_targeted_monster();
+
+            if (!target || target.dead) {
+                target = attackers[0] || null;
+            }
+
+            return target;
+        }
+
+        // pulling logic
+        let target = null;
+
+        if (!target) {
+            target = this.findTargetNotAttackingMe();
+        }
+
+        if (!target) {
+            set_message(`No target, moving to farm ${this.currentMobFarm}`);
+            return null;
+        }
+
+        return target;
+    }
+
+
 }
 
 class BaseClass extends TargetLogic {
@@ -198,8 +269,8 @@ class BaseClass extends TargetLogic {
         this.gettingBuff = false;
         this.movingToEvent = false;
 
-        this.currentMobFarm = "Hawk";
-        this.secondaryTarget = "Hawk";
+        this.currentMobFarm = "Mole";
+        this.secondaryTarget = "Mole";
 
         this.lastTarget = "";
 
@@ -216,13 +287,13 @@ class BaseClass extends TargetLogic {
             "sstinger", "candycane", "ornament", "mistletoe", "frozenkey", "funtoken", "leather", "btusk", "bwing",
             "x0", "x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x9", "electronics", "cocoon",
             "intbelt", "strbelt", "dexbelt", "dstones", "poison", "pleather",
-            "handofmidas", "mcape", "sweaterhs", "cryptkey", "forscroll",
+            "handofmidas", "mcape", "sweaterhs", "cryptkey", "forscroll", "gemfragment",
             // Upgrade
             "ringsj", "intbelt", "intearring", "strearring", "dexearring", "dexamulet", "stramulet", "intamulet", "wbookhs", "wbook0",
             // Sell
             "hpbelt", "hpamulet", "shoes", "coat", "pants", "strring", "intring", "vitring", "dexring",
             "wattire", "wshoes", "wcap", "cclaw", "mushroomstaff", "wbreeches", "slimestaff", "stinger",
-            "vitearring", "wgloves", "quiver", "xmace", "xbow", "iceskates", "gcape", "swifty",
+            "vitearring", "wgloves", "quiver", "xmace", "xbow", "iceskates", "gcape", "swifty", "lspores",
         ];
 
         this.returningToGroup = false;
@@ -236,7 +307,7 @@ class BaseClass extends TargetLogic {
         });
 
         setInterval(() => this.handleHolidayBuffs(), 45 * 1000);
-        // setInterval(() => this.handleEvents(), 15 * 1000);
+        setInterval(() => this.handleEvents(), 15 * 1000);
         setInterval(() => this.sendWhitelistedItemsToMerchant(), 3 * 1000);
         setInterval(() => this.askForLuck(), 20 * 1000);
         setInterval(() => this.callMerchant(), 20 * 1000);
@@ -248,26 +319,16 @@ class BaseClass extends TargetLogic {
     }
 
     async handleEvents() {
-        if (parent.S.snowman.live && distance(character, { x: 1175, y: -903, map: 'winterland' }) > 300) {
+        if (parent.S.snowman.live) {
             this.lastEvent = 'snowman';
-            if (!get_nearest_monster({ type: 'snowman' })) {
-                if (this.lastTarget == "") {
-                    this.lastTarget = this.currentMobFarm;
-                    this.currentMobFarm = 'Arctic Bee';
-                    this.secondaryTarget = 'Arctic Bee';
-                }
-
-                this.movingToEvent = true;
-                await smart_move({ x: 1119, y: -886, map: 'winterland' });
+            if (this.lastTarget == "") {
+                this.lastTarget = this.currentMobFarm;
             }
-            else if (this.getClosestMonsterByName('Snowman') && parent.S.snowman.live) {
-                if (this.lastTarget == "") { this.lastTarget = this.currentMobFarm; }
-                this.movingToEvent = false;
-                this.currentMobFarm = "Arctic Bee";
-                this.secondaryTarget = "Arctic Bee";
 
-            }
-        } else if (parent.S.icegolem) {
+            this.currentMobFarm = 'Arctic Bee';
+            this.secondaryTarget = 'Arctic Bee';
+        }
+        else if (parent.S.icegolem) {
             this.lastEvent = 'icegolem';
             if (!get_nearest_monster({ type: 'icegolem' })) { join('icegolem'); }
         }
@@ -612,6 +673,7 @@ class BaseClass extends TargetLogic {
     // ATTTACKING
     async attack(target) {
         if (this.movingToNewMob) { return; }
+
         if (!this.is_in_range(target, "attack")) {
             moveTowardTargetFloodfill(target.real_x, target.real_y);
 

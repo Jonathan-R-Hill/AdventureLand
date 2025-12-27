@@ -83,9 +83,6 @@ class combineItems {
             }
         }
 
-
-        console.log(grouped)
-
         // Find a level with at least 3 of the item
         let chosenLevel = null;
         for (const lvl of levels) {

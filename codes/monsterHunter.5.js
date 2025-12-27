@@ -32,6 +32,9 @@ const mobData = [
     { travel: "mechagnome", target: "Mech-a Gnome", map: "cyberland" },
     { travel: "bbpompom", target: "Pom Pom", map: "winter_cave" },
     { travel: "cgoo", target: "Irradiated Goo", map: "arena" },
+    { travel: "mole", target: "Mole", map: "tunnel" },
+    { travel: "pppompom", target: "Pom Pom", map: "level2n" },
+    { travel: "ent", target: "Ent", map: "desertland" },
 ];
 
 // MONSTER HUNTER

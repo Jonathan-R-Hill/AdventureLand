@@ -14,7 +14,7 @@ const sellWhiteList = [
 	"helmet1", "pants1", "coat1", "gloves1", "shoes1", // Rugged set
 	"xmace", "xbow", "merry", "snowball", "xmashat", "rednose", "candycanesword", "xmassweater", "xmaspants", "xmasshoes", "warmscarf",
 	"iceskates", "gcape", "santasbelt", "angelwings", "swifty",
-	"mittens", "snowflakes", "ornamentstaff", "mshield", "ringsj",
+	"mittens", "snowflakes", "ornamentstaff", "mshield", "ringsj", "lspores",
 
 ];
 
@@ -207,7 +207,7 @@ class Merchant extends combineItems {
 			}
 		}
 
-		if (now - this.lastRun.healBuff > 1000) {
+		if (now - this.lastRun.healBuff > 200) {
 			this.lastRun.healBuff = now;
 			await this.healAndBuff();
 		}
@@ -340,9 +340,9 @@ class Merchant extends combineItems {
 		}
 
 		const holidayItems = [
+			{ item: "candycane", min: 1, x: 1310.5, y: -1584, map: "winterland" },
 			{ item: "mistletoe", min: 1, x: -183, y: -105, map: "winter_inn" },
 			{ item: "ornament", min: 20, x: -125.4, y: -144.5, map: "winterland" },
-			{ item: "candycane", min: 1, x: 1310.5, y: -1584, map: "winterland" },
 		];
 
 		// Collect from bank
