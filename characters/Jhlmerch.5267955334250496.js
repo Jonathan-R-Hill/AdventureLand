@@ -85,6 +85,7 @@ class Merchant extends combineItems {
 		// setInterval(snowball, 4200);
 		setInterval(exportCharacterData, 8 * 1000);
 		setInterval(useSkillJacko, 1200);
+		setInterval(crossMapHeal, 800);
 		// setInterval(async () => await this.upgradeAllByName("mittens", 7, 0), 1500);
 
 		parent.socket.off("magiport");

@@ -2,7 +2,7 @@
 let MAIN_PARTY = {
     "Jhlwarrior": { slot: "Jhlwarrior", active: true },
     "Jhlmage": { slot: "Jhlmage", active: false },
-    // "Jhlmerchant": { slot: "Jhlmerch", active: true },
+    "Jhlmerch": { slot: "Jhlmerch", active: true },
     "Jhlranger": { slot: "Jhlranger", active: true },
     "Jhlrogue": { slot: "Jhlrogue", active: false },
 };
@@ -10,7 +10,7 @@ let MAIN_PARTY = {
 let SNOWMAN_PARTY = {
     "Jhlwarrior": { slot: "Jhlwarrior", active: false },
     "Jhlmage": { slot: "Jhlmage", active: true },
-    // "Jhlmerchant": { slot: "Jhlmerch", active: true },
+    "Jhlmerch": { slot: "Jhlmerch", active: true },
     "Jhlranger": { slot: "Jhlranger", active: true },
     "Jhlrogue": { slot: "Jhlrogue", active: false },
 };

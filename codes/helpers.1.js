@@ -7,6 +7,7 @@ function startSharedTasks() {
     setInterval(reviveSelf, 7000);
     setInterval(playKeepAliveSound, 45 * 60 * 1000);
     setInterval(exportCharacterData, 6 * 1000);
+    setInterval(crossMapHeal, 800);
 
     parent.socket.off("magiport");
     parent.socket.on("magiport", (d) => {
@@ -228,6 +229,14 @@ function useSkillJacko() {
         if (is_on_cooldown("scare")) { return; }
         change_target(mob);
         use_skill("scare");
+    }
+}
+
+function crossMapHeal() {
+    if (character.name == "Jhlpriest") { return; }
+
+    if (character.hp <= character.max_hp * 0.4) {
+        send_cm("Jhlpriest", `aoeHeal 123`);
     }
 }
 

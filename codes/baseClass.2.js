@@ -454,6 +454,16 @@ class BaseClass extends TargetLogic {
                 if (character.name == "Jhlmage") {
                     this.useSkillPort(target);
                 }
+
+                break;
+            }
+
+            case "aoeHeal": {
+                if (character.mp > 550) {
+                    use_skill("partyheal");
+                }
+
+                break;
             }
 
             default:
