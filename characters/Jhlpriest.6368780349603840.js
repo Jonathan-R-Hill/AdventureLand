@@ -2,7 +2,7 @@ load_code("baseClass");
 load_code("helpers");
 load_code("charLauncher");
 load_code("dpsMeter");
-load_code("partyHealthUI");
+load_code("UI");
 
 class MyChar extends BaseClass {
 
