@@ -6,6 +6,9 @@ class MyChar extends BaseClass {
 	lastFarmCheck = 0;
 	cburstpull = false;
 
+	currentMobFarm = `Arctic Bee`;
+	secondaryTarget = `Arctic Bee`;
+
 	useSkillCBurst() {
 		const USE_ABOVE_MANA = 3000;
 		if (character.mp > USE_ABOVE_MANA && !is_on_cooldown("cburst") && this.cburstpull) {
@@ -55,10 +58,23 @@ class MyChar extends BaseClass {
 			return;
 		}
 	}
+
+	snowmanPort() {
+		if (!parent.S.snowman.live) { return; }
+
+		if (!get_player("Jhlpriest")) {
+			this.useSkillPort("Jhlpriest");
+		}
+
+		if (!get_player("Jhlranger")) {
+			this.useSkillPort("Jhlranger");
+		}
+	}
 }
 
 const myChar = new MyChar(character.name);
 
+setInterval(myChar.snowmanPort(), 1000);
 setInterval(async () => {
 	if (myChar.gettingBuff) { return; }
 

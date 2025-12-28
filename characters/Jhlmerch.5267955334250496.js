@@ -14,8 +14,7 @@ const sellWhiteList = [
 	"helmet1", "pants1", "coat1", "gloves1", "shoes1", // Rugged set
 	"xmace", "xbow", "merry", "snowball", "xmashat", "rednose", "candycanesword", "xmassweater", "xmaspants", "xmasshoes", "warmscarf",
 	"iceskates", "gcape", "santasbelt", "angelwings", "swifty",
-	"snowflakes", "ornamentstaff", "mshield", "ringsj", "lspores", // "mittens",
-
+	"snowflakes", "ornamentstaff", "mshield", "ringsj", "lspores", "mittens",
 ];
 
 const bankWhitelist = [
@@ -25,7 +24,7 @@ const bankWhitelist = [
 	// Keyes
 	"spiderkey", "frozenkey",
 	// Weapons & Armor
-	"handofmidas", "mcape", "sweaterhs", "mittens", "firestaff", //"firebow","mshield", "ornamentstaff",
+	"handofmidas", "mcape", "sweaterhs", "firestaff", //"firebow","mshield", "ornamentstaff",
 	// Upgrades
 	"lostearring", "intearring", "strearring", "dexearring",
 	"wbook0", "dexamulet", "stramulet", "intamulet", "candy1",

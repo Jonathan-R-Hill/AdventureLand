@@ -305,7 +305,7 @@ class BaseClass extends TargetLogic {
         });
 
         setInterval(() => this.handleHolidayBuffs(), 45 * 1000);
-        // setInterval(() => this.handleEvents(), 15 * 1000);
+        setInterval(() => this.handleEvents(), 15 * 1000);
         setInterval(() => this.sendWhitelistedItemsToMerchant(), 3 * 1000);
         setInterval(() => this.askForLuck(), 20 * 1000);
         setInterval(() => this.callMerchant(), 20 * 1000);

@@ -1,7 +1,15 @@
 // ----- Config ----- //
-const PARTY_CONFIG = {
+let MAIN_PARTY = {
     "Jhlwarrior": { slot: "Jhlwarrior", active: true },
     "Jhlmage": { slot: "Jhlmage", active: false },
+    // "Jhlmerchant": { slot: "Jhlmerch", active: true },
+    "Jhlranger": { slot: "Jhlranger", active: true },
+    "Jhlrogue": { slot: "Jhlrogue", active: false },
+};
+
+let SNOWMAN_PARTY = {
+    "Jhlwarrior": { slot: "Jhlwarrior", active: false },
+    "Jhlmage": { slot: "Jhlmage", active: true },
     // "Jhlmerchant": { slot: "Jhlmerch", active: true },
     "Jhlranger": { slot: "Jhlranger", active: true },
     "Jhlrogue": { slot: "Jhlrogue", active: false },
@@ -16,8 +24,13 @@ async function manageActiveChars() {
     try {
         const activeStates = get_active_characters();
 
-        for (const name in PARTY_CONFIG) {
-            const config = PARTY_CONFIG[name];
+        const isSnowmanLive = parent.S.snowman && parent.S.snowman.live;
+        const requiredParty = isSnowmanLive ? SNOWMAN_PARTY : MAIN_PARTY;
+
+        if (isSnowmanLive) set_message("Boss Mode");
+
+        for (const name in requiredParty) {
+            const config = requiredParty[name];
             const currentState = activeStates[name]; // "self", "starting", "loading", "active", "code"
 
             if (!config.active) {
@@ -25,7 +38,7 @@ async function manageActiveChars() {
                 if (currentState && currentState !== "self") {
                     game_log(`Stopping ${name} (Config set to inactive)`);
                     stop_character(name);
-                    await sleep(1000);
+                    await sleep(1500);
                 }
                 continue;
             }
