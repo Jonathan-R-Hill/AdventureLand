@@ -2,7 +2,7 @@ load_code("healAndPot")
 load_code("ApiInteraction");
 
 function startSharedTasks() {
-    playKeepAliveSound();
+    setInterval(playKeepAliveSound, 10 * 1005);
     setInterval(manageParty, 2100);
     setInterval(reviveSelf, 7000);
     setInterval(playKeepAliveSound, 45 * 60 * 1000);

@@ -204,6 +204,112 @@ class combineItems {
         }
     }
 
+    getScrollTypeForLevel(level, grade) {
+        if (grade == 0) {
+            if (level < 4) return "scroll0";
+            if (level <= 7) return "scroll1";
+            if (level <= 9) return "scroll2";
+        }
+        else if (grade == 1) {
+            if (level < 5) return "scroll1";
+            if (level <= 9) return "scroll2";
+        }
+        else if (grade == 2) { return "scroll2"; }
+    }
+
+    findAllItemSlotsByName(name) {
+        name = name.toLowerCase();
+        const slots = [];
+
+        for (let i = 0; i < character.items.length; i++) {
+            const item = character.items[i];
+            if (item && item.name.toLowerCase() === name) {
+                slots.push(i);
+            }
+        }
+
+        return slots;
+    }
+
+    findScrollSlot(scrollName) {
+        scrollName = scrollName.toLowerCase();
+
+        for (let i = 0; i < character.items.length; i++) {
+            const item = character.items[i];
+            if (!item) continue;
+
+            if (item.name.toLowerCase() === scrollName) {
+                return i;
+            }
+        }
+
+        return null;
+    }
+
+    async upgradeItemToLevel(itemSlot, targetLevel, grade) {
+        if (character.q.upgrade) { return; }
+
+        const item = character.items[itemSlot];
+        if (!item) return;
+
+        const currentLevel = item.level || 0;
+
+        if (currentLevel >= targetLevel) return;
+
+        const scrollName = this.getScrollTypeForLevel(currentLevel, grade);
+        const scrollSlot = this.findScrollSlot(scrollName);
+
+        if (scrollSlot === null) {
+            game_log(`Missing scroll: ${scrollName}`, "#FF0000");
+            return;
+        }
+
+        game_log(`Upgrading ${item.name}+${currentLevel} using ${scrollName}`);
+
+        use_skill("massproduction");
+
+        await upgrade(itemSlot, scrollSlot);
+
+        await sleep(500);
+    }
+
+    async upgradeAllByName(itemName, targetLevel, grade) {
+        const slots = this.findAllItemSlotsByName(itemName);
+
+        if (slots.length === 0) {
+            game_log(`No items named '${itemName}' found`, "#FF0000");
+            return;
+        }
+
+        // Sort by current level so we upgrade the lowest first
+        slots.sort((a, b) => {
+            const A = character.items[a]?.level || 0;
+            const B = character.items[b]?.level || 0;
+            return A - B;
+        });
+
+        // Pick the lowest-level item that still needs upgrading
+        let chosenSlot = null;
+
+        for (const slot of slots) {
+            const item = character.items[slot];
+            const lvl = item.level || 0;
+
+            if (lvl < targetLevel) {
+                chosenSlot = slot;
+                break;
+            }
+        }
+
+        if (chosenSlot === null) {
+            game_log(`All '${itemName}' items are already at target level ${targetLevel}`);
+            return;
+        }
+
+        // Upgrade that one item
+        await this.upgradeItemToLevel(chosenSlot, targetLevel, grade);
+    }
+
 }
 
 

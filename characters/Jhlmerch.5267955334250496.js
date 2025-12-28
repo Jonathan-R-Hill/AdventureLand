@@ -14,7 +14,7 @@ const sellWhiteList = [
 	"helmet1", "pants1", "coat1", "gloves1", "shoes1", // Rugged set
 	"xmace", "xbow", "merry", "snowball", "xmashat", "rednose", "candycanesword", "xmassweater", "xmaspants", "xmasshoes", "warmscarf",
 	"iceskates", "gcape", "santasbelt", "angelwings", "swifty",
-	"mittens", "snowflakes", "ornamentstaff", "mshield", "ringsj", "lspores",
+	"snowflakes", "ornamentstaff", "mshield", "ringsj", "lspores", // "mittens",
 
 ];
 
@@ -25,7 +25,7 @@ const bankWhitelist = [
 	// Keyes
 	"spiderkey", "frozenkey",
 	// Weapons & Armor
-	"handofmidas", "mcape", "sweaterhs", //"firebow","mshield", "ornamentstaff",
+	"handofmidas", "mcape", "sweaterhs", "mittens", "firestaff", //"firebow","mshield", "ornamentstaff",
 	// Upgrades
 	"lostearring", "intearring", "strearring", "dexearring",
 	"wbook0", "dexamulet", "stramulet", "intamulet", "candy1",
@@ -47,7 +47,7 @@ const bankWhitelist = [
 ];
 
 const dismantleList = [
-	"fireblade", "firestaff", "firebow",
+	"fireblade", "firebow", // "firestaff",
 ];
 
 class Merchant extends combineItems {
@@ -82,11 +82,11 @@ class Merchant extends combineItems {
 
 		scaleUI(0.80);
 
-		// setInterval(async () => await this.holidayExchangeAndSell(), 7 * 1000);
 		setInterval(async () => await this.mainLoop(), 1000);
 		// setInterval(snowball, 4200);
 		setInterval(exportCharacterData, 8 * 1000);
 		setInterval(useSkillJacko, 1200);
+		// setInterval(async () => await this.upgradeAllByName("mittens", 6, 0), 1500);
 
 		parent.socket.off("magiport");
 		parent.socket.on("magiport", (d) => {
@@ -353,8 +353,10 @@ class Merchant extends combineItems {
 				if (!pack) continue;
 				for (let i = 0; i < pack.length; i++) {
 					const item = pack[i];
+					if (!item) continue;
+
 					for (const exch of holidayItems) {
-						if (item && item.name === exch.item) {
+						if (item.name === exch.item) {
 							slots.push({ location: "bank", pack: packName, slot: i });
 						}
 					}
@@ -364,52 +366,61 @@ class Merchant extends combineItems {
 			await sleep(500);
 		}
 
-		// find first holiday item in inv
-		let itemSlot = -1;
-		let exchInfo = null;
+		// Find item with MOST trades
+		let bestExch = null;
+		let maxPotentialTrades = 0;
+
 		for (const exch of holidayItems) {
-			itemSlot = this.getItemSlot(exch.item);
-			if (itemSlot > -1) {
-				if (character.items[itemSlot].q < exch.min) {
-					itemSlot = -1;
-					continue;
+			// Sum up total quantity of this specific item in inventory
+			let totalQty = 0;
+			character.items.forEach(slotItem => {
+				if (slotItem && slotItem.name === exch.item) {
+					totalQty += (slotItem.q || 1);
 				}
-				exchInfo = exch;
-				break;
+			});
+
+			let potential = Math.floor(totalQty / exch.min);
+
+			if (potential > maxPotentialTrades) {
+				maxPotentialTrades = potential;
+				bestExch = exch;
 			}
 		}
 
-		if (itemSlot === -1) {
+		// If no items found or not enough for a single trade
+		if (!bestExch || maxPotentialTrades <= 0) {
+			game_log("Nothing to exchange (or not enough for min req)");
 			this.busy = false;
-			return; // nothing to exchange
+
+			return;
 		}
 
-		// move to the correct  location for le item
-		if (character.map !== exchInfo.map) {
+		const exchInfo = bestExch;
+		game_log(`Decided to trade ${exchInfo.item} (Potential trades: ${maxPotentialTrades})`);
+
+		// 3. Move to the correct location
+		if (character.map !== exchInfo.map || distance(character, { x: exchInfo.x, y: exchInfo.y }) > 100) {
 			await smart_move({ x: exchInfo.x, y: exchInfo.y, map: exchInfo.map });
 		}
 
-		// calculate how many trades based on free inventory slots
 		const freeSpaces = this.getInventoryUsage();
-		let tradesToDo = Math.max(0, 42 - freeSpaces.used - 1); // leave 1 slot free
-
-		const item = character.items[itemSlot];
-		let maxTrades = Math.floor(item.q / exchInfo.min);
-		let trades = Math.min(tradesToDo, maxTrades);
+		let tradesToDo = Math.max(0, 42 - freeSpaces.used - 1);
+		let trades = Math.min(tradesToDo, maxPotentialTrades);
 
 		for (let i = 0; i < trades; i++) {
+			let itemSlot = this.getItemSlot(exchInfo.item);
+			if (itemSlot === -1) break;
+
+			let item = character.items[itemSlot];
 			if (item.q < exchInfo.min) break;
+
 			if (!character.q.exchange) {
 				exchange(itemSlot);
 			}
-			await sleep(6000);
 
-			// re‑find
-			itemSlot = this.getItemSlot(exchInfo.item);
-			if (itemSlot === -1) break;
+			await sleep(6000);
 		}
 
-		// Step 5: sell leftovers
 		this.sellItems();
 
 		if (character.map !== "main") {

@@ -136,7 +136,7 @@ class TargetLogic {
         }
 
         if (!target ||
-            target.name?.startsWith("Jhl") || allies.includes(target.name)) {
+            target.name?.startsWith("Jhl") || this.allies.includes(target.name)) {
 
             if (target == null && get_player(this.tank) == null) {
                 target = get_targeted_monster();
@@ -187,7 +187,6 @@ class TargetLogic {
 
         return target;
     }
-
 
     findTargetNotAttackingMe() {
         let closest = null;
@@ -250,7 +249,6 @@ class TargetLogic {
         return target;
     }
 
-
 }
 
 class BaseClass extends TargetLogic {
@@ -269,8 +267,8 @@ class BaseClass extends TargetLogic {
         this.gettingBuff = false;
         this.movingToEvent = false;
 
-        this.currentMobFarm = "Mole";
-        this.secondaryTarget = "Mole";
+        this.currentMobFarm = "Hawk";
+        this.secondaryTarget = "Hawk";
 
         this.lastTarget = "";
 
@@ -307,7 +305,7 @@ class BaseClass extends TargetLogic {
         });
 
         setInterval(() => this.handleHolidayBuffs(), 45 * 1000);
-        setInterval(() => this.handleEvents(), 15 * 1000);
+        // setInterval(() => this.handleEvents(), 15 * 1000);
         setInterval(() => this.sendWhitelistedItemsToMerchant(), 3 * 1000);
         setInterval(() => this.askForLuck(), 20 * 1000);
         setInterval(() => this.callMerchant(), 20 * 1000);

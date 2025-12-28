@@ -34,6 +34,7 @@ class MyChar extends BaseClass {
     skillHardShell() {
         // Don't use if on cooldown
         if (is_on_cooldown("hardshell")) { return; }
+        if (target.s.stunned) { return; }
 
         // Count how many monsters are targeting you
         let targetingCount = 0;
@@ -82,6 +83,17 @@ class MyChar extends BaseClass {
         }
     }
 
+    async skillCleave() {
+        if (is_on_cooldown("cleave") || character.mp < 800) return;
+
+        this.removeWeapons();
+        await sleep(25);
+
+        equip(locate_item(`bataxe`));
+
+        use_skill("cleave");
+    }
+
     useSkillWarCry() {
         if (is_on_cooldown("warcry") || character.s.warcry) { return; }
 
@@ -101,6 +113,10 @@ class MyChar extends BaseClass {
 
             this.useSkillWarCry();
         }
+
+        // if (character.mp > 1000) {
+        //     await this.skillCleave();
+        // }
 
         this.equipMainWeapons();
 
@@ -142,18 +158,19 @@ const combat = async () => {
         myChar.lastFarmCheck = now;
     }
 
-    if (["Poisio", "Wild Boar", "Water Spirit", "Hawk", "Scorpion", "Spider", "Mole"].includes(myChar.currentMobFarm) || this.fightTogeather) {
+    if (["Poisio", "Wild Boar", "Water Spirit", "Hawk", "Scorpion", "Spider", "Mole"].includes(myChar.currentMobFarm)) {
         if (get_nearest_monster({ target: "Jhlpriest" }) != null) { target = get_nearest_monster({ target: "Jhlpriest" }); }
         else if (get_nearest_monster({ target: "Jhlranger" }) != null) { target = get_nearest_monster({ target: "Jhlranger" }); }
         else if (get_nearest_monster({ target: "Jhlrogue" }) != null) { target = get_nearest_monster({ target: "Jhlrogue" }); }
-        // else if (get_nearest_monster({ target: "Jhlwarrior" }) != null) { target = get_nearest_monster({ target: "Jhlwarrior" }); }
+        else if (get_nearest_monster({ target: "Jhlmage" }) != null) { target = get_nearest_monster({ target: "Jhlmage" }); }
+        else if (get_nearest_monster({ target: "Jhlwarrior" }) != null) { target = get_nearest_monster({ target: "Jhlwarrior" }); }
         else {
-            if (this.pullThree) { target = await myChar.targetLogicTank3(); }
+            if (myChar.pullThree) { target = await myChar.targetLogicTank3(); }
             else { target = await myChar.targetLogicTank(); }
         }
     }
     else {
-        if (this.pullThree) { target = await myChar.targetLogicTank3(); }
+        if (myChar.pullThree) { target = await myChar.targetLogicTank3(); }
         else { target = await myChar.targetLogicTank(); }
     }
 
