@@ -42,7 +42,7 @@ class MyChar extends BaseClass {
     }
 
     markTarget(target) {
-        if (!is_on_cooldown("huntersmark") && target.hp > 18_000 && character.mp > 675 && !target.name.startsWith("Jhl")) {
+        if (!is_on_cooldown("huntersmark") && target.hp > 18_000 && character.mp > 800 && !target.name.startsWith("Jhl")) {
             use_skill("huntersmark", target);
         }
 
@@ -66,6 +66,7 @@ setInterval(async () => {
         myChar.lastFarmCheck = now;
     }
 
+    if (character.mp < 200) { useManaPotion(); }
     useHealthPotion();
     useManaPotion();
     recoverOutOfCombat();

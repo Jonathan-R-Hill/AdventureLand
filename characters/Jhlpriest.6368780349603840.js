@@ -1,5 +1,7 @@
 load_code("baseClass");
 load_code("helpers");
+load_code("charLauncher");
+load_code("dpsMeter");
 
 class MyChar extends BaseClass {
 

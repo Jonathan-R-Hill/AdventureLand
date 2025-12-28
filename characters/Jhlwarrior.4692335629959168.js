@@ -1,6 +1,5 @@
 load_code("baseClass");
 load_code("helpers");
-load_code("dpsMeter");
 
 class MyChar extends BaseClass {
     monsterHunter = false;
