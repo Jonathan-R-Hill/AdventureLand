@@ -17,8 +17,8 @@ class MyChar extends BaseClass {
         }
         else {
             // this.equipItem(`hammer`, 6, "offhand");
-            this.equipItem(`fireblade`, 7, "mainhand");
-            this.equipItem(`fireblade`, 6, "offhand");
+            this.equipItem(`fireblade`, 8, "mainhand");
+            this.equipItem(`fireblade`, 7, "offhand");
             // this.equipItem(`sshield`, 7, "offhand");
         }
     }

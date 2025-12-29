@@ -1,4 +1,4 @@
-// === PARTY OVERLAY SETTINGS ===
+// ----- PARTY OVERLAY SETTINGS ----- //
 const UI_ID = "party_status_overlay";
 const UPDATE_MS = 500; // How often to refresh (ms)
 
@@ -74,7 +74,7 @@ function updatePartyOverlay() {
     container.html(html);
 }
 
-// Start the UI
+// Start the Party frames
 setTimeout(() => {
     initPartyOverlay();
     setInterval(updatePartyOverlay, UPDATE_MS);
@@ -155,7 +155,7 @@ function createCustomButtonPrompt() {
     $(parent.document.body).append($btn);
 }
 
-setTimeout(createCustomButtonPrompt, 2000);
+// setTimeout(createCustomButtonPrompt, 2000);
 
 function createCustomButtonNoPrompt() {
     let $ = parent.$ || window.$;

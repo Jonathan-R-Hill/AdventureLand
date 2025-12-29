@@ -263,6 +263,8 @@ class BaseClass extends TargetLogic {
         this.kite = false;
         this.attackMode = true;
         this.fightTogeather = false;
+        this.surge = false;
+        this.surgeLastUsed = 0;
 
         this.gettingBuff = false;
         this.movingToEvent = false;
@@ -349,6 +351,27 @@ class BaseClass extends TargetLogic {
         else {
             this.gettingBuff = false;
         }
+    }
+
+    async useTemporalSurge(keepMana) {
+        if (Date.now() < this.surgeLastUsed + 62000 || !this.surge) {
+            return;
+        }
+
+        const itemSlot = locate_item("orboftemporal");
+
+        if (character.mp < keepMana || itemSlot === -1) {
+            return;
+        }
+
+        equip(itemSlot);
+        await sleep(25);
+
+        use_skill("temporalsurge");
+        this.surgeLastUsed = Date.now();
+        await sleep(10);
+
+        equip(itemSlot);
     }
 
     async handleCM(sender, payload) {

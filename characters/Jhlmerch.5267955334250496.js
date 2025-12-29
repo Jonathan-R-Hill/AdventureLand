@@ -86,7 +86,9 @@ class Merchant extends combineItems {
 		setInterval(exportCharacterData, 8 * 1000);
 		setInterval(useSkillJacko, 1200);
 		setInterval(crossMapHeal, 800);
-		// setInterval(async () => await this.upgradeAllByName("mittens", 7, 0), 1500);
+
+		setInterval(recoverOutOfCombat, 1000);
+		// setInterval(async () => await this.upgradeAllByName("wingedboots", 7, 0), 1500);
 
 		parent.socket.off("magiport");
 		parent.socket.on("magiport", (d) => {
@@ -867,7 +869,6 @@ class Merchant extends combineItems {
 	async healAndBuff() {
 		reviveSelf();
 		manageParty();
-
 
 		if (this.fishing || this.mining) { return; }
 		useHealthPotion();

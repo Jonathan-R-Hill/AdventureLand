@@ -106,6 +106,8 @@ setInterval(async () => {
     const target = await myChar.targetLogicNonTank();
     if (target == null) { return; }
 
+    await myChar.useTemporalSurge(2800);
+
     myChar.movingToNewMob = false;
     if (myChar.kite) { myChar.kiteTarget(); }
     myChar.moveAwayFromWarrior();
