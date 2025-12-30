@@ -33,7 +33,7 @@ class MyChar extends BaseClass {
 	}
 
 	useSkillPort(char) {
-		const USE_ABOVE_MANA = 900;
+		const USE_ABOVE_MANA = 920;
 
 		if (is_on_cooldown("magiport") || character.mp <= USE_ABOVE_MANA) { return; }
 
@@ -62,6 +62,14 @@ class MyChar extends BaseClass {
 	snowmanPort() {
 		if (!parent.S.snowman.live) { return; }
 
+		const snowman = get_nearest_monster({ type: "snowman" });
+
+
+		if (!snowman || this.distance(mage, snowman) >= 900) {
+			// Snowman not visible or too far away
+			return;
+		}
+
 		if (!get_player("Jhlpriest")) {
 			this.useSkillPort("Jhlpriest");
 		}
@@ -70,11 +78,20 @@ class MyChar extends BaseClass {
 			this.useSkillPort("Jhlranger");
 		}
 	}
+
+	weaponLogic(target) {
+		if (target.name == 'Snowman' && !target.s.fullguardx) {
+			this.equipItem("wand", 7, "mainhand");
+		}
+		else {
+			this.equipItem("harbringer", 6, "mainhand");
+		}
+	}
 }
 
 const myChar = new MyChar(character.name);
 
-setInterval(myChar.snowmanPort(), 1000);
+setInterval(myChar.snowmanPort, 2000);
 setInterval(async () => {
 	if (myChar.gettingBuff) { return; }
 
@@ -97,6 +114,8 @@ setInterval(async () => {
 	myChar.moveAwayFromWarrior();
 
 	myChar.useSkillEnergize();
+
+	myChar.weaponLogic(target);
 
 	myChar.attack(target);
 

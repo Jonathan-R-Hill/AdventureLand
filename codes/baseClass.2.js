@@ -331,12 +331,19 @@ class BaseClass extends TargetLogic {
         else if (parent.S.icegolem) {
             this.lastEvent = 'icegolem';
             if (!get_nearest_monster({ type: 'icegolem' })) { join('icegolem'); }
+            if (this.lastTarget != "") {
+                this.lastTarget = this.currentMobFarm;
+            }
         }
         else {
             if (this.lastTarget != "") {
                 this.currentMobFarm = this.lastTarget;
                 this.secondaryTarget = this.lastTarget;
                 this.lastTarget = "";
+            }
+
+            if (character.map == "winterland" && this.distance(character, { map: "winterland", x: 820, y: 425 }) < 300) {
+                use_skill(`town`)
             }
 
             this.movingToEvent = false;
@@ -688,10 +695,10 @@ class BaseClass extends TargetLogic {
         if ("map" in a && "map" in b && a.map != b.map) return 99999999;
 
         // Get the center coordinates for both entities
-        const a_x = get_x(a);
-        const a_y = get_y(a);
-        const b_x = get_x(b);
-        const b_y = get_y(b);
+        let a_x = (a.real_x != null) ? a.real_x : (a.x != null) ? a.x : get_x(a);
+        let a_y = (a.real_y != null) ? a.real_y : (a.y != null) ? a.y : get_y(a);
+        let b_x = (b.real_x != null) ? b.real_x : (b.x != null) ? b.x : get_x(b);
+        let b_y = (b.real_y != null) ? b.real_y : (b.y != null) ? b.y : get_y(b);
 
         // Calculate the difference in coordinates
         const dx = a_x - b_x;

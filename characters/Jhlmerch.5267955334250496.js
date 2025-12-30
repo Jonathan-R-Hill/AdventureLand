@@ -87,8 +87,8 @@ class Merchant extends combineItems {
 		setInterval(useSkillJacko, 1200);
 		setInterval(crossMapHeal, 800);
 
-		setInterval(recoverOutOfCombat, 1000);
-		// setInterval(async () => await this.upgradeAllByName("wingedboots", 7, 0), 1500);
+		// setInterval(recoverOutOfCombat, 1000);
+		// setInterval(async () => await this.upgradeAllByName("firestaff", 7, 1), 1500);
 
 		parent.socket.off("magiport");
 		parent.socket.on("magiport", (d) => {
@@ -122,7 +122,7 @@ class Merchant extends combineItems {
 		// if (now - this.lastRun.autoUpgrade > 4 * 60 * 1000) {
 		// 	if (!this.checkIfDoingSOmething()) {
 		// 		this.lastRun.autoUpgrade = now;
-		// 		await this.buyAndUpgrade("coat", 6);
+		// 		await this.buyAndUpgrade("wand", 7);
 		// 	}
 		// }
 
@@ -235,7 +235,6 @@ class Merchant extends combineItems {
 	}
 
 	async handleCM(sender, payload) {
-		if (this.busy || this.fishing || this.mining) return;
 		if (!sender.name.startsWith("Jhl")) return;
 
 		this.equipBroom();
@@ -250,11 +249,6 @@ class Merchant extends combineItems {
 
 				await this.handlePotionRequest(sender.name, "need_Hpots", x, y, map);
 
-				const player = get_player(sender.name);
-				if (!player) {
-					this.busy = false;
-				}
-
 				break;
 			}
 
@@ -265,15 +259,12 @@ class Merchant extends combineItems {
 
 				this.handlePotionRequest(sender.name, "need_Mpots", x, y, map);
 
-				const player = get_player(sender.name);
-				if (!player) {
-					this.busy = false;
-				}
-
 				break;
 			}
 
 			case "come_to_me": {
+				if (this.checkIfDoingSOmething()) return;
+
 				const [xStr, yStr, map] = data.split(",");
 				const x = Number(xStr);
 				const y = Number(yStr);
@@ -300,6 +291,8 @@ class Merchant extends combineItems {
 			}
 
 			case "need_luck": {
+				if (this.checkIfDoingSOmething()) return;
+
 				const [xStr, yStr, map] = data.split(",");
 				const x = Number(xStr);
 				const y = Number(yStr);

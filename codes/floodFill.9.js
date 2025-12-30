@@ -197,7 +197,6 @@ function planFloodfillPath(goalX, goalY) {
     if (!shouldReplanFloodfill(goal)) return;
 
     const originTile = tileFromWorld(character.real_x, character.real_y);
-
     let path = null;
 
     // Try from exact position
@@ -206,12 +205,19 @@ function planFloodfillPath(goalX, goalY) {
     // Fallback: nearby ttiles
     if (!path || !path.length) {
         const startSeeds = getFloodfillStartSeeds(3);
-        if (!startSeeds.length) return;
-
-        path = floodfillPathMultiStart(startSeeds, goal);
+        if (startSeeds.length) {
+            path = floodfillPathMultiStart(startSeeds, goal);
+        }
     }
 
-    if (!path || !path.length) return;
+    // move aroudn till i find a path  
+    if (!path || !path.length) {
+        console.log("No path found! Wiggling...");
+        const angle = Math.random() * Math.PI * 2;
+        move(character.real_x + Math.cos(angle) * 20, character.real_y + Math.sin(angle) * 20);
+        ffLastPlan = Date.now(); // Reset CD so we don't spam
+        return;
+    }
 
     ffPath = path;
     ffIndex = 0;
@@ -233,11 +239,20 @@ function followFloodfillPath() {
 
     const LOOKAHEAD = 6;
 
-    const reachableIndex = findReachablePathIndex(ffPath, 6);
+    const reachableIndex = findReachablePathIndex(ffPath, LOOKAHEAD);
 
+    // If reachableIndex is -1 we are likely slightly off or clipping a wall. 
     if (reachableIndex === -1) {
-        const firstTileWorld = worldFromTile(ffPath[ffIndex].tx, ffPath[ffIndex].ty);
-        if (nudgeDownIfBlocked(firstTileWorld)) return;
+        const forcedTarget = worldFromTile(ffPath[ffIndex].tx, ffPath[ffIndex].ty);
+
+        // Check dist. If we are really close to it but still "stuck", increment index
+        if (simple_distance(character, forcedTarget) < 10) {
+            ffIndex++;
+            return;
+        }
+
+        // try to force the move and not care if its possible..
+        move(forcedTarget.x, forcedTarget.y);
         return;
     }
 

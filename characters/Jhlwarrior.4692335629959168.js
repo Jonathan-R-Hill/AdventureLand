@@ -10,10 +10,10 @@ class MyChar extends BaseClass {
     lastTaunt = 0;
     aoeTaunt = false;
 
-    equipMainWeapons() {
+    async equipMainWeapons() {
         if (this.aoeTaunt) {
             this.equipItem("glolipop", 6, "mainhand");
-            this.equipItem("glolipop", 6, "offhand");
+            this.equipItem("ololipop", 5, "offhand");
         }
         else {
             // this.equipItem(`hammer`, 6, "offhand");
@@ -27,11 +27,9 @@ class MyChar extends BaseClass {
         if (is_on_cooldown(`charge`)) { return; }
 
         if (is_moving(character)) { use_skill(`charge`); }
-
     }
 
     skillHardShell() {
-        // Don't use if on cooldown
         if (is_on_cooldown("hardshell")) { return; }
         if (target.s.stunned) { return; }
 
@@ -69,6 +67,7 @@ class MyChar extends BaseClass {
         await sleep(25);
 
         use_skill((`stomp`));
+        await sleep(10);
 
         return true;
     }
@@ -91,6 +90,8 @@ class MyChar extends BaseClass {
         equip(locate_item(`bataxe`));
 
         use_skill("cleave");
+
+        await sleep(10);
     }
 
     useSkillWarCry() {
