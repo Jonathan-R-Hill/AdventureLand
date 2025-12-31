@@ -17,17 +17,17 @@ let SNOWMAN_PARTY = {
 
 let isManaging = false;
 
-async function manageActiveChars() {
+async function manageActiveChars(eventsEnabled) {
     if (isManaging) return;
     isManaging = true;
 
     try {
         const activeStates = get_active_characters();
 
-        const isSnowmanLive = parent.S.snowman && parent.S.snowman.live;
+        const isSnowmanLive = parent.S.snowman && parent.S.snowman.live && eventsEnabled;
         const requiredParty = isSnowmanLive ? SNOWMAN_PARTY : MAIN_PARTY;
 
-        if (isSnowmanLive) set_message("Boss Mode");
+        if (isSnowmanLive) { set_message("Boss Mode"); }
 
         for (const name in requiredParty) {
             const config = requiredParty[name];
@@ -63,5 +63,3 @@ async function manageActiveChars() {
         isManaging = false;
     }
 }
-
-setInterval(async () => await manageActiveChars(), 5000);

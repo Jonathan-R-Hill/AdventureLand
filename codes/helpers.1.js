@@ -37,11 +37,12 @@ function getPartyHealth() {
 }
 
 async function manageParty() {
+    const inviteAllies = false;
     const partyMembers = [
         "Jhlpriest", "Jhlranger", "Jhlmerch", "Jhlmage", "Jhlwarrior", "Jhlrogue",
-        // "trololol", "YTFAN", "derped", "Knight", "Bonjour",
-        // "Bravo", "Tostitos", "iniwa",
     ];
+
+    const allies = ["trololol", "YTFAN", "derped", "Knight", "Bonjour", "Bravo", "Tostitos", "iniwa",]
     const leaderName = "Jhlpriest"
     // const leaderName = "trololol";
 
@@ -59,7 +60,18 @@ async function manageParty() {
                 send_party_invite(name);
                 set_message(`Inviting ${name}`);
             }
-            await sleep(100);
+            await sleep(150);
+        }
+
+        if (inviteAllies) {
+            for (const name of allies) {
+                if (!get_party()?.[name]) {
+                    send_party_invite(name);
+                    set_message(`Inviting ${name}`);
+                }
+
+                await sleep(150);
+            }
         }
     } else {
         if (!character.party) {

@@ -65,7 +65,7 @@ class MyChar extends BaseClass {
 		const snowman = get_nearest_monster({ type: "snowman" });
 
 
-		if (!snowman || this.distance(mage, snowman) >= 900) {
+		if (!snowman || this.distance(character, snowman) >= 900) {
 			// Snowman not visible or too far away
 			return;
 		}

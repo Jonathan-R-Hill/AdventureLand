@@ -10,6 +10,7 @@ class TargetLogic {
     attackMode;
     fightTogeather;
     movingToNewMob;
+    pvpEnabled = false;
 
     allies = ["trololol", "YTFAN", "derped", "Knight", "Bonjour"];
 
@@ -35,31 +36,8 @@ class TargetLogic {
 
     getTankTarget() {
         const tank = get_player(this.tank);
-        if (tank) {
-            if (get_nearest_monster({ target: "Jhlpriest" }) != null) {
-                return get_nearest_monster({ target: "Jhlpriest" });
-            }
-            else if (get_nearest_monster({ target: "Jhlranger" }) != null) {
-                return get_nearest_monster({ target: "Jhlranger" });
-            }
-            else if (get_nearest_monster({ target: "Jhlmerch" }) != null) {
-                return get_nearest_monster({ target: "Jhlmerch" });
-            }
-            else if (get_nearest_monster({ target: "Jhlmage" }) != null) {
-                return get_nearest_monster({ target: "Jhlmage" });
-            }
-            else if (get_nearest_monster({ target: "Jhlrogue" }) != null) {
-                return get_nearest_monster({ target: "Jhlrogue" });
-            }
-            else if (get_nearest_monster({ target: "Jhlwarrior" }) != null) {
-                return get_nearest_monster({ target: "Jhlwarrior" });
-            }
-            else {
-                return get_target_of(tank);
-            }
-        }
 
-        return null;
+        return get_target_of(tank);
     }
 
     findStunnedTarget() {
@@ -86,6 +64,17 @@ class TargetLogic {
     }
 
     findTarget(target) {
+        const playerAtk = ["altfire", "ryaaahs", "pbuffme", "learningad", "merchire"];
+
+        if (this.pvpEnabled) {
+            for (const name of playerAtk) {
+                const player = get_player(name);
+                if (player && !player.rip && player.visible) {
+                    return player;
+                }
+            }
+        }
+
         target = this.bosses
             .map(name => this.getClosestMonsterByName(name))
             .find(mon => mon) // first non-null result
@@ -260,9 +249,12 @@ class BaseClass extends TargetLogic {
         this.sendItems = true;
         this.merchantName = "Jhlmerch";
 
+        this.eventsEnabled = true;
+
         this.kite = false;
         this.attackMode = true;
         this.fightTogeather = false;
+
         this.surge = false;
         this.surgeLastUsed = 0;
 
@@ -307,7 +299,7 @@ class BaseClass extends TargetLogic {
         });
 
         setInterval(() => this.handleHolidayBuffs(), 45 * 1000);
-        setInterval(() => this.handleEvents(), 15 * 1000);
+        if (this.eventsEnabled) { setInterval(() => this.handleEvents(), 15 * 1000); }
         setInterval(() => this.sendWhitelistedItemsToMerchant(), 3 * 1000);
         setInterval(() => this.askForLuck(), 20 * 1000);
         setInterval(() => this.callMerchant(), 20 * 1000);
@@ -329,9 +321,11 @@ class BaseClass extends TargetLogic {
             this.secondaryTarget = 'Arctic Bee';
         }
         else if (parent.S.icegolem) {
+            if (character.name == "Jhlmage") { return; }
+
             this.lastEvent = 'icegolem';
             if (!get_nearest_monster({ type: 'icegolem' })) { join('icegolem'); }
-            if (this.lastTarget != "") {
+            if (this.lastTarget == "") {
                 this.lastTarget = this.currentMobFarm;
             }
         }

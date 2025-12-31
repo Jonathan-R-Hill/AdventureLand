@@ -83,6 +83,8 @@ setInterval(() => {
     send_cm("Jhlmerch", `come_to_me ${character.real_x},${character.real_y},${character.map}`);
 }, 8 * 60 * 1000);
 
+setInterval(async () => await manageActiveChars(myChar.eventsEnabled), 4000);
+
 // Combat
 setInterval(async () => {
     if (myChar.gettingBuff) { return; }

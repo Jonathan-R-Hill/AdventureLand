@@ -1,5 +1,6 @@
 load_code("baseClass");
 load_code("helpers");
+load_code("aoeFarmArea");
 
 class MyChar extends BaseClass {
     monsterHunter = false;
@@ -9,6 +10,10 @@ class MyChar extends BaseClass {
     lastFarmCheck = 0;
     lastTaunt = 0;
     aoeTaunt = false;
+
+    circleX = 1240;
+    circleY = -100;
+    radius = 35;
 
     async equipMainWeapons() {
         if (this.aoeTaunt) {
@@ -100,6 +105,18 @@ class MyChar extends BaseClass {
         use_skill("warcry");
     }
 
+    async circleModeAttack(target) {
+        if (this.movingToNewMob) { return; }
+
+        if (!this.is_in_range(target, "attack")) {
+            set_message("waiting for target to come to me");
+        } else if (!is_on_cooldown("attack")) {
+            set_message("Attacking");
+
+            attack(target);
+        }
+    }
+
     async attackLogic(target) {
         if (character.mp > 450) {
             if (character.hp < character.max_hp * 0.65) { await this.skillStun(); }
@@ -110,7 +127,6 @@ class MyChar extends BaseClass {
             if (this.aoeTaunt && get_player("Jhlpriest")) { this.skillAoeTaunt(); }
 
             this.skillHardShell();
-
             this.useSkillWarCry();
         }
 
@@ -120,7 +136,15 @@ class MyChar extends BaseClass {
 
         this.equipMainWeapons();
 
-        await this.attack(target);
+        if (this.aoeTaunt) {
+            if (get_player("Jhlpriest")) { this.skillAoeTaunt(); }
+
+            circleCoords(this.circleX, this.circleY, this.radius);
+            myChar.circleModeAttack(target);
+        }
+        else {
+            await this.attack(target);
+        }
     }
 }
 
