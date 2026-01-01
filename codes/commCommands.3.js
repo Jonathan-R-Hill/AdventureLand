@@ -1,4 +1,4 @@
-load_code("monsterHunter");
+load_code("mobList");
 
 function getMobKeyFromValue(travelKey) {
     return mobData.find(m => m.travel === travelKey);

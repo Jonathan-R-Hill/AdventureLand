@@ -113,7 +113,6 @@ async function mainLoop() {
             if (target) {
                 await myChar.useTemporalSurge(2800);
 
-                myChar.movingToNewMob = false;
                 if (myChar.kite) { myChar.kiteTarget(); }
                 myChar.moveAwayFromWarrior();
 
@@ -135,5 +134,5 @@ async function mainLoop() {
     }
 }
 
-
+setInterval(() => manageActiveChars(myChar.eventsEnabled), 5000);
 mainLoop();

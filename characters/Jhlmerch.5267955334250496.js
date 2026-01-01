@@ -1,6 +1,7 @@
 load_code("helpers");
 load_code("commCommands");
 load_code("combineItems");
+load_code("UI");
 
 const HP_POTION = "hpot1";
 const MP_POTION = "mpot1";

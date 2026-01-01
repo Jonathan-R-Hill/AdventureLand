@@ -3,7 +3,7 @@ load_code("helpers");
 load_code("aoeFarmArea");
 
 class MyChar extends BaseClass {
-    monsterHunter = true;
+    monsterHunter = false;
     gettingNewTask = false;
     pullThree = false;
 
@@ -110,7 +110,7 @@ class MyChar extends BaseClass {
     }
 
     async circleModeAttack(target) {
-        if (this.movingToNewMob) { return; }
+        if (smart.moving) { return; }
 
         if (!this.is_in_range(target, "attack")) {
             set_message("waiting for target to come to me");
@@ -180,14 +180,12 @@ async function mainLoop() {
 
             // Target & attack
             if (["Poisio", "Wild Boar", "Water Spirit", "Hawk", "Scorpion", "Spider", "Mole"].includes(myChar.currentMobFarm)) {
-                if (get_nearest_monster({ target: "Jhlpriest" }) != null) { target = get_nearest_monster({ target: "Jhlpriest" }); }
-                else if (get_nearest_monster({ target: "Jhlranger" }) != null) { target = get_nearest_monster({ target: "Jhlranger" }); }
-                else if (get_nearest_monster({ target: "Jhlrogue" }) != null) { target = get_nearest_monster({ target: "Jhlrogue" }); }
-                else if (get_nearest_monster({ target: "Jhlmage" }) != null) { target = get_nearest_monster({ target: "Jhlmage" }); }
-                else if (get_nearest_monster({ target: "Jhlwarrior" }) != null) { target = get_nearest_monster({ target: "Jhlwarrior" }); }
-                else {
-                    if (myChar.pullThree) { target = await myChar.targetLogicTank3(); }
-                    else { target = await myChar.targetLogicTank(); }
+                target = get_nearest_monster({ target: "Jhlpriest" }) ||
+                    get_nearest_monster({ target: "Jhlranger" }) || get_nearest_monster({ target: "Jhlrogue" }) ||
+                    get_nearest_monster({ target: "Jhlmage" }) || get_nearest_monster({ target: "Jhlwarrior" });
+
+                if (!target) {
+                    target = myChar.pullThree ? myChar.targetLogicTank3() : myChar.targetLogicTank();
                 }
             }
             else {

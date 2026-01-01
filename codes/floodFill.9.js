@@ -1,8 +1,8 @@
 
 const TILE = 25;
-const FF_RANGE = 17;       // tiles around player
+const FF_RANGE = 34;       // tiles around player
 const FF_REPLAN_CD = 800; // ms
-const FF_GOAL_EPS = 1;
+const FF_GOAL_EPS = 2;
 
 let ffPath = null;
 let ffIndex = 0;
@@ -74,7 +74,6 @@ function nudgeDownIfBlocked(targetWorld) {
     return false;
 }
 
-
 function getFloodfillStartSeeds(radius = 2) {
     const origin = tileFromWorld(character.real_x, character.real_y);
     const seeds = [];
@@ -101,7 +100,6 @@ function getFloodfillStartSeeds(radius = 2) {
 
     return seeds;
 }
-
 
 // ---------- Path reconstruction ----------
 
@@ -132,7 +130,7 @@ function floodfillPathMultiStart(starts, goal) {
     }
 
     let iterations = 0;
-    const MAX_ITER = 2000;
+    const MAX_ITER = 3000;
 
     while (queue.length) {
         if (++iterations > MAX_ITER) return null;

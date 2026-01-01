@@ -10,7 +10,6 @@ class TargetLogic {
     bosses;
     attackMode;
     fightTogeather;
-    movingToNewMob;
     pvpEnabled = false;
 
     allies = ["trololol", "YTFAN", "derped", "Knight", "Bonjour"];
@@ -156,7 +155,7 @@ class TargetLogic {
     }
 
     targetLogicTank() {
-        if (!this.attackMode || character.rip || this.movingToNewMob) return null;
+        if (!this.attackMode || character.rip || smart.moving) return null;
 
         let target = get_targeted_monster();
 
@@ -203,7 +202,7 @@ class TargetLogic {
     }
 
     targetLogicTank3() {
-        if (!this.attackMode || character.rip || this.movingToNewMob) return null;
+        if (!this.attackMode || character.rip || smart.moving) return null;
 
         const attackers = Object.values(parent.entities).filter(e =>
             e.type === "monster" &&
@@ -290,7 +289,6 @@ class BaseClass extends TargetLogic {
         ];
 
         this.returningToGroup = false;
-        this.movingToNewMob = false;
 
         this.x = this.char.real_x;
         this.y = this.char.real_y;
@@ -337,7 +335,7 @@ class BaseClass extends TargetLogic {
                 this.lastTarget = "";
             }
 
-            if (character.map == "winterland" && this.distance(character, { map: "winterland", x: 820, y: 425 }) < 300) {
+            if (character.map == "winterland" && this.distance(character, { map: "winterland", x: 820, y: 425 }) < 400) {
                 use_skill(`town`)
             }
 
@@ -416,9 +414,7 @@ class BaseClass extends TargetLogic {
                 this.currentMobFarm = dataSplit[1];
                 this.secondaryTarget = dataSplit[1];
 
-                this.movingToNewMob = true;
-                await smart_move({ to: dataSplit[0] });
-                this.movingToNewMob = false;
+                if (!smart.moving) await smart_move({ to: dataSplit[0] });
 
                 break;
             }
@@ -428,14 +424,14 @@ class BaseClass extends TargetLogic {
 
                 this.currentMobFarm = target;
                 this.secondaryTarget = target;
-                this.movingToNewMob = true;
 
-                if (character.map !== map) {
-                    await smart_move({ map: map });
+                if (!smart.moving) {
+                    if (character.map !== map) {
+                        await smart_move({ map: map });
+                    }
+                    await smart_move(travel);
                 }
-                await smart_move(travel);
 
-                this.movingToNewMob = false;
                 break;
             }
 
@@ -593,7 +589,7 @@ class BaseClass extends TargetLogic {
     async checkNearbyFarmMob() {
         // If fighting together and not the tank, stop here for follow logic
         if (this.fightTogeather && get_player(this.tank) && character.name !== this.tank) {
-            this.movingToNewMob = false;
+            if (smart.moving) { stop(); }
             return;
         }
 
@@ -606,9 +602,9 @@ class BaseClass extends TargetLogic {
             if (dist > 300) { continue; }
 
             if (this.bosses.includes(ent.name)) {
-                this.movingToNewMob = false;
-                stop();
+                if (smart.moving) { stop(); }
                 set_message("Boss spotted nearby, engaging");
+
                 return;
             }
         }
@@ -631,7 +627,6 @@ class BaseClass extends TargetLogic {
                 if (dist > 300) continue;
 
                 if (ent.name === mobEntry.target) {
-                    this.movingToNewMob = false;
                     stop();
                     set_message(`Engaging ${mobEntry.target}`);
                     return;
@@ -640,9 +635,8 @@ class BaseClass extends TargetLogic {
         }
 
         // If none found nearby, move toward this mob’s spawn
-        if (!this.movingToNewMob) {
+        if (!smart.moving) {
             let farm = mobData.find(m => m.target === this.currentMobFarm);
-            this.movingToNewMob = true;
 
             if (this.lastEvent == "icegolem") {
                 use_skill("use_town");
@@ -658,7 +652,7 @@ class BaseClass extends TargetLogic {
             }
         }
 
-        set_message(`No ${mobEntry.target} nearby, moving to farm`);
+        set_message(`No ${this.currentMobFarm} nearby, moving to farm`);
         return;
 
     }
@@ -705,7 +699,7 @@ class BaseClass extends TargetLogic {
 
     // ATTTACKING
     async attack(target) {
-        if (this.movingToNewMob) { return; }
+        if (smart.moving) { return; }
 
         if (!this.is_in_range(target, "attack")) {
             moveTowardTargetFloodfill(target.real_x, target.real_y);

@@ -109,7 +109,6 @@ setInterval(async () => {
 	const target = myChar.targetLogicNonTank();
 	if (target == null) { return; }
 
-	myChar.movingToNewMob = false;
 	if (myChar.kite) { myChar.kiteTarget(); }
 	myChar.moveAwayFromWarrior();
 

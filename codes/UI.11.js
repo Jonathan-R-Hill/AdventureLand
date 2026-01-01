@@ -84,10 +84,12 @@ function updatePartyOverlay() {
 }
 
 // Start the Party frames
-setTimeout(() => {
-    initPartyOverlay();
-    setInterval(updatePartyOverlay, UPDATE_MS);
-}, 2000);
+if (character.name == "Jhlpriest") {
+    setTimeout(() => {
+        initPartyOverlay();
+        setInterval(updatePartyOverlay, UPDATE_MS);
+    }, 2000);
+}
 
 // ----- Ping & CC ----- //
 function createPingCCWidget() {

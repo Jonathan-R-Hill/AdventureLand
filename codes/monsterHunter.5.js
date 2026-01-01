@@ -1,41 +1,4 @@
-
-const mobData = [
-    { travel: "goo", target: "Goo", map: "main" },
-    { travel: "bee", target: "Bee", map: "main" },
-    { travel: "crab", target: "Tiny Crab", map: "main" },
-    { travel: "minimush", target: "Pom Pom", map: "halloween" },
-    { travel: "osnake", target: "Snake", map: "halloween" },
-    { travel: "snake", target: "Snake", map: "main" },
-    { travel: "rat", target: "Rat", map: "main" },
-    { travel: "spider", target: "Spider", map: "main" },
-    { travel: "squig", target: "Squig", map: "main" },
-    { travel: "squigtoad", target: "Squigtoad", map: "main" },
-    { travel: "poisio", target: "Poisio", map: "main" },
-    { travel: "arcticbee", target: "Arctic Bee", map: "winterland" },
-    { travel: "iceroamer", target: "Water Spirit", map: "winterland" },
-    { travel: "armadillo", target: "Armadillo", map: "main" },
-    { travel: "croc", target: "Croc", map: "main" },
-    { travel: "porcupine", target: "Porcupine", map: "desertland" },
-    { travel: "scorpion", target: "Scorpion", map: "main" },
-    { travel: "bigbird", target: "Hawk", map: "main" },
-    { travel: "stoneworm", target: "Stone Worm", map: "spookytown" },
-    { travel: "boar", target: "Wild Boar", map: "winterland" },
-    { travel: "wolf", target: "White Wolf", map: "winterland" },
-    { travel: "stompy", target: "Stompy", map: "winterland" },
-    { travel: "crabx", target: "Huge Crab", map: "main" },
-    { travel: "tortoise", target: "Tortoise", map: "main" },
-    { travel: "rharpy", target: "Rebel Harpy", map: "winterland" },
-    { travel: "bat", target: "Bat", map: "cave" },
-    { travel: "nerfedBat", target: "Bat", map: "cave" },
-    { travel: "sparkbot", target: "Spark Bot", map: "Underground" },
-    { travel: "targetron", target: "Targetron", map: "Underground" },
-    { travel: "mechagnome", target: "Mech-a Gnome", map: "cyberland" },
-    { travel: "bbpompom", target: "Pom Pom", map: "winter_cave" },
-    { travel: "cgoo", target: "Irradiated Goo", map: "arena" },
-    { travel: "mole", target: "Mole", map: "tunnel" },
-    { travel: "pppompom", target: "Pom Pom", map: "level2n" },
-    { travel: "ent", target: "Ent", map: "desertland" },
-];
+load_code("mobList");
 
 // MONSTER HUNTER
 function checkMonsterHunt() {
