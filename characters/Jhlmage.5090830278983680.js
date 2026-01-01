@@ -91,7 +91,7 @@ class MyChar extends BaseClass {
 
 const myChar = new MyChar(character.name);
 
-setInterval(myChar.snowmanPort, 2000);
+setInterval(() => myChar.snowmanPort(), 2000);
 setInterval(async () => {
 	if (myChar.gettingBuff) { return; }
 
