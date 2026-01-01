@@ -1,6 +1,7 @@
 load_code("helpers");
 load_code("commCommands");
 load_code("floodFill");
+load_code("UI");
 
 class TargetLogic {
     currentMobFarm;
@@ -140,7 +141,7 @@ class TargetLogic {
         return target;
     }
 
-    async targetLogicNonTank() {
+    targetLogicNonTank() {
         if (!this.attackMode || character.rip) { return null; }
 
         let target = null;
@@ -148,13 +149,13 @@ class TargetLogic {
         if (this.fightTogeather) {
             target = this.farmTogeather();
         } else {
-            target = await this.targetLogicTank();
+            target = this.targetLogicTank();
         }
 
         return target;
     }
 
-    async targetLogicTank() {
+    targetLogicTank() {
         if (!this.attackMode || character.rip || this.movingToNewMob) return null;
 
         let target = get_targeted_monster();
@@ -201,7 +202,7 @@ class TargetLogic {
         return closest;
     }
 
-    async targetLogicTank3() {
+    targetLogicTank3() {
         if (!this.attackMode || character.rip || this.movingToNewMob) return null;
 
         const attackers = Object.values(parent.entities).filter(e =>
@@ -261,8 +262,8 @@ class BaseClass extends TargetLogic {
         this.gettingBuff = false;
         this.movingToEvent = false;
 
-        this.currentMobFarm = "Hawk";
-        this.secondaryTarget = "Hawk";
+        this.currentMobFarm = "Mole";
+        this.secondaryTarget = "Mole";
 
         this.lastTarget = "";
         this.lastEvent = null;
@@ -546,8 +547,8 @@ class BaseClass extends TargetLogic {
     // Equip / un-equip weapons
     equipItem(itemName, targetLevel, equipSlot = null) {
         if (this.isEquipped(itemName, targetLevel, equipSlot)) { return; }
-        let slot = -1;
 
+        let slot = -1;
         for (let i = 0; i < character.items.length; i++) {
             const invItem = character.items[i];
             if (invItem && invItem.name === itemName && invItem.level === targetLevel) {

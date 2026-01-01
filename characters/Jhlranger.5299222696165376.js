@@ -5,7 +5,8 @@ class MyChar extends BaseClass {
     lastFarmCheck = 0;
     aoeFarming = false;
 
-    skillThreeShot() {
+    skillMultiShot() {
+        // Keeping your logic: Only if MP > 50%
         if (is_on_cooldown("3shot") || character.mp <= character.max_mp * 0.50) { return; }
 
         let targets = [];
@@ -17,13 +18,17 @@ class MyChar extends BaseClass {
             }
         }
 
-        if (targets.length >= 3) {
+        if (targets.length >= 5) {
+            let chosen = targets.slice(0, 5);
+            use_skill("5shot", chosen);
+        }
+        else if (targets.length >= 3) {
             let chosen = targets.slice(0, 3);
             use_skill("3shot", chosen);
         }
     }
 
-    aoeFarm() {
+    executeAoeFarm() {
         if (is_on_cooldown("3shot") || character.mp <= character.max_mp * 0.50) { return; }
 
         let targets = [];
@@ -35,50 +40,72 @@ class MyChar extends BaseClass {
             }
         }
 
-        if (targets.length >= 3) {
+        if (targets.length >= 5) {
+            let chosen = targets.slice(0, 5);
+            use_skill("5shot", chosen);
+        }
+        else if (targets.length >= 3) {
             let chosen = targets.slice(0, 3);
             use_skill("3shot", chosen);
         }
     }
 
     markTarget(target) {
-        if (!is_on_cooldown("huntersmark") && target.hp > 18_000 && character.mp > 800 && !target.name.startsWith("Jhl")) {
+        // Keeping Hunter's Mark logic
+        if (!is_on_cooldown("huntersmark") && target.hp > 18000 && character.mp > 800 && !target.name.startsWith("Jhl")) {
             use_skill("huntersmark", target);
         }
 
-        this.skillThreeShot();
-        if (this.aoeFarming) { this.aoeFarm(); }
+        this.skillMultiShot();
+        if (this.aoeFarming) { this.executeAoeFarm(); }
 
+        // Execution of the attack
         this.attack(target);
-
     }
-
 }
 
 const myChar = new MyChar(character.name);
 
-setInterval(async () => {
-    if (myChar.gettingBuff || myChar.movingToEvent) { return; }
+async function mainLoop() {
+    while (true) {
+        try {
+            if (myChar.gettingBuff || myChar.movingToEvent || character.cc >= 170) {
+                await sleep(100);
+                continue;
+            }
 
-    const now = Date.now();
-    if (now - myChar.lastFarmCheck > 5000 && !myChar.gettingBuff && myChar.currentMobFarm != "") {
-        myChar.checkNearbyFarmMob();
-        myChar.lastFarmCheck = now;
+            // Farm Check
+            const now = Date.now();
+            if (now - myChar.lastFarmCheck > 5000 && !myChar.gettingBuff && myChar.currentMobFarm != "") {
+                myChar.checkNearbyFarmMob();
+                myChar.lastFarmCheck = now;
+            }
+
+            if (character.mp < 200) { useManaPotion(); }
+            useHealthPotion();
+            useManaPotion();
+            recoverOutOfCombat();
+            loot();
+
+            // Target & Attack
+            const target = myChar.targetLogicNonTank();
+
+            if (target) {
+                if (myChar.kite) { myChar.kiteTarget(); }
+                myChar.moveAwayFromWarrior();
+
+                myChar.markTarget(target);
+            } else {
+                set_message("No Target");
+            }
+
+        } catch (e) {
+            console.error("Main Loop Error:", e);
+        }
+
+        let delay = ((1 / character.frequency) * 1000) / 8;
+        await sleep(delay);
     }
+}
 
-    if (character.mp < 200) { useManaPotion(); }
-    useHealthPotion();
-    useManaPotion();
-    recoverOutOfCombat();
-    loot();
-
-    const target = await myChar.targetLogicNonTank();
-    if (target == null) { return; }
-
-    if (myChar.kite) { myChar.kiteTarget(); }
-    myChar.moveAwayFromWarrior();
-
-    myChar.markTarget(target);
-
-}, ((1 / character.frequency) * 1000) / 8);
-
+mainLoop();

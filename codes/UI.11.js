@@ -34,6 +34,15 @@ function initPartyOverlay() {
 }
 
 function updatePartyOverlay() {
+    const classColors = {
+        mage: '#3FC7EB',
+        paladin: '#F48CBA',
+        priest: '#FFFFFF', // White
+        ranger: '#AAD372',
+        rogue: '#FFF468',
+        warrior: '#C69B6D'
+    };
+
     let $ = parent.$ || window.$;
     const container = $(parent.document).find(`#${UI_ID}`);
     if (!container.length) return initPartyOverlay();
@@ -79,6 +88,48 @@ setTimeout(() => {
     initPartyOverlay();
     setInterval(updatePartyOverlay, UPDATE_MS);
 }, 2000);
+
+// ----- Ping & CC ----- //
+function createPingCCWidget() {
+    const $ = parent.$ || window.$;
+    // Remove existing widget to prevent duplicates
+    $(parent.document).find('#character_stats_widget').remove();
+
+    const $widget = $('<div id="character_stats_widget"></div>').css({
+        position: 'fixed',
+        top: '10px',
+        left: '25%',
+        transform: 'translateX(-50%)',
+        padding: '8px 15px',
+        background: 'rgba(0, 0, 0, 0.7)',
+        color: '#00FF00',
+        border: '1px solid #444',
+        fontFamily: 'monospace',
+        fontSize: '14px',
+        zIndex: 9999,
+        borderRadius: '4px',
+        pointerEvents: 'none',
+        textAlign: 'center',
+        minWidth: '120px'
+    });
+
+    $(parent.document.body).append($widget);
+
+    setInterval(() => {
+        const ping = Math.round(character.ping);
+        const cc = Math.round(character.cc);
+
+        // Color coding for CC (Red if high)
+        const ccColor = cc > 150 ? '#FF4444' : '#00FF00';
+
+        $widget.html(
+            `PING: ${ping}ms | <span style="color: ${ccColor}">CC: ${cc}</span>`
+        );
+    }, 300);
+}
+
+// Initialize the widget
+createPingCCWidget();
 
 
 // ----- Buttons ----- //

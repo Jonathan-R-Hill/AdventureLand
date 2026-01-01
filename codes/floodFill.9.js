@@ -209,11 +209,10 @@ function planFloodfillPath(goalX, goalY) {
     // No path so we move to try and try a new calculation
     if (!path || !path.length) {
         const now = Date.now();
-        if (now - lastWiggle > 500) {
+        if (now - lastWiggle > 1000) {
             const angle = Math.random() * Math.PI * 2;
 
-            // Move slightly further (30 instead of 20) but less often
-            move(character.real_x + Math.cos(angle) * 30, character.real_y + Math.sin(angle) * 30);
+            move(character.real_x + Math.cos(angle) * 35, character.real_y + Math.sin(angle) * 35);
 
             lastWiggle = now;
             ffLastPlan = now;

@@ -3,7 +3,7 @@ load_code("helpers");
 load_code("aoeFarmArea");
 
 class MyChar extends BaseClass {
-    monsterHunter = false;
+    monsterHunter = true;
     gettingNewTask = false;
     pullThree = false;
 
@@ -15,18 +15,22 @@ class MyChar extends BaseClass {
     circleY = -100;
     radius = 35;
 
-    async equipMainWeapons() {
+    async equipMainHandWeap() {
+        if (character.q.equip) return; // Don't spam if server is busy
         if (this.aoeTaunt) {
             this.equipItem("glolipop", 6, "mainhand");
-            this.equipItem("ololipop", 5, "offhand");
-        }
-        else {
-            // this.equipItem(`hammer`, 6, "offhand");
+        } else {
             this.equipItem(`fireblade`, 8, "mainhand");
-            this.equipItem(`fireblade`, 7, "offhand");
-            // this.equipItem(`sshield`, 7, "offhand");
         }
-        await sleep(50);
+    }
+
+    async equipOffHandWeap() {
+        if (character.q.equip) return;
+        if (this.aoeTaunt) {
+            this.equipItem("ololipop", 5, "offhand");
+        } else {
+            this.equipItem(`fireblade`, 7, "offhand");
+        }
     }
 
     skillCharge() {
@@ -39,7 +43,7 @@ class MyChar extends BaseClass {
         if (is_on_cooldown("hardshell")) { return; }
         if (target.s.stunned) { return; }
 
-        // Count how many monsters are targeting you
+        // Count how many monsters are targeting me
         let targetingCount = 0;
         for (let id in parent.entities) {
             let entity = parent.entities[id];
@@ -48,7 +52,7 @@ class MyChar extends BaseClass {
             }
         }
 
-        if (character.hp <= character.max_hp * 0.50) { //|| targetingCount > 2
+        if (character.hp <= character.max_hp * 0.50) {
             use_skill("hardshell");
         }
     }
@@ -56,7 +60,6 @@ class MyChar extends BaseClass {
     skillAoeTaunt() {
         const now = Date.now();
 
-        // Only run if 6 seconds have passed since last cast
         if (now - this.lastTaunt < 6000) { return; }
 
         use_skill("agitate");
@@ -119,113 +122,96 @@ class MyChar extends BaseClass {
     }
 
     async attackLogic(target) {
+
         if (character.mp > 450) {
-            if (character.hp < character.max_hp * 0.65) { await this.skillStun(); }
+            if (character.hp < character.max_hp * 0.65) {
+                await this.skillStun();
+            }
 
             this.skillCharge();
-
             this.skillTaunt();
-            if (this.aoeTaunt && get_player("Jhlpriest")) { this.skillAoeTaunt(); }
-
             this.skillHardShell();
             this.useSkillWarCry();
         }
 
-        // if (character.mp > 1000) {
-        //     await this.skillCleave();
-        // }
-
-        await this.equipMainWeapons();
+        await this.equipMainHandWeap();
+        await this.equipOffHandWeap();
 
         if (this.aoeTaunt) {
-            if (get_player("Jhlpriest")) { this.skillAoeTaunt(); }
-
+            if (get_player("Jhlpriest")) this.skillAoeTaunt();
             circleCoords(this.circleX, this.circleY, this.radius);
-            myChar.circleModeAttack(target);
-        }
-        else {
+            this.circleModeAttack(target);
+        } else {
             await this.attack(target);
         }
     }
 }
 
 const myChar = new MyChar(character.name);
-myChar.kite = false;
+let target = null;
 
-let combatLoop = null;
-let target;
+async function mainLoop() {
+    while (true) {
+        try {
+            if (myChar.movingToEvent || character.cc >= 170) {
+                await sleep(200);
+                continue;
+            }
 
-const combat = async () => {
-    if (myChar.movingToEvent) { return; }
-    if (myChar.currentMobFarm == undefined || myChar.currentMobFarm == `Porcupine` || myChar.secondaryTarget == `porcupine`) {
+            useHealthPotion();
+            useManaPotion();
+            recoverOutOfCombat();
+            loot();
 
-        myChar.currentMobFarm = 'Squigtoad';
-        myChar.secondaryTarget = 'Squig'
+            // Monster Hunter Check
+            if (myChar.monsterHunter && checkMonsterHunt()) {
+                await getNewTask();
+                const targetInfo = await setNewTask();
+                handleNewTarget(targetInfo ? targetInfo.travel : "spider");
+                continue;
+            }
 
-        target = null;
-    }
+            // Periodic Farm Check
+            const now = Date.now();
+            if (now - myChar.lastFarmCheck > 5000 && myChar.currentMobFarm != "") {
+                myChar.checkNearbyFarmMob();
+                myChar.lastFarmCheck = now;
+            }
 
-    useHealthPotion();
-    useManaPotion();
-    recoverOutOfCombat();
-    loot();
+            // Target & attack
+            if (["Poisio", "Wild Boar", "Water Spirit", "Hawk", "Scorpion", "Spider", "Mole"].includes(myChar.currentMobFarm)) {
+                if (get_nearest_monster({ target: "Jhlpriest" }) != null) { target = get_nearest_monster({ target: "Jhlpriest" }); }
+                else if (get_nearest_monster({ target: "Jhlranger" }) != null) { target = get_nearest_monster({ target: "Jhlranger" }); }
+                else if (get_nearest_monster({ target: "Jhlrogue" }) != null) { target = get_nearest_monster({ target: "Jhlrogue" }); }
+                else if (get_nearest_monster({ target: "Jhlmage" }) != null) { target = get_nearest_monster({ target: "Jhlmage" }); }
+                else if (get_nearest_monster({ target: "Jhlwarrior" }) != null) { target = get_nearest_monster({ target: "Jhlwarrior" }); }
+                else {
+                    if (myChar.pullThree) { target = await myChar.targetLogicTank3(); }
+                    else { target = await myChar.targetLogicTank(); }
+                }
+            }
+            else {
+                if (myChar.pullThree) { target = await myChar.targetLogicTank3(); }
+                else { target = await myChar.targetLogicTank(); }
+            }
 
-    if (myChar.gettingNewTask || myChar.gettingBuff) { return; }
+            if (!target) {
+                target = myChar.pullThree ? myChar.targetLogicTank3() : myChar.targetLogicTank();
+            }
 
-    if (myChar.monsterHunter && checkMonsterHunt()) {
-        await newMonsterHunter();
-        return;
-    }
+            if (target) {
+                await myChar.attackLogic(target);
+            } else {
+                set_message("Searching...");
+            }
 
-    const now = Date.now();
-    if (now - myChar.lastFarmCheck > 5000 && !myChar.gettingBuff && myChar.currentMobFarm != "") {
-        await myChar.checkNearbyFarmMob();
-        myChar.lastFarmCheck = now;
-    }
-
-    if (["Poisio", "Wild Boar", "Water Spirit", "Hawk", "Scorpion", "Spider", "Mole"].includes(myChar.currentMobFarm)) {
-        if (get_nearest_monster({ target: "Jhlpriest" }) != null) { target = get_nearest_monster({ target: "Jhlpriest" }); }
-        else if (get_nearest_monster({ target: "Jhlranger" }) != null) { target = get_nearest_monster({ target: "Jhlranger" }); }
-        else if (get_nearest_monster({ target: "Jhlrogue" }) != null) { target = get_nearest_monster({ target: "Jhlrogue" }); }
-        else if (get_nearest_monster({ target: "Jhlmage" }) != null) { target = get_nearest_monster({ target: "Jhlmage" }); }
-        else if (get_nearest_monster({ target: "Jhlwarrior" }) != null) { target = get_nearest_monster({ target: "Jhlwarrior" }); }
-        else {
-            if (myChar.pullThree) { target = await myChar.targetLogicTank3(); }
-            else { target = await myChar.targetLogicTank(); }
+        } catch (e) {
+            console.error("Main Loop Error:", e);
         }
+
+        let delay = is_moving(character) ? 100 : ((1 / character.frequency) * 1000) / 8;
+        await sleep(delay);
     }
-    else {
-        if (myChar.pullThree) { target = await myChar.targetLogicTank3(); }
-        else { target = await myChar.targetLogicTank(); }
-    }
+}
 
-    if (!target) return;
-
-    myChar.attackLogic(target);
-};
-
-const newMonsterHunter = async () => {
-    if (combatLoop) {
-        clearInterval(combatLoop);
-        combatLoop = null;
-    }
-
-    myChar.gettingNewTask = true;
-
-    await getNewTask();
-    await sleep(100);
-
-    const targetInfo = await setNewTask();
-    if (!targetInfo || targetInfo == null) {
-        handleNewTarget("spider")
-    }
-    else {
-        handleNewTarget(targetInfo.travel);
-    }
-
-    myChar.gettingNewTask = false;
-
-    combatLoop = setInterval(() => combat(), ((1 / character.frequency) * 1000) / 8);
-};
-
-combatLoop = setInterval(() => combat(), ((1 / character.frequency) * 1000) / 8);
+mainLoop();

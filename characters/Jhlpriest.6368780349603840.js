@@ -2,21 +2,21 @@ load_code("baseClass");
 load_code("helpers");
 load_code("charLauncher");
 load_code("dpsMeter");
-load_code("UI");
 
 class MyChar extends BaseClass {
-
     lastFarmCheck = 0;
+    lastMerchCall = 0; // Track merchant pings
 
     healParty() {
         let partyHealth = getPartyHealth();
 
-        // Filter members below 75% HP
+        // Filter members below 55% HP for Party Heal
         let lowMembers = partyHealth.filter(m => m.hp < m.max_hp * 0.55);
         if (lowMembers.length >= 2 && !is_on_cooldown("partyheal")) {
             use_skill("partyheal");
         }
 
+        // Filter members below 85% HP for single Heal
         lowMembers = partyHealth.filter(m => m.hp < m.max_hp * 0.85);
         if (lowMembers.length > 0 && !is_on_cooldown("heal")) {
             use_skill("heal", lowMembers[0].name);
@@ -28,10 +28,9 @@ class MyChar extends BaseClass {
             const member = get_player(id);
             if (!member) continue;
 
-            // Check if dead
             if (member.rip) {
                 if (member.c.revival) { continue; }
-                // Only cast if revive is ready
+                // Cast if revive is ready and target is at full HP
                 if (!is_on_cooldown("revive") && member.hp >= member.max_hp) {
                     use_skill("revive", member);
                     game_log("Revived " + member.name);
@@ -44,16 +43,13 @@ class MyChar extends BaseClass {
     }
 
     useSkillDarkBlessing() {
-        if (is_on_cooldown("darkblessing")) { return; }
-        if (character.s.darkblessing) { return; }
-
+        if (is_on_cooldown("darkblessing") || character.s.darkblessing) { return; }
         use_skill("darkblessing");
     }
 
     useSkillCurse(target) {
         if (is_on_cooldown("curse") || target.s.curse) { return; }
         if (target.hp < target.max_hp * 0.2 || target.hp < 12000 || target.s.cursed) { return; }
-
         use_skill("curse", target);
     }
 
@@ -63,13 +59,11 @@ class MyChar extends BaseClass {
             const member = get_player(id);
             if (!member || !member.map || member.rip) { continue; }
 
-            for (const id in parent.entities) {
-                const ent = parent.entities[id];
-
+            for (const entId in parent.entities) {
+                const ent = parent.entities[entId];
                 if (!ent.target || ent.type !== "monster") { continue; }
                 if (ent.target === member.name && !is_on_cooldown("absorb")) {
                     use_skill("absorb", member);
-
                     return;
                 }
             }
@@ -79,44 +73,67 @@ class MyChar extends BaseClass {
 
 const myChar = new MyChar(character.name);
 
-setInterval(() => {
-    send_cm("Jhlmerch", `come_to_me ${character.real_x},${character.real_y},${character.map}`);
-}, 8 * 60 * 1000);
+async function mainLoop() {
+    while (true) {
+        try {
+            if (character.cc >= 170 || myChar.gettingBuff) {
+                await sleep(200);
+                continue;
+            }
 
-setInterval(async () => await manageActiveChars(myChar.eventsEnabled), 4000);
+            useHealthPotion();
+            useManaPotion();
+            recoverOutOfCombat();
+            loot();
 
-// Combat
-setInterval(async () => {
-    if (myChar.gettingBuff) { return; }
+            const now = Date.now();
+            // Call Merchant
+            if (now - myChar.lastMerchCall > 8 * 60 * 1000) {
+                send_cm("Jhlmerch", `come_to_me ${character.real_x},${character.real_y},${character.map}`);
+                myChar.lastMerchCall = now;
+            }
 
-    myChar.healParty();
-    myChar.revivePartyMembers();
+            // High Priority: Healing and Reviving
+            myChar.healParty();
+            myChar.revivePartyMembers();
 
-    if (myChar.movingToEvent) { return; }
+            if (myChar.movingToEvent) {
+                await sleep(250);
+                continue;
+            }
 
-    const now = Date.now();
-    if (now - myChar.lastFarmCheck > 5000 && !myChar.gettingBuff && myChar.currentMobFarm != "") {
-        myChar.checkNearbyFarmMob();
-        myChar.lastFarmCheck = now;
+            // Farm Check
+            if (now - myChar.lastFarmCheck > 5000 && myChar.currentMobFarm != "") {
+                myChar.checkNearbyFarmMob();
+                myChar.lastFarmCheck = now;
+            }
+
+            // Combat Logic
+            const target = myChar.targetLogicNonTank();
+            if (target) {
+                await myChar.useTemporalSurge(2800);
+
+                myChar.movingToNewMob = false;
+                if (myChar.kite) { myChar.kiteTarget(); }
+                myChar.moveAwayFromWarrior();
+
+                // myChar.useSkillAbsorb();
+                myChar.useSkillDarkBlessing();
+                myChar.useSkillCurse(target);
+
+                await myChar.attack(target);
+            } else {
+                set_message("No Target");
+            }
+
+        } catch (e) {
+            console.error("Main Loop Error:", e);
+        }
+
+        let delay = ((1 / character.frequency) * 1000) / 8;
+        await sleep(delay);
     }
+}
 
-    useHealthPotion();
-    useManaPotion();
-    recoverOutOfCombat();
-    loot();
 
-    const target = await myChar.targetLogicNonTank();
-    if (target == null) { return; }
-
-    await myChar.useTemporalSurge(2800);
-
-    myChar.movingToNewMob = false;
-    if (myChar.kite) { myChar.kiteTarget(); }
-    myChar.moveAwayFromWarrior();
-
-    // myChar.useSkillAbsorb();
-    myChar.useSkillDarkBlessing();
-    myChar.useSkillCurse(target);
-    myChar.attack(target);
-
-}, ((1 / character.frequency) * 1000) / 8);
+mainLoop();

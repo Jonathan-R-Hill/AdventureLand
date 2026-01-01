@@ -93,7 +93,7 @@ const myChar = new MyChar(character.name);
 
 setInterval(() => myChar.snowmanPort(), 2000);
 setInterval(async () => {
-	if (myChar.gettingBuff) { return; }
+	if (myChar.gettingBuff || character.cc >= 190) { return; }
 
 	const now = Date.now();
 	if (now - myChar.lastFarmCheck > 5000 && !myChar.gettingBuff && myChar.currentMobFarm != "") {
@@ -106,7 +106,7 @@ setInterval(async () => {
 	recoverOutOfCombat();
 	loot();
 
-	const target = await myChar.targetLogicNonTank();
+	const target = myChar.targetLogicNonTank();
 	if (target == null) { return; }
 
 	myChar.movingToNewMob = false;
