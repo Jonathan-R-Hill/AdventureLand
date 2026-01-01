@@ -265,11 +265,11 @@ class BaseClass extends TargetLogic {
         this.secondaryTarget = "Hawk";
 
         this.lastTarget = "";
-
         this.lastEvent = null;
 
         this.bosses = ["Phoenix", "Grinch", "Green Jr.", "Snowman", "Ice Golem", "Dracul"];
         this.tank = "Jhlwarrior";
+        this.lastWarriorEscape = 0;
 
         this.whitelist = [
             // Keep
@@ -778,18 +778,28 @@ class BaseClass extends TargetLogic {
     }
 
     moveAwayFromWarrior() {
-        const war = get_player("Jhlwarrior");
+        const now = Date.now();
 
-        if (!war) { return; }
+        if (this.lastWarriorEscape && now - this.lastWarriorEscape < 500) {
+            return;
+        }
+
+        const war = get_player("Jhlwarrior");
+        if (!war) return;
 
         if (this.distance(character, war) < 20) {
-            // Calculate direction vector away from warrior
             const dx = character.x - war.x;
             const dy = character.y - war.y;
 
-            // Normalize vector
             const length = Math.sqrt(dx * dx + dy * dy);
-            if (length === 0) { return; }
+            if (length === 0) {
+                // If perfectly overlapping, move in a random direction to break the stack
+                const angle = Math.random() * Math.PI * 2;
+                move(character.x + Math.cos(angle) * 33, character.y + Math.sin(angle) * 33);
+                this.lastWarriorEscape = now;
+
+                return;
+            }
 
             const nx = dx / length;
             const ny = dy / length;
@@ -799,7 +809,7 @@ class BaseClass extends TargetLogic {
             const targetY = war.y + ny * reqDist;
 
             move(targetX, targetY);
-            game_log("Moving away from warrior");
+            this.lastWarriorEscape = now;
         }
     }
 }

@@ -8,6 +8,7 @@ let ffPath = null;
 let ffIndex = 0;
 let ffGoal = null;
 let ffLastPlan = 0;
+let lastWiggle = 0;
 
 // ---------- Tile helpers ----------
 
@@ -193,16 +194,11 @@ function shouldReplanFloodfill(goalTile) {
 
 function planFloodfillPath(goalX, goalY) {
     const goal = tileFromWorld(goalX, goalY);
-
     if (!shouldReplanFloodfill(goal)) return;
 
     const originTile = tileFromWorld(character.real_x, character.real_y);
-    let path = null;
+    let path = floodfillPathSingleStart(originTile, goal);
 
-    // Try from exact position
-    path = floodfillPathSingleStart(originTile, goal);
-
-    // Fallback: nearby ttiles
     if (!path || !path.length) {
         const startSeeds = getFloodfillStartSeeds(3);
         if (startSeeds.length) {
@@ -210,12 +206,19 @@ function planFloodfillPath(goalX, goalY) {
         }
     }
 
-    // move aroudn till i find a path  
+    // No path so we move to try and try a new calculation
     if (!path || !path.length) {
-        console.log("No path found! Wiggling...");
-        const angle = Math.random() * Math.PI * 2;
-        move(character.real_x + Math.cos(angle) * 20, character.real_y + Math.sin(angle) * 20);
-        ffLastPlan = Date.now(); // Reset CD so we don't spam
+        const now = Date.now();
+        if (now - lastWiggle > 500) {
+            const angle = Math.random() * Math.PI * 2;
+
+            // Move slightly further (30 instead of 20) but less often
+            move(character.real_x + Math.cos(angle) * 30, character.real_y + Math.sin(angle) * 30);
+
+            lastWiggle = now;
+            ffLastPlan = now;
+        }
+
         return;
     }
 

@@ -26,6 +26,7 @@ class MyChar extends BaseClass {
             this.equipItem(`fireblade`, 7, "offhand");
             // this.equipItem(`sshield`, 7, "offhand");
         }
+        await sleep(50);
     }
 
     skillCharge() {
@@ -69,7 +70,7 @@ class MyChar extends BaseClass {
         this.removeWeapons();
         equip(locate_item(`basher`));
 
-        await sleep(25);
+        await sleep(50);
 
         use_skill((`stomp`));
         await sleep(10);
@@ -90,7 +91,7 @@ class MyChar extends BaseClass {
         if (is_on_cooldown("cleave") || character.mp < 800) return;
 
         this.removeWeapons();
-        await sleep(25);
+        await sleep(50);
 
         equip(locate_item(`bataxe`));
 
@@ -134,7 +135,7 @@ class MyChar extends BaseClass {
         //     await this.skillCleave();
         // }
 
-        this.equipMainWeapons();
+        await this.equipMainWeapons();
 
         if (this.aoeTaunt) {
             if (get_player("Jhlpriest")) { this.skillAoeTaunt(); }
