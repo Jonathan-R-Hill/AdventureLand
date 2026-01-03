@@ -2,6 +2,8 @@ load_code("baseClass");
 load_code("helpers");
 load_code("aoeFarmArea");
 
+graphicsLimiter();
+
 class MyChar extends BaseClass {
     monsterHunter = false;
     gettingNewTask = false;
@@ -207,7 +209,7 @@ async function mainLoop() {
             console.error("Main Loop Error:", e);
         }
 
-        let delay = is_moving(character) ? 100 : ((1 / character.frequency) * 1000) / 8;
+        let delay = is_moving(character) ? 100 : ((1 / character.frequency) * 1000) / 6;
         await sleep(delay);
     }
 }

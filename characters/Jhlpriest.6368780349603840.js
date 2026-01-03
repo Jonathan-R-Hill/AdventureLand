@@ -69,70 +69,81 @@ class MyChar extends BaseClass {
             }
         }
     }
+
+    weaponLogic(target) {
+        if (target.name == 'Snowman' && !target.s.fullguardx) {
+            this.equipItem("wand", 7, "mainhand");
+        } else {
+            this.equipItem("harbringer", 7, "mainhand");
+        }
+    }
+
+    async mainLoop() {
+        while (true) {
+            try {
+                if (character.cc >= 170 || this.gettingBuff) {
+                    await sleep(200);
+                    continue;
+                }
+
+                useHealthPotion();
+                useManaPotion();
+                recoverOutOfCombat();
+                loot();
+
+                const now = Date.now();
+                // Call Merchant
+                if (now - this.lastMerchCall > 8 * 60 * 1000) {
+                    send_cm("Jhlmerch", `come_to_me ${character.real_x},${character.real_y},${character.map}`);
+                    this.lastMerchCall = now;
+                }
+
+                // High Priority: Healing and Reviving
+                this.healParty();
+                this.revivePartyMembers();
+
+                if (this.movingToEvent) {
+                    await sleep(250);
+                    continue;
+                }
+
+                // Farm Check
+                if (now - this.lastFarmCheck > 5000 && this.currentMobFarm != "") {
+                    this.checkNearbyFarmMob();
+                    this.lastFarmCheck = now;
+                }
+
+                // Combat Logic
+                const target = this.targetLogicNonTank();
+                if (target) {
+                    await this.useTemporalSurge(2800);
+
+                    this.weaponLogic(target);
+
+                    if (this.kite) { this.kiteTarget(); }
+                    this.moveAwayFromWarrior();
+
+                    // this.useSkillAbsorb();
+                    this.useSkillDarkBlessing();
+                    this.useSkillCurse(target);
+
+                    await this.attack(target);
+                } else {
+                    set_message("No Target");
+                }
+
+            } catch (e) {
+                console.error("Main Loop Error:", e);
+            }
+
+            let delay = ((1 / character.frequency) * 1000) / 6;
+            await sleep(delay);
+        }
+    }
+
 }
 
 const myChar = new MyChar(character.name);
 
-async function mainLoop() {
-    while (true) {
-        try {
-            if (character.cc >= 170 || myChar.gettingBuff) {
-                await sleep(200);
-                continue;
-            }
-
-            useHealthPotion();
-            useManaPotion();
-            recoverOutOfCombat();
-            loot();
-
-            const now = Date.now();
-            // Call Merchant
-            if (now - myChar.lastMerchCall > 8 * 60 * 1000) {
-                send_cm("Jhlmerch", `come_to_me ${character.real_x},${character.real_y},${character.map}`);
-                myChar.lastMerchCall = now;
-            }
-
-            // High Priority: Healing and Reviving
-            myChar.healParty();
-            myChar.revivePartyMembers();
-
-            if (myChar.movingToEvent) {
-                await sleep(250);
-                continue;
-            }
-
-            // Farm Check
-            if (now - myChar.lastFarmCheck > 5000 && myChar.currentMobFarm != "") {
-                myChar.checkNearbyFarmMob();
-                myChar.lastFarmCheck = now;
-            }
-
-            // Combat Logic
-            const target = myChar.targetLogicNonTank();
-            if (target) {
-                await myChar.useTemporalSurge(2800);
-
-                if (myChar.kite) { myChar.kiteTarget(); }
-                myChar.moveAwayFromWarrior();
-
-                // myChar.useSkillAbsorb();
-                myChar.useSkillDarkBlessing();
-                myChar.useSkillCurse(target);
-
-                await myChar.attack(target);
-            } else {
-                set_message("No Target");
-            }
-
-        } catch (e) {
-            console.error("Main Loop Error:", e);
-        }
-
-        let delay = ((1 / character.frequency) * 1000) / 8;
-        await sleep(delay);
-    }
-}
-
-setInterval(() => manageActiveChars(myChar.eventsEnabled), 5000);
-mainLoop();
+// setInterval(() => manageActiveChars(myChar.eventsEnabled), 7000);
+myChar.mainLoop();

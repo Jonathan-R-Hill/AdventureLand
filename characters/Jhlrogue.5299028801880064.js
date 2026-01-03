@@ -1,6 +1,8 @@
 load_code("baseClass");
 load_code("helpers");
 
+graphicsLimiter();
+
 class MyChar extends BaseClass {
 
 	lastFarmCheck = 0;
@@ -64,5 +66,5 @@ setInterval(async function () {
 
 	myChar.rogueLogic(target);
 
-}, ((1 / character.frequency) * 1000) / 8);
+}, ((1 / character.frequency) * 1000) / 6);
 

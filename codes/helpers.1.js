@@ -24,6 +24,13 @@ function startSharedTasks() {
     }
 }
 
+function graphicsLimiter() {
+    if (parent.active_character !== character.name) {
+        parent.can_render = false;   // This is the core setting to stop rendering
+        parent.fps_cap = 15;         // Lowering this even further saves more CPU
+        parent.dont_draw = true;     // Stops drawing sprites/entities
+    }
+}
 
 async function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));

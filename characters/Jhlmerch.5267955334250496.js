@@ -3,6 +3,8 @@ load_code("commCommands");
 load_code("combineItems");
 load_code("UI");
 
+graphicsLimiter();
+
 const HP_POTION = "hpot1";
 const MP_POTION = "mpot1";
 const POTSMINSTOCK = 9999;

@@ -261,8 +261,8 @@ class BaseClass extends TargetLogic {
         this.gettingBuff = false;
         this.movingToEvent = false;
 
-        this.currentMobFarm = "Mole";
-        this.secondaryTarget = "Mole";
+        this.currentMobFarm = "Wild Boar";
+        this.secondaryTarget = "Wild Boar";
 
         this.lastTarget = "";
         this.lastEvent = null;
@@ -281,7 +281,7 @@ class BaseClass extends TargetLogic {
             "intbelt", "strbelt", "dexbelt", "dstones", "poison", "pleather",
             "handofmidas", "mcape", "sweaterhs", "cryptkey", "forscroll", "gemfragment",
             // Upgrade
-            "ringsj", "intbelt", "intearring", "strearring", "dexearring", "dexamulet", "stramulet", "intamulet", "wbookhs", "wbook0",
+            "ringsj", "intbelt", "intearring", "strearring", "dexearring", "dexamulet", "stramulet", "intamulet", "wbookhs",
             // Sell
             "hpbelt", "hpamulet", "shoes", "coat", "pants", "strring", "intring", "vitring", "dexring",
             "wattire", "wshoes", "wcap", "cclaw", "mushroomstaff", "wbreeches", "slimestaff", "stinger",
@@ -289,9 +289,6 @@ class BaseClass extends TargetLogic {
         ];
 
         this.returningToGroup = false;
-
-        this.x = this.char.real_x;
-        this.y = this.char.real_y;
 
         character.on("cm", async (sender, data) => {
             await this.handleCM(sender, data);
@@ -306,10 +303,16 @@ class BaseClass extends TargetLogic {
 
         startSharedTasks();
 
-        scaleUI(0.80);
+        // scaleUI(0.80);
     }
 
     async handleEvents() {
+        if (character.map == "winterland" && this.distance(character, { map: "winterland", x: 820, y: 425 }) < 400
+            && !get_nearest_monster({ type: 'icegolem' })) {
+
+            use_skill(`town`)
+        }
+
         if (parent.S.snowman.live) {
             this.lastEvent = 'snowman';
             if (this.lastTarget == "") {
@@ -333,10 +336,6 @@ class BaseClass extends TargetLogic {
                 this.currentMobFarm = this.lastTarget;
                 this.secondaryTarget = this.lastTarget;
                 this.lastTarget = "";
-            }
-
-            if (character.map == "winterland" && this.distance(character, { map: "winterland", x: 820, y: 425 }) < 400) {
-                use_skill(`town`)
             }
 
             this.movingToEvent = false;
@@ -522,7 +521,7 @@ class BaseClass extends TargetLogic {
         if (!merchant || parent.distance(character, merchant) > 400) { return; }
 
         const onlyTier1 = [
-            "firebow", "fireblade", "firestaff", "glolipop",
+            "firebow", "fireblade", "firestaff", "glolipop", "wand", "sparkstaff", "wbook0"
         ];
 
         for (let i = 0; i < character.items.length; i++) {

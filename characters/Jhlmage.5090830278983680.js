@@ -1,31 +1,26 @@
 load_code("baseClass");
 load_code("helpers");
 
+graphicsLimiter();
+
 class MyChar extends BaseClass {
-
 	lastFarmCheck = 0;
+	lastSnowmanCheck = 0;
 	cburstpull = false;
-
-	currentMobFarm = `Arctic Bee`;
-	secondaryTarget = `Arctic Bee`;
 
 	useSkillCBurst() {
 		const USE_ABOVE_MANA = 3000;
 		if (character.mp > USE_ABOVE_MANA && !is_on_cooldown("cburst") && this.cburstpull) {
-
 			let targets = [];
-			let totalCost = 0
+			let totalCost = 0;
 			for (let id in parent.entities) {
 				let entity = parent.entities[id];
-
 				if (entity.type === "monster" && entity.target !== this.tank && is_in_range(entity, "cburst")) {
 					targets.push(entity);
 					totalCost += 80;
 				}
-
 				if (totalCost >= USE_ABOVE_MANA - 80) { break; }
 			}
-
 			if (targets.length > 0) {
 				use_skill("cburst", targets);
 			}
@@ -34,9 +29,7 @@ class MyChar extends BaseClass {
 
 	useSkillPort(char) {
 		const USE_ABOVE_MANA = 920;
-
 		if (is_on_cooldown("magiport") || character.mp <= USE_ABOVE_MANA) { return; }
-
 		use_skill("magiport", char);
 	}
 
@@ -46,34 +39,27 @@ class MyChar extends BaseClass {
 
 		if (character.mp < 1000) { return; }
 
-		if (priest && priest.mp <= 1000 && !is_on_cooldown("energize")) {
+		if (priest && priest.mp <= 600 && !is_on_cooldown("energize")) {
 			use_skill("energize", priest);
-
 			return;
 		}
-
-		if (war && war.mp <= 450 && !is_on_cooldown("energize")) {
-			use_skill("energize", priest);
-
+		if (war && war.mp <= 200 && !is_on_cooldown("energize")) {
+			use_skill("energize", war); // Corrected to target war
 			return;
 		}
 	}
 
 	snowmanPort() {
-		if (!parent.S.snowman.live) { return; }
-
+		if (!parent.S || !parent.S.snowman || !parent.S.snowman.live) { return; }
 		const snowman = get_nearest_monster({ type: "snowman" });
 
-
-		if (!snowman || this.distance(character, snowman) >= 900) {
-			// Snowman not visible or too far away
+		if (!snowman || distance(character, snowman) >= 900) {
 			return;
 		}
 
 		if (!get_player("Jhlpriest")) {
 			this.useSkillPort("Jhlpriest");
 		}
-
 		if (!get_player("Jhlranger")) {
 			this.useSkillPort("Jhlranger");
 		}
@@ -82,8 +68,7 @@ class MyChar extends BaseClass {
 	weaponLogic(target) {
 		if (target.name == 'Snowman' && !target.s.fullguardx) {
 			this.equipItem("wand", 7, "mainhand");
-		}
-		else {
+		} else {
 			this.equipItem("harbringer", 6, "mainhand");
 		}
 	}
@@ -91,33 +76,57 @@ class MyChar extends BaseClass {
 
 const myChar = new MyChar(character.name);
 
-setInterval(() => myChar.snowmanPort(), 2000);
-setInterval(async () => {
-	if (myChar.gettingBuff || character.cc >= 190) { return; }
+async function mainLoop() {
+	while (true) {
+		try {
+			// 1. Safety and CC check
+			if (myChar.gettingBuff || character.cc >= 190) {
+				await sleep(100);
+				continue;
+			}
 
-	const now = Date.now();
-	if (now - myChar.lastFarmCheck > 5000 && !myChar.gettingBuff && myChar.currentMobFarm != "") {
-		myChar.checkNearbyFarmMob();
-		myChar.lastFarmCheck = now;
+			const now = Date.now();
+
+			// 2. Snowman Port Logic (runs every 2 seconds)
+			if (now - myChar.lastSnowmanCheck > 2000) {
+				myChar.snowmanPort();
+				myChar.lastSnowmanCheck = now;
+			}
+
+			// Periodic Farm Check
+			if (now - myChar.lastFarmCheck > 5000 && !myChar.gettingBuff && myChar.currentMobFarm != "") {
+				myChar.checkNearbyFarmMob();
+				myChar.lastFarmCheck = now;
+			}
+
+			useHealthPotion();
+			useManaPotion();
+			recoverOutOfCombat();
+			loot();
+
+			// Combat Logic
+			const target = myChar.targetLogicNonTank();
+			if (target) {
+				if (myChar.kite) { myChar.kiteTarget(); }
+				myChar.moveAwayFromWarrior();
+
+				myChar.useSkillEnergize();
+				await myChar.useTemporalSurge(2000);
+
+				// myChar.weaponLogic(target);
+
+				myChar.attack(target);
+			} else {
+				set_message("No Target");
+			}
+
+		} catch (e) {
+			console.error("Mage Loop Error:", e);
+		}
+
+		let delay = ((1 / character.frequency) * 1000) / 6;
+		await sleep(delay);
 	}
+}
 
-	useHealthPotion();
-	useManaPotion();
-	recoverOutOfCombat();
-	loot();
-
-	const target = myChar.targetLogicNonTank();
-	if (target == null) { return; }
-
-	if (myChar.kite) { myChar.kiteTarget(); }
-	myChar.moveAwayFromWarrior();
-
-	myChar.useSkillEnergize();
-
-	myChar.weaponLogic(target);
-
-	myChar.attack(target);
-
-}, ((1 / character.frequency) * 1000) / 8);
-
-
+mainLoop();
