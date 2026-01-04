@@ -54,9 +54,7 @@ setInterval(async function () {
 		myChar.lastFarmCheck = now;
 	}
 
-	useHealthPotion();
-	useManaPotion();
-	recoverOutOfCombat();
+	potionUse();
 	loot();
 
 	const target = myChar.targetLogicNonTank();

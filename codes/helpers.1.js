@@ -22,6 +22,8 @@ function startSharedTasks() {
         setInterval(sendGoldToMerchant, 3 * 1000);
         setInterval(checkPotions, 9 * 1000);
     }
+
+    scaleUI(0.90);
 }
 
 function graphicsLimiter() {
@@ -121,7 +123,7 @@ function returnToLeader() {
     }
 
     // Only act if leader is far enough
-    if (distance(character, leader) < 85) { return; }
+    if (distance(character, leader) < 70) { return; }
 
     const target = get_targeted_monster();
 

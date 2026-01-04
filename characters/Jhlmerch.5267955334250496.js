@@ -82,8 +82,6 @@ class Merchant extends combineItems {
 			holidayExchange: 0,
 		};
 
-		scaleUI(0.80);
-
 		setInterval(async () => await this.mainLoop(), 1000);
 		// setInterval(snowball, 4200);
 		setInterval(exportCharacterData, 8 * 1000);
@@ -809,7 +807,7 @@ class Merchant extends combineItems {
 
 		if (is_on_cooldown("fishing") || this.busy || this.mining) { return; }
 
-		if (parent.distance(character, this.fishingLocation) > 2) {
+		if (parent.distance(character, this.fishingLocation) > 1) {
 			if (!this.fishing) {
 				this.equipBroom();
 				this.fishing = true;
@@ -818,9 +816,8 @@ class Merchant extends combineItems {
 			}
 		}
 
-		if (this.fishing && parent.distance(character, this.fishingLocation) < 2) {
+		if (this.fishing && parent.distance(character, this.fishingLocation) <= 1) {
 			if (!character.c.fishing) {
-				useManaPotion();
 
 				equip(locate_item(fishingRodName));
 				await sleep(80);
@@ -851,7 +848,6 @@ class Merchant extends combineItems {
 		}
 
 		if (character.real_x == this.miningLocation.x && character.real_y == this.miningLocation.y && this.mining) {
-			useManaPotion();
 			await sleep(50);
 
 			equip(locate_item(pickaxeItemId));
@@ -866,9 +862,12 @@ class Merchant extends combineItems {
 		reviveSelf();
 		manageParty();
 
-		if (this.fishing || this.mining) { return; }
-		useHealthPotion();
-		recoverOutOfCombat();
+		if (this.fishing || this.mining) {
+			recoverOutOfCombat();
+			return;
+		}
+
+		potionUse();
 
 		this.buffPartyWithMLuck();
 		loot();

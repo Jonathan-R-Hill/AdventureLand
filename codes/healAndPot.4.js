@@ -20,19 +20,23 @@ function reviveSelf() {
     }
 }
 
-function useHealthPotion() {
+function potionUse() {
     if (is_on_cooldown("regen_mp")) { return; }
 
-    if (character.hp < character.max_hp * 0.65) {
-        return use_skill('use_hp');
+    if (character.mp < 400) {
+        return useManaPotion();
     }
-}
-
-function useManaPotion() {
-    if (is_on_cooldown("regen_mp")) { return; }
-
-    if (character.mp < character.max_mp * 0.65) {
+    else if (character.hp < character.max_hp * 0.35) {
+        use_skill('use_hp');
+    }
+    else if (character.mp < character.max_mp * 0.65) {
         use_skill('use_mp');
+    }
+    else if (character.hp < character.max_hp * 0.65) {
+        use_skill('use_hp');
+    }
+    else {
+        recoverOutOfCombat();
     }
 }
 

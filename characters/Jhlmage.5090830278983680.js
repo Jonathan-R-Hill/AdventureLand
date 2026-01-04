@@ -8,6 +8,9 @@ class MyChar extends BaseClass {
 	lastSnowmanCheck = 0;
 	cburstpull = false;
 
+	currentMobFarm = "Arctic Bee";
+	secondaryTarget = "Arctic Bee";
+
 	useSkillCBurst() {
 		const USE_ABOVE_MANA = 3000;
 		if (character.mp > USE_ABOVE_MANA && !is_on_cooldown("cburst") && this.cburstpull) {
@@ -99,9 +102,7 @@ async function mainLoop() {
 				myChar.lastFarmCheck = now;
 			}
 
-			useHealthPotion();
-			useManaPotion();
-			recoverOutOfCombat();
+			potionUse()
 			loot();
 
 			// Combat Logic

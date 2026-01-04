@@ -7,7 +7,7 @@ graphicsLimiter();
 class MyChar extends BaseClass {
     monsterHunter = false;
     gettingNewTask = false;
-    pullThree = false;
+    pullThree = true;
 
     lastFarmCheck = 0;
     lastTaunt = 0;
@@ -18,8 +18,11 @@ class MyChar extends BaseClass {
     radius = 35;
 
     async equipMainHandWeap() {
-        if (character.q.equip) return; // Don't spam if server is busy
-        if (this.aoeTaunt) {
+        if (character.q.equip) { return; }
+
+        const attackers = this.getMobsAttackingMe();
+
+        if (this.aoeTaunt || attackers.length >= 4) {
             this.equipItem("glolipop", 6, "mainhand");
         } else {
             this.equipItem(`fireblade`, 8, "mainhand");
@@ -27,8 +30,11 @@ class MyChar extends BaseClass {
     }
 
     async equipOffHandWeap() {
-        if (character.q.equip) return;
-        if (this.aoeTaunt) {
+        if (character.q.equip) { return; }
+
+        const attackers = this.getMobsAttackingMe();
+
+        if (this.aoeTaunt || attackers.length >= 4) {
             this.equipItem("ololipop", 5, "offhand");
         } else {
             this.equipItem(`fireblade`, 7, "offhand");
@@ -160,9 +166,7 @@ async function mainLoop() {
                 continue;
             }
 
-            useHealthPotion();
-            useManaPotion();
-            recoverOutOfCombat();
+            potionUse();
             loot();
 
             // Monster Hunter Check
@@ -181,17 +185,17 @@ async function mainLoop() {
             }
 
             // Target & attack
-            if (["Poisio", "Wild Boar", "Water Spirit", "Hawk", "Scorpion", "Spider", "Mole"].includes(myChar.currentMobFarm)) {
+            if (["Dark Hound", "Poisio", "Wild Boar", "Water Spirit", "Hawk", "Scorpion", "Spider", "Mole"].includes(myChar.currentMobFarm)) {
                 target = get_nearest_monster({ target: "Jhlpriest" }) ||
                     get_nearest_monster({ target: "Jhlranger" }) || get_nearest_monster({ target: "Jhlrogue" }) ||
-                    get_nearest_monster({ target: "Jhlmage" }) || get_nearest_monster({ target: "Jhlwarrior" });
+                    get_nearest_monster({ target: "Jhlmage" }) || get_nearest_monster({ target: "Jhlpally" });
 
                 if (!target) {
                     target = myChar.pullThree ? myChar.targetLogicTank3() : myChar.targetLogicTank();
                 }
             }
             else {
-                if (myChar.pullThree) { target = await myChar.targetLogicTank3(); }
+                if (myChar.pullThree) { target = myChar.targetLogicTank3(); }
                 else { target = await myChar.targetLogicTank(); }
             }
 

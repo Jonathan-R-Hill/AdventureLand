@@ -34,4 +34,5 @@ const mobData = [
     { travel: "mole", target: "Mole", map: "tunnel" },
     { travel: "pppompom", target: "Pom Pom", map: "level2n" },
     { travel: "ent", target: "Ent", map: "desertland" },
+    { travel: "wolfie", target: "Dark Hound", map: "winterland", x: -82, y: -2059 },
 ];

@@ -10,6 +10,7 @@ class TargetLogic {
     bosses;
     attackMode;
     fightTogeather;
+    followLeader;
     pvpEnabled = false;
 
     allies = ["trololol", "YTFAN", "derped", "Knight", "Bonjour"];
@@ -37,7 +38,13 @@ class TargetLogic {
     getTankTarget() {
         const tank = get_player(this.tank);
 
-        return get_target_of(tank);
+        let target = get_target_of(tank);
+
+        if (!target) {
+            target = get_nearest_monster({ target: "Jhlwarrior" })
+        }
+
+        return target;
     }
 
     findStunnedTarget() {
@@ -148,6 +155,7 @@ class TargetLogic {
         if (this.fightTogeather) {
             target = this.farmTogeather();
         } else {
+            if (this.followLeader && character.name != this.tank) { returnToLeader(); }
             target = this.targetLogicTank();
         }
 
@@ -185,13 +193,13 @@ class TargetLogic {
             const e = parent.entities[id];
 
             if (
-                e.type === "monster" &&
+                e.type == "monster" &&
                 !e.dead &&
-                (e.name === this.currentMobFarm || e.name === this.secondaryTarget) &&
-                e.target !== character.name
+                (this.bosses.includes(e.name) || e.name == this.currentMobFarm || e.name == this.secondaryTarget) &&
+                get_target_of(e) !== character
             ) {
-                const d = distance(character, e);
-                if (d < closestDist) {
+                const d = this.distance(character, e);
+                if (d <= closestDist) {
                     closest = e;
                     closestDist = d;
                 }
@@ -204,13 +212,10 @@ class TargetLogic {
     targetLogicTank3() {
         if (!this.attackMode || character.rip || smart.moving) return null;
 
-        const attackers = Object.values(parent.entities).filter(e =>
-            e.type === "monster" &&
-            !e.dead &&
-            e.target === character.name
-        );
+        const attackers = this.getMobsAttackingMe();
 
         const attackerCount = attackers.length;
+        console.log(`Currently tanking ${attackerCount} mobs`);
 
         // If already tanking 3+, STOP pulling new mobs
         if (attackerCount >= 3) {
@@ -238,6 +243,14 @@ class TargetLogic {
         return target;
     }
 
+    getMobsAttackingMe() {
+        return Object.values(parent.entities).filter(e =>
+            e.type == "monster" &&
+            !e.dead &&
+            e.target == character.name
+        );
+    }
+
 }
 
 class BaseClass extends TargetLogic {
@@ -253,6 +266,7 @@ class BaseClass extends TargetLogic {
 
         this.kite = false;
         this.attackMode = true;
+        this.followLeader = true;
         this.fightTogeather = false;
 
         this.surge = false;
@@ -261,8 +275,8 @@ class BaseClass extends TargetLogic {
         this.gettingBuff = false;
         this.movingToEvent = false;
 
-        this.currentMobFarm = "Wild Boar";
-        this.secondaryTarget = "Wild Boar";
+        this.currentMobFarm = "Dark Hound";
+        this.secondaryTarget = "Dark Hound";
 
         this.lastTarget = "";
         this.lastEvent = null;

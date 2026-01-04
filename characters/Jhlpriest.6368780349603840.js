@@ -71,11 +71,7 @@ class MyChar extends BaseClass {
     }
 
     weaponLogic(target) {
-        if (target.name == 'Snowman' && !target.s.fullguardx) {
-            this.equipItem("wand", 7, "mainhand");
-        } else {
-            this.equipItem("harbringer", 7, "mainhand");
-        }
+        this.equipItem("harbringer", 7, "mainhand");
     }
 
     async mainLoop() {
@@ -86,9 +82,7 @@ class MyChar extends BaseClass {
                     continue;
                 }
 
-                useHealthPotion();
-                useManaPotion();
-                recoverOutOfCombat();
+                potionUse();
                 loot();
 
                 const now = Date.now();
