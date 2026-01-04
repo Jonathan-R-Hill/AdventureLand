@@ -88,8 +88,12 @@ class Merchant extends combineItems {
 		setInterval(useSkillJacko, 1200);
 		setInterval(crossMapHeal, 800);
 
-		// setInterval(recoverOutOfCombat, 1000);
-		// setInterval(async () => await this.upgradeAllByName("firestaff", 7, 1), 1500);
+		setInterval(recoverOutOfCombat, 1000);
+		// setInterval(async () => await this.upgradeAllByName("cape", 5, 1), 1500);
+		// setTimeout(async () => {
+		// 	await this.buyBasicUpgrade();
+		// 	setTimeout(async () => { await this.buyBasicUpgrade(); }, 2000);
+		// }, 2000);
 
 		parent.socket.off("magiport");
 		parent.socket.on("magiport", (d) => {
@@ -104,6 +108,14 @@ class Merchant extends combineItems {
 			await this.handleCM(sender, data);
 		});
 
+	}
+
+	async buyBasicUpgrade() {
+		await this.buyAndUpgrade("shoes", 7);
+		await this.buyAndUpgrade("helmet", 7);
+		await this.buyAndUpgrade("pants", 7);
+		// await this.buyAndUpgrade("coat", 7);
+		await this.buyAndUpgrade("mace", 7);
 	}
 
 	checkIfDoingSOmething() {
@@ -123,7 +135,11 @@ class Merchant extends combineItems {
 		// if (now - this.lastRun.autoUpgrade > 4 * 60 * 1000) {
 		// 	if (!this.checkIfDoingSOmething()) {
 		// 		this.lastRun.autoUpgrade = now;
-		// 		await this.buyAndUpgrade("wand", 7);
+		// 		await this.buyAndUpgrade("shoes", 7);
+		// 		await this.buyAndUpgrade("helmet", 7);
+		// 		await this.buyAndUpgrade("pants", 7);
+		// 		await this.buyAndUpgrade("coat", 7);
+		// 		await this.buyAndUpgrade("mace", 7);
 		// 	}
 		// }
 

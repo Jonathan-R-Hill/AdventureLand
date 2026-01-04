@@ -7,7 +7,7 @@ graphicsLimiter();
 class MyChar extends BaseClass {
     monsterHunter = false;
     gettingNewTask = false;
-    pullThree = true;
+    pullThree = false;
 
     lastFarmCheck = 0;
     lastTaunt = 0;

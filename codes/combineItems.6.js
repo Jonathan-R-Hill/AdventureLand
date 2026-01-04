@@ -155,53 +155,73 @@ class combineItems {
 
     async buyAndUpgrade(itemName, targetLevel) {
         this.busy = true;
-        await smart_move({ to: "potions" });
 
-        // Buy the item
-        if (locate_item(itemName) !== -1) {
-            game_log("Already have " + itemName + " in inventory!");
+        // Function to find the lowest level version of the item
+        const findLowestSlot = (name) => {
+            let lowestLevel = Infinity;
+            let lowestSlot = -1;
+            for (let i = 0; i < character.items.length; i++) {
+                let item = character.items[i];
+                if (item && item.name === name) {
+                    if (item.level < lowestLevel) {
+                        lowestLevel = item.level;
+                        lowestSlot = i;
+                    }
+                }
+            }
+            return { slot: lowestSlot, level: lowestLevel };
+        };
+
+        // Check if we already have a high-level version anywhere in inventory
+        const alreadyFinished = character.items.some(item => item && item.name === itemName && item.level >= targetLevel);
+
+        if (alreadyFinished) {
+            game_log(`Already have ${itemName} at level ${targetLevel} or higher! Skipping.`);
             this.busy = false;
             return;
         }
 
-        await buy(itemName, 1);
-        let itemSlot = locate_item(itemName);
+        if (!smart.moving) { await smart_move({ to: "potions" }); }
 
-        if (itemSlot === -1) {
-            game_log("Couldn't find " + itemName + " in inventory!");
+        let itemInfo = findLowestSlot(itemName);
+
+        // If we have none at all, buy a new one
+        if (itemInfo.slot === -1) {
+            game_log("Buying new " + itemName + " to upgrade.");
+            await buy(itemName, 1);
+            itemInfo = findLowestSlot(itemName);
+        }
+
+        if (itemInfo.slot === -1) {
+            game_log("Failed to acquire " + itemName);
             this.busy = false;
             return;
         }
 
-        // Step 2: Upgrade loop
-        while (character.items[itemSlot].level < targetLevel) {
-            // Decide which scroll to use based on current level
-            let scrollName = character.items[itemSlot].level >= 4 ? "scroll1" : "scroll0";
+        while (itemInfo.level < targetLevel) {
+            let scrollName = itemInfo.level >= 4 ? "scroll1" : "scroll0";
             let scrollSlot = locate_item(scrollName);
 
             if (scrollSlot === -1) {
                 game_log("No " + scrollName + " left!");
-                this.busy = false;
-                break;
+                await buy(scrollName, 10);
+                scrollSlot = locate_item(scrollName);
+                if (scrollSlot === -1) break;
             }
 
-            use_skill("massproduction");
-            await upgrade(itemSlot, scrollSlot);
+            if (character.ctype === "merchant") {
+                use_skill("massproduction");
+            }
+
+            await upgrade(itemInfo.slot, scrollSlot);
             await sleep(1000);
 
-            // Refresh slot reference
-            itemSlot = locate_item(itemName);
-            if (itemSlot === -1) {
-                this.busy = false;
-                game_log(itemName + " broke or disappeared!");
-                break;
-            }
+            itemInfo = findLowestSlot(itemName);
+            if (itemInfo.slot === -1 || itemInfo.level >= targetLevel) break;
         }
 
-        if (itemSlot !== -1 && character.items[itemSlot].level >= targetLevel) {
-            this.busy = false;
-            game_log(itemName + " reached level " + targetLevel + "!");
-        }
+        this.busy = false;
+        game_log("Upgrade task for " + itemName + " finished.");
     }
 
     getScrollTypeForLevel(level, grade) {

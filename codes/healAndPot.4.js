@@ -24,7 +24,7 @@ function potionUse() {
     if (is_on_cooldown("regen_mp")) { return; }
 
     if (character.mp < 400) {
-        return useManaPotion();
+        return use_skill('use_mp');
     }
     else if (character.hp < character.max_hp * 0.35) {
         use_skill('use_hp');

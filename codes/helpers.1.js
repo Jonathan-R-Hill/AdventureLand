@@ -48,7 +48,7 @@ function getPartyHealth() {
 async function manageParty() {
     const inviteAllies = false;
     const partyMembers = [
-        "Jhlpriest", "Jhlranger", "Jhlmerch", "Jhlmage", "Jhlwarrior", "Jhlrogue",
+        "Jhlpriest", "Jhlranger", "Jhlmerch", "Jhlmage", "Jhlwarrior", "Jhlrogue", "Jhlpally",
     ];
 
     const allies = ["trololol", "YTFAN", "derped", "Knight", "Bonjour", "Bravo", "Tostitos", "iniwa",]

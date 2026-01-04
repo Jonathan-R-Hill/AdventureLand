@@ -192,6 +192,7 @@ class TargetLogic {
         for (let id in parent.entities) {
             const e = parent.entities[id];
 
+            if (e.s.fullguardx) { continue; }
             if (
                 e.type == "monster" &&
                 !e.dead &&
@@ -211,6 +212,10 @@ class TargetLogic {
 
     targetLogicTank3() {
         if (!this.attackMode || character.rip || smart.moving) return null;
+
+        if (this.eventsEnabled && parent.S.snowman.live) {
+            return this.targetLogicTank();
+        }
 
         const attackers = this.getMobsAttackingMe();
 
