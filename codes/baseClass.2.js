@@ -263,6 +263,7 @@ class BaseClass extends TargetLogic {
         super();
         this.name = name;
         this.char = get_player(name);
+        this.myCharacters = ["Jhlpriest", "Jhlranger", "Jhlmerch", "Jhlmage", "Jhlwarrior", "Jhlrogue", "Jhlpally",]
 
         this.sendItems = true;
         this.merchantName = "Jhlmerch";
@@ -683,7 +684,7 @@ class BaseClass extends TargetLogic {
 
         const character_radius = get_width(character) / 2;
         const target_radius = target.width / 2;
-        const desired_buffer = 1;
+        const desired_buffer = 3;
 
         // The maximum dist that still allows an attack
         const maxCenter2CenterRange = character.range + target_radius + character_radius;
@@ -727,7 +728,7 @@ class BaseClass extends TargetLogic {
             set_message("Attacking");
             clearFloodfillPath();
 
-            if (!this.kite) { stop(); }
+            if (!this.kite && character.name != "Jhlwarrior") { stop(); }
             attack(target);
         }
     }

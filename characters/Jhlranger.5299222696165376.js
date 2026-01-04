@@ -7,8 +7,6 @@ class MyChar extends BaseClass {
     lastFarmCheck = 0;
     aoeFarming = false;
 
-    myToons = ["Jhlwarrior", "Jhlmerch", "Jhlmage", "Jhlranger", "Jhlrogue", "Jhlpally"];
-
     skillMultiShot() {
         // Keeping your logic: Only if MP > 50%
         if (is_on_cooldown("attack") || character.mp <= character.max_mp * 0.50) { return; }
@@ -16,7 +14,7 @@ class MyChar extends BaseClass {
         let targets = [];
         for (let id in parent.entities) {
             let entity = parent.entities[id];
-            if ((this.myToons.includes(entity.target) || entity.target === "trololol")
+            if ((this.myCharacters.includes(entity.target) || entity.target === "trololol")
                 && entity.type === "monster" && this.is_in_range(entity)) {
                 targets.push(entity);
             }

@@ -2,10 +2,9 @@ load_code("healAndPot")
 load_code("ApiInteraction");
 
 function startSharedTasks() {
-    setInterval(playKeepAliveSound, 10 * 1005);
+    setInterval(playKeepAliveSound, 4 * 1000);
     setInterval(manageParty, 2100);
     setInterval(reviveSelf, 7000);
-    setInterval(playKeepAliveSound, 45 * 60 * 1000);
     setInterval(exportCharacterData, 6 * 1000);
     setInterval(crossMapHeal, 800);
 
@@ -23,7 +22,7 @@ function startSharedTasks() {
         setInterval(checkPotions, 9 * 1000);
     }
 
-    scaleUI(0.90);
+    scaleUI(0.80);
 }
 
 function graphicsLimiter() {

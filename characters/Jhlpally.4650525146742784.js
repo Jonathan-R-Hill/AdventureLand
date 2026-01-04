@@ -30,7 +30,6 @@ class MyChar extends BaseClass {
 		use_skill("smash", target);
 	}
 
-	// attackLogic should not block the loop unnecessarily
 	async attackLogic(target) {
 		this.useSkillSmash(target);
 		this.useSkillPurify(target);
@@ -59,7 +58,7 @@ async function mainLoop() {
 				myChar.lastFarmCheck = now;
 			}
 
-			myChar.useSkillSelfHeal();
+			// myChar.useSkillSelfHeal();
 
 			const target = myChar.targetLogicNonTank();
 			if (target) {

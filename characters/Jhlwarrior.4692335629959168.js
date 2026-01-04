@@ -7,7 +7,7 @@ graphicsLimiter();
 class MyChar extends BaseClass {
     monsterHunter = false;
     gettingNewTask = false;
-    pullThree = false;
+    pullThree = true;
 
     lastFarmCheck = 0;
     lastTaunt = 0;
@@ -122,10 +122,11 @@ class MyChar extends BaseClass {
 
         if (!this.is_in_range(target, "attack")) {
             set_message("waiting for target to come to me");
-        } else if (!is_on_cooldown("attack")) {
+        }
+        else if (!is_on_cooldown("attack")) {
             set_message("Attacking");
 
-            attack(target);
+            this.attack(target);
         }
     }
 
@@ -145,11 +146,17 @@ class MyChar extends BaseClass {
         await this.equipMainHandWeap();
         await this.equipOffHandWeap();
 
+        const attackers = this.getMobsAttackingMe();
         if (this.aoeTaunt) {
             if (get_player("Jhlpriest")) this.skillAoeTaunt();
-            circleCoords(this.circleX, this.circleY, this.radius);
+            circleTargets(attackers, this.circleX, this.circleY, this.radius);
             this.circleModeAttack(target);
-        } else {
+        }
+        else if (this.pullThree && attackers.length >= 3) {
+            circleTargets(attackers);
+            this.circleModeAttack(target);
+        }
+        else {
             await this.attack(target);
         }
     }
@@ -190,9 +197,6 @@ async function mainLoop() {
                     get_nearest_monster({ target: "Jhlranger" }) || get_nearest_monster({ target: "Jhlrogue" }) ||
                     get_nearest_monster({ target: "Jhlmage" }) || get_nearest_monster({ target: "Jhlpally" });
 
-                if (!target) {
-                    target = myChar.pullThree ? myChar.targetLogicTank3() : myChar.targetLogicTank();
-                }
             }
             else {
                 if (myChar.pullThree) { target = myChar.targetLogicTank3(); }

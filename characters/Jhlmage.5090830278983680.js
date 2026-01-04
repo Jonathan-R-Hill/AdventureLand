@@ -8,8 +8,8 @@ class MyChar extends BaseClass {
 	lastSnowmanCheck = 0;
 	cburstpull = false;
 
-	currentMobFarm = "Arctic Bee";
-	secondaryTarget = "Arctic Bee";
+	// currentMobFarm = "Arctic Bee";
+	// secondaryTarget = "Arctic Bee";
 
 	useSkillCBurst() {
 		const USE_ABOVE_MANA = 3000;
@@ -68,12 +68,32 @@ class MyChar extends BaseClass {
 		}
 	}
 
-	weaponLogic(target) {
+	async weaponLogic(target) {
+		let targets = [];
+		for (let id in parent.entities) {
+			let entity = parent.entities[id];
+			if ((this.myCharacters.includes(entity.target) || entity.target === "trololol")
+				&& entity.type === "monster" && this.is_in_range(entity)) {
+				targets.push(entity);
+			}
+		}
+
 		if (target.name == 'Snowman' && !target.s.fullguardx) {
 			this.equipItem("wand", 7, "mainhand");
-		} else {
-			this.equipItem("harbringer", 6, "mainhand");
+			this.equipItem("wbook0", 4, "offhand");
 		}
+		else if (targets.length >= 3) {
+			if (this.isEquipped("sparkstaff", 5)) { return; }
+
+			this.removeWeapons();
+			this.equipItem("sparkstaff", 5, "mainhand");
+		}
+		else {
+			this.equipItem("harbringer", 6, "mainhand");
+			this.equipItem("wbook0", 4, "offhand");
+		}
+
+		await sleep(20);
 	}
 }
 
@@ -82,7 +102,6 @@ const myChar = new MyChar(character.name);
 async function mainLoop() {
 	while (true) {
 		try {
-			// 1. Safety and CC check
 			if (myChar.gettingBuff || character.cc >= 190) {
 				await sleep(100);
 				continue;
@@ -90,7 +109,6 @@ async function mainLoop() {
 
 			const now = Date.now();
 
-			// 2. Snowman Port Logic (runs every 2 seconds)
 			if (now - myChar.lastSnowmanCheck > 2000) {
 				myChar.snowmanPort();
 				myChar.lastSnowmanCheck = now;
@@ -114,7 +132,7 @@ async function mainLoop() {
 				myChar.useSkillEnergize();
 				await myChar.useTemporalSurge(2000);
 
-				// myChar.weaponLogic(target);
+				await myChar.weaponLogic(target);
 
 				myChar.attack(target);
 			} else {

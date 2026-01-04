@@ -87,8 +87,9 @@ class Merchant extends combineItems {
 		setInterval(exportCharacterData, 8 * 1000);
 		setInterval(useSkillJacko, 1200);
 		setInterval(crossMapHeal, 800);
+		scaleUI(0.8);
 
-		setInterval(recoverOutOfCombat, 1000);
+		// setInterval(recoverOutOfCombat, 1000);
 		// setInterval(async () => await this.upgradeAllByName("cape", 5, 1), 1500);
 		// setTimeout(async () => {
 		// 	await this.buyBasicUpgrade();
@@ -834,7 +835,7 @@ class Merchant extends combineItems {
 
 		if (this.fishing && parent.distance(character, this.fishingLocation) <= 1) {
 			if (!character.c.fishing) {
-
+				potionUse();
 				equip(locate_item(fishingRodName));
 				await sleep(80);
 
@@ -864,6 +865,7 @@ class Merchant extends combineItems {
 		}
 
 		if (character.real_x == this.miningLocation.x && character.real_y == this.miningLocation.y && this.mining) {
+			potionUse();
 			await sleep(50);
 
 			equip(locate_item(pickaxeItemId));
@@ -877,15 +879,13 @@ class Merchant extends combineItems {
 	async healAndBuff() {
 		reviveSelf();
 		manageParty();
+		this.buffPartyWithMLuck();
 
 		if (this.fishing || this.mining) {
-			recoverOutOfCombat();
 			return;
 		}
 
 		potionUse();
-
-		this.buffPartyWithMLuck();
 		loot();
 	}
 
