@@ -72,11 +72,19 @@ libpango-1.0-0 libcairo2 libxshmfence1
 ```bash
 #!/bin/bash
 
-# Navigate to your project folder
-cd ~/al-headless || exit  # your file path here
+# Function to kill all chrome/chromium instances
+cleanup() {
+    echo "Terminal closed. Killing all bot instances..."
+    pkill -f chrome
+    pkill -f chromium
+    exit
+}
 
-# Run the bot
-echo "Starting Adventure Land Bots..."
+# Trap the EXIT signal (covers terminal closing, Ctrl+C, etc.)
+trap cleanup EXIT
+
+# Navigate and start the bots
+cd /home/hilly/al-headless || exit
 npm start
 ```
 
