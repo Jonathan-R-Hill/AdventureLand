@@ -65,7 +65,36 @@ sudo apt install -y libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 \
 libxkbcommon0 libxcomposite1 libxdamage1 libxrandr2 libgbm1 libasound2 \
 libpango-1.0-0 libcairo2 libxshmfence1
 
-## Notes / troubleshooting
+## QoL scripts to launch in one click!
+
+1. Create a luanch .sh script
+
+```bash
+#!/bin/bash
+
+# Navigate to your project folder
+cd ~/al-headless || exit  # your file path here
+
+# Run the bot
+echo "Starting Adventure Land Bots..."
+npm start
+```
+
+2. Create a desktop launcher
+
+```bash
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=AL Party Launcher
+Comment=Launch 4 Adventure Land Bots
+Exec=/bin/bash /home/USER/headlessBots.sh # your file path here
+Icon=chromium
+Terminal=true
+Categories=Network;WebBrowser;
+```
+
+# Notes / troubleshooting
 
 -   If you keep "verbatimModuleSyntax": true in tsconfig, you must set "type":"module" in package.json (recommended) or set verbatimModuleSyntax to false and adjust module/moduleResolution.
 -   The script will create ./profiles/<CharacterName> for browser user data automatically.
