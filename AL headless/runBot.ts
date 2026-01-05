@@ -6,15 +6,17 @@ const characters: string[] = [`Jhlmerch`, `Jhlwarrior`, `Jhlpriest`, `Jhlmage`];
 const region: string = `EU/II/`;
 
 async function startCharacter(charName: string, config: any) {
+	// Where character profiles get saved
+	const userDataDir = path.join(process.env.HOME || "", ".adventure_land_profiles", charName);
 	const browser = await puppeteer.launch({
 		headless: "shell",
 		defaultViewport: { width: 1280, height: 720 },
-		userDataDir: path.resolve(`./profiles/${charName}`),
+		userDataDir: userDataDir,
 		args: [
 			// "--no-sandbox",
 			// "--disable-setuid-sandbox",
-			"--disable-gpu",
-			"--disable-dev-shm-usage",
+			// "--disable-gpu",
+			// "--disable-dev-shm-usage",
 			// "--disable-accelerated-2d-canvas",
 			"--no-first-run",
 			// "--no-zygote",
@@ -53,7 +55,7 @@ async function startCharacter(charName: string, config: any) {
 
 	console.log(`[${charName}] Successfully logged in.. Navigating to character...`);
 
-	// Navigate to character specific URL
+	// Navigate to character specific URL to log into your char
 	await page.goto(`https://adventure.land/character/${charName}/in/${region}`, { waitUntil: "networkidle2" });
 
 	let codeStarted = false;
@@ -69,7 +71,7 @@ async function startCharacter(charName: string, config: any) {
 
 			await page.keyboard.press("\\");
 
-			// Option B: Backup - Click the UI if the keypress didn't trigger the modal
+			// Backup - Click the UI if the keypress didn't trigger the modal
 			const engageButton = `#codeui > div:nth-child(3) > div.clickable.iengagebutton`;
 			const isModalVisible = await page.$(engageButton);
 
@@ -79,7 +81,7 @@ async function startCharacter(charName: string, config: any) {
 				await page.waitForSelector(engageButton, { visible: true, timeout: 2000 }).catch(() => {});
 			}
 
-			// Click Engage
+			// Clicky
 			await page.click(engageButton).catch(() => {});
 
 			// Wait 5 seconds for the code to initialize before checking again
