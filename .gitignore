@@ -2,6 +2,12 @@
 clash/*
 libraries/*
 
+# my code
+profiles/
+.adventure_land_profiles/
+config.json
+package-lock.json
+
 .vs/*
 Properties/PublishProfiles/*
 config/*
