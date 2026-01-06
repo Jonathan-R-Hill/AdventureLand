@@ -343,7 +343,7 @@ class BaseClass extends TargetLogic {
             this.secondaryTarget = 'Arctic Bee';
         }
         else if (parent.S.icegolem) {
-            if (character.name == "Jhlmage") { return; }
+            //if (character.name == "Jhlmage") { return; }
 
             this.lastEvent = 'icegolem';
             if (!get_nearest_monster({ type: 'icegolem' })) { join('icegolem'); }

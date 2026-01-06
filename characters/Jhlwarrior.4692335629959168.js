@@ -11,7 +11,7 @@ class MyChar extends BaseClass {
 
     lastFarmCheck = 0;
     lastTaunt = 0;
-    aoeTaunt = false;
+    aoeTaunt = true;
 
     circleX = 1240;
     circleY = -100;
@@ -22,7 +22,7 @@ class MyChar extends BaseClass {
 
         const attackers = this.getMobsAttackingMe();
 
-        if (this.aoeTaunt || attackers.length >= 4) {
+        if (attackers.length >= 3) {
             this.equipItem("glolipop", 6, "mainhand");
         } else {
             this.equipItem(`fireblade`, 8, "mainhand");
@@ -34,7 +34,7 @@ class MyChar extends BaseClass {
 
         const attackers = this.getMobsAttackingMe();
 
-        if (this.aoeTaunt || attackers.length >= 4) {
+        if (attackers.length >= 3) {
             this.equipItem("ololipop", 5, "offhand");
         } else {
             this.equipItem(`fireblade`, 7, "offhand");
@@ -68,14 +68,15 @@ class MyChar extends BaseClass {
     skillAoeTaunt() {
         const now = Date.now();
 
-        if (now - this.lastTaunt < 6000) { return; }
+        if (!get_player(`Jhlpriest`)) { return; }
+        if (now - this.lastTaunt < 8000 || !this.getClosestMonsterByName(this.currentMobFarm)) { return; }
 
         use_skill("agitate");
         this.lastTaunt = now;
     }
 
     async skillStun() {
-        if (is_on_cooldown(`stomp`)) { return; }
+        if (is_on_cooldown(`stomp`) || character.hp > character.max_hp * 0.65) { return; }
         if (character.s.hardshell) { return; }
 
         this.removeWeapons();
@@ -133,12 +134,11 @@ class MyChar extends BaseClass {
     async attackLogic(target) {
 
         if (character.mp > 450) {
-            if (character.hp < character.max_hp * 0.65) {
-                await this.skillStun();
-            }
+            await this.skillStun();
 
             this.skillCharge();
             this.skillTaunt();
+
             this.skillHardShell();
             this.useSkillWarCry();
         }
@@ -147,12 +147,12 @@ class MyChar extends BaseClass {
         await this.equipOffHandWeap();
 
         const attackers = this.getMobsAttackingMe();
-        if (this.aoeTaunt) {
-            if (get_player("Jhlpriest")) this.skillAoeTaunt();
-            circleTargets(attackers, this.circleX, this.circleY, this.radius);
+        if (this.aoeTaunt) { this.skillAoeTaunt(); }
+        if (this.aoeTaunt && !this.pullThree) {
+            circleTargets(attackers); // , this.circleX, this.circleY, this.radius
             this.circleModeAttack(target);
         }
-        else if (this.pullThree && attackers.length >= 3) {
+        else if ((this.pullThree && attackers.length >= 3)) {
             circleTargets(attackers);
             this.circleModeAttack(target);
         }
@@ -164,6 +164,7 @@ class MyChar extends BaseClass {
 
 const myChar = new MyChar(character.name);
 let target = null;
+const healer = `Jhlpriest`
 
 async function mainLoop() {
     while (true) {
@@ -195,16 +196,12 @@ async function mainLoop() {
             if (["Dark Hound", "Poisio", "Wild Boar", "Water Spirit", "Hawk", "Scorpion", "Spider", "Mole"].includes(myChar.currentMobFarm)) {
                 target = get_nearest_monster({ target: "Jhlpriest" }) ||
                     get_nearest_monster({ target: "Jhlranger" }) || get_nearest_monster({ target: "Jhlrogue" }) ||
-                    get_nearest_monster({ target: "Jhlmage" }) || get_nearest_monster({ target: "Jhlpally" });
-
-            }
-            else {
-                if (myChar.pullThree) { target = myChar.targetLogicTank3(); }
-                else { target = await myChar.targetLogicTank(); }
+                    get_nearest_monster({ target: "Jhlmage" }) || get_nearest_monster({ target: "Jhlpally" }) ||
+                    get_nearest_monster({ target: "Jhlmerch" });
             }
 
             if (!target) {
-                target = myChar.pullThree ? myChar.targetLogicTank3() : myChar.targetLogicTank();
+                target = myChar.pullThree && get_player(healer) ? myChar.targetLogicTank3() : myChar.targetLogicTank();
             }
 
             if (target) {
@@ -217,7 +214,7 @@ async function mainLoop() {
             console.error("Main Loop Error:", e);
         }
 
-        let delay = is_moving(character) ? 100 : ((1 / character.frequency) * 1000) / 6;
+        let delay = ((1 / character.frequency) * 1000) / 6;
         await sleep(delay);
     }
 }

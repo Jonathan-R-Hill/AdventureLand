@@ -22,6 +22,13 @@ function startSharedTasks() {
         setInterval(checkPotions, 9 * 1000);
     }
 
+    setInterval(() => {
+        if (character.afk && !is_paused())
+            pause();
+        else if (!character.afk && is_paused())
+            pause();
+    }, 2000);
+
     scaleUI(0.80);
 }
 

@@ -87,6 +87,13 @@ class Merchant extends combineItems {
 		setInterval(exportCharacterData, 8 * 1000);
 		setInterval(useSkillJacko, 1200);
 		setInterval(crossMapHeal, 800);
+		setInterval(() => {
+			if (character.afk && !is_paused())
+				pause();
+			else if (!character.afk && is_paused())
+				pause();
+		}, 2000);
+
 		scaleUI(0.8);
 
 		// setInterval(recoverOutOfCombat, 1000);

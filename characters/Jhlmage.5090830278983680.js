@@ -11,7 +11,7 @@ class MyChar extends BaseClass {
 	// currentMobFarm = "Arctic Bee";
 	// secondaryTarget = "Arctic Bee";
 
-	useSkillCBurst() {
+	skillCBurst() {
 		const USE_ABOVE_MANA = 3000;
 		if (character.mp > USE_ABOVE_MANA && !is_on_cooldown("cburst") && this.cburstpull) {
 			let targets = [];
@@ -30,13 +30,13 @@ class MyChar extends BaseClass {
 		}
 	}
 
-	useSkillPort(char) {
+	skillPort(char) {
 		const USE_ABOVE_MANA = 920;
 		if (is_on_cooldown("magiport") || character.mp <= USE_ABOVE_MANA) { return; }
 		use_skill("magiport", char);
 	}
 
-	useSkillEnergize() {
+	skillEnergize() {
 		const priest = get_player("Jhlpriest");
 		const war = get_player("Jhlwarrior");
 
@@ -52,6 +52,12 @@ class MyChar extends BaseClass {
 		}
 	}
 
+	skillBlink(x, y) {
+		if (is_on_cooldown(`blink`) || character.mp < 1800) { return; }
+
+		use_skill(`blink`, [x, y]);
+	}
+
 	snowmanPort() {
 		if (!parent.S || !parent.S.snowman || !parent.S.snowman.live) { return; }
 		const snowman = get_nearest_monster({ type: "snowman" });
@@ -61,10 +67,10 @@ class MyChar extends BaseClass {
 		}
 
 		if (!get_player("Jhlpriest")) {
-			this.useSkillPort("Jhlpriest");
+			this.skillPort("Jhlpriest");
 		}
 		if (!get_player("Jhlranger")) {
-			this.useSkillPort("Jhlranger");
+			this.skillPort("Jhlranger");
 		}
 	}
 

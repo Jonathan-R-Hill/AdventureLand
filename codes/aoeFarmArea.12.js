@@ -16,7 +16,7 @@ function circleTargets(mobs, fixedX = null, fixedY = null, radius = 35) {
 
     // Update Angle
     // Lower = Slower, Higher = Faster. 
-    const rotationSpeed = 0.25;
+    const rotationSpeed = 0.30;
     orbitAngle += rotationSpeed;
 
     // Reset angle to keep numbers small (Math.PI * 2 is a full circle)
