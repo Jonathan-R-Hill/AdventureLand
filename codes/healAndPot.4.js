@@ -50,11 +50,6 @@ function checkPotions() {
 
     const player = get_player(character.name);
 
-    console.log(
-        `${character.name} - Potion Check - HP: ${hpCount}, MP: ${mpCount}
-        ${player.x},${player.y},${player.map}`
-    );
-
     if (hpCount < MIN_POTIONS) {
         send_cm("Jhlmerch", `need_Hpots ${player.x},${player.y},${player.map}`);
     }

@@ -220,7 +220,6 @@ class TargetLogic {
         const attackers = this.getMobsAttackingMe();
 
         const attackerCount = attackers.length;
-        console.log(`Currently tanking ${attackerCount} mobs`);
 
         // If already tanking 3+, STOP pulling new mobs
         if (attackerCount >= 3) {

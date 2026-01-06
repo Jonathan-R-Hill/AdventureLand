@@ -37,19 +37,23 @@ class MyChar extends BaseClass {
 	}
 
 	skillEnergize() {
+		if (is_on_cooldown("energize")) { return; }
 		const priest = get_player("Jhlpriest");
 		const war = get_player("Jhlwarrior");
 
-		if (character.mp < 1000) { return; }
+		if (character.mp < 1200) { return; }
 
 		if (priest && priest.mp <= 600 && !is_on_cooldown("energize")) {
 			use_skill("energize", priest);
 			return;
 		}
+
 		if (war && war.mp <= 200 && !is_on_cooldown("energize")) {
 			use_skill("energize", war); // Corrected to target war
 			return;
 		}
+
+		use_skill("energize", `Jhlmage`);
 	}
 
 	skillBlink(x, y) {
@@ -135,7 +139,7 @@ async function mainLoop() {
 				if (myChar.kite) { myChar.kiteTarget(); }
 				myChar.moveAwayFromWarrior();
 
-				myChar.useSkillEnergize();
+				myChar.skillEnergize();
 				await myChar.useTemporalSurge(2000);
 
 				await myChar.weaponLogic(target);
