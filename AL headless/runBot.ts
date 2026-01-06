@@ -5,8 +5,25 @@ import path from "path";
 const characters: string[] = [`Jhlwarrior`, `Jhlpriest`, `Jhlmage`, `Jhlmerch`];
 const region: string = `EU/II/`;
 
+async function clearCache(userDataDir: string) {
+	try {
+		const cachePath = path.join(userDataDir, "Default", "Cache");
+		const codeCachePath = path.join(userDataDir, "Default", "Code Cache");
+
+		// We only delete the Cache, not the LocalStorage (which holds your settings/code)
+		await fs.rm(cachePath, { recursive: true, force: true }).catch(() => {});
+		await fs.rm(codeCachePath, { recursive: true, force: true }).catch(() => {});
+		console.log(`[System] Cleared cache for ${path.basename(userDataDir)}`);
+	} catch (e) {
+		// Ignore errors
+	}
+}
+
 async function startCharacter(charName: string, config: any) {
 	const userDataDir = path.join(process.env.HOME || "", ".adventure_land_profiles", charName);
+
+	// Clear the old cache we don't care for old files..
+	await clearCache(userDataDir);
 
 	// Launch browser
 	const browser = await puppeteer.launch({
@@ -19,7 +36,7 @@ async function startCharacter(charName: string, config: any) {
 			"--disable-extensions",
 			"--disable-component-update",
 			"--mute-audio",
-			"--js-flags=--max-old-space-size=512",
+			"--js-flags=--max-old-space-size=512 --expose-gc",
 			// CPU Optimizations
 			"--disable-gpu", // Disables hardware acceleration
 			"--disable-software-rasterizer",
@@ -35,6 +52,21 @@ async function startCharacter(charName: string, config: any) {
 
 	try {
 		const page = await browser.newPage();
+
+		await page.evaluateOnNewDocument(() => {
+			const style = document.createElement("style");
+			style.innerHTML = `
+                /* Stop all CSS animations */
+                * { animation: none !important; transition: none !important; }
+                
+                /* Hide background images */
+                body { background-image: none !important; background: #000 !important; }
+                
+                /* Hide heavy UI elements */
+                #game, #bottommode, .utop { visibility: hidden !important; }
+            `;
+			document.head.appendChild(style);
+		});
 
 		console.log(`[${charName}] Navigating to Adventure Land...`);
 		await page.goto(`https://adventure.land/`, { waitUntil: "networkidle2" });
@@ -95,46 +127,86 @@ async function startCharacter(charName: string, config: any) {
 		await page.keyboard.press("Escape").catch(() => {});
 		console.log(`[${charName}] Bot active.`);
 
-		console.log(`[${charName}] Optimizing for headless mode...`);
+		// ---------- Optimization Logic ---------- //
+		console.log(`[${charName}] Attempting to optimize CPU usage...`);
 
-		try {
-			// Find the game iframe
-			const frameElement = await page.$("iframe");
-			const frame = await frameElement?.contentFrame();
+		let isOptimized = false;
+		// Try 15 times, waiting 2 seconds between attempts (Total 30s)
+		for (let i = 0; i < 15; i++) {
+			try {
+				const frameElement = await page.$("iframe");
+				const frame = await frameElement?.contentFrame();
 
-			if (frame) {
-				await frame.evaluate(() => {
-					// Disable rendering if the function exists in the iframe context
-					if (typeof (window as any).disable_rendering === "function") {
-						(window as any).disable_rendering();
-					}
-
-					const canvas = document.querySelector("canvas");
-					if (canvas) canvas.style.display = "none";
-
-					// Stop the PIXI ticker
-					// @ts-ignore
-					if (window.PIXI && window.PIXI.ticker && window.PIXI.ticker.shared) {
+				if (frame) {
+					// We ask the browser: Did the optimization work?
+					const success = await frame.evaluate(() => {
+						// Check if the game engine is actually loaded yet
 						// @ts-ignore
-						window.PIXI.ticker.shared.stop();
+						if (!window.PIXI || !window.PIXI.ticker) return false;
+
+						// Stop Tickers
+						// @ts-ignore
+						if (window.PIXI.ticker.shared) window.PIXI.ticker.shared.stop();
+						// @ts-ignore
+						if (window.PIXI.ticker.system) window.PIXI.ticker.system.stop();
+
+						// Hide Canvas
+						const canvas = document.querySelector("canvas");
+						if (canvas) canvas.style.display = "none";
+
+						// Force Cleanup
+						// @ts-ignore
+						if (window.gc) window.gc();
+
+						return true;
+					});
+
+					if (success) {
+						console.log(`[${charName}] Optimization applied successfully.`);
+						isOptimized = true;
+						break;
 					}
-				});
+				}
+			} catch (e) {
+				// Ignore errors we don't care for them
 			}
-		} catch (e) {
-			console.log(`[${charName}] Note: Optimization commands skipped (Game still loading)`);
+
+			// Wait 2 sec before trying again
+			await new Promise((r) => setTimeout(r, 2000));
+		}
+
+		if (!isOptimized) {
+			console.warn(`[${charName}] Warning: Could not optimize PIXI (Game might be lagging or stuck).`);
 		}
 
 		// ---------- Watchdog Loop ---------- //
 		while (true) {
-			await new Promise((r) => setTimeout(r, 40 * 1000));
+			await new Promise((r) => setTimeout(r, 12 * 1000));
+
+			// Check if browser crashed
 			if (page.isClosed()) throw new Error("Page closed");
+
+			// Check for Disconnects
 			const isDisconnected = await page.evaluate(() => {
 				return (
 					document.body.innerText.includes("Disconnected") || document.querySelector(".gameerror") !== null
 				);
 			});
-
 			if (isDisconnected) throw new Error("Game Server Disconnected");
+
+			// CHECK IF CODE STOPPED
+			const isCodePaused = await page.evaluate(() => {
+				// If the "Engage" button is visible, it means the code is NOT running.
+				// We check for the class '.iengagebutton' and if it is visible to the user.
+				const engageBtn = document.querySelector(".iengagebutton");
+				if (engageBtn && (engageBtn as HTMLElement).offsetParent !== null) {
+					return true;
+				}
+
+				return false;
+			});
+
+			if (isCodePaused) throw new Error("Code execution stopped unexpectedly (Engage button visible)");
 		}
 	} finally {
 		console.log(`[${charName}] Shutting down browser instance...`);
@@ -152,8 +224,8 @@ async function startCharacterWithRecovery(charName: string, config: any) {
 		const lockPath = path.join(process.env.HOME || "", ".adventure_land_profiles", charName, "SingletonLock");
 		await fs.rm(lockPath, { force: true }).catch(() => {});
 
-		console.log(`[${charName}] Restarting in 20 seconds...`);
-		setTimeout(() => startCharacterWithRecovery(charName, config), 20000);
+		console.log(`[${charName}] Restarting in 12 seconds...`);
+		setTimeout(() => startCharacterWithRecovery(charName, config), 12 * 1000);
 	}
 }
 
@@ -163,6 +235,7 @@ async function run() {
 	for (const char of characters) {
 		startCharacterWithRecovery(char, config);
 		console.log(`[SYSTEM] Waiting 1.5s before starting next character...`);
+
 		await new Promise((r) => setTimeout(r, 1500));
 	}
 
