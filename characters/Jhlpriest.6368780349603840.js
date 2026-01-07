@@ -20,6 +20,27 @@ class MyChar extends BaseClass {
         lowMembers = partyHealth.filter(m => m.hp < m.max_hp * 0.85);
         if (lowMembers.length > 0 && !is_on_cooldown("heal")) {
             use_skill("heal", lowMembers[0].name);
+            return;
+        }
+
+        let targets = Object.values(parent.entities).filter(p =>
+            p.type === "character" &&
+            this.myCharacters.includes(p.name) &&
+            !p.rip
+        );
+
+        // Don't forget to add yourself to the list!
+        targets.push(character);
+
+        for (let target of targets) {
+            if (target.hp < target.max_hp * 0.70) {
+                if (distance(character, target) <= character.range) {
+                    if (!is_on_cooldown("heal")) {
+                        use_skill("heal", target.id || target.name);
+                        return;
+                    }
+                }
+            }
         }
     }
 

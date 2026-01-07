@@ -70,6 +70,20 @@ class TargetLogic {
         return closest;
     }
 
+    findBosses() {
+        const target = this.bosses
+            .map(name => this.getClosestMonsterByName(name))
+            .find(mon => mon) // first non-null result
+
+        if (target && !target.s.fullguardx) {
+            change_target(target);
+
+            return target;
+        }
+
+        return null;
+    }
+
     findTarget(target) {
         const playerAtk = ["altfire", "ryaaahs", "pbuffme", "learningad", "merchire"];
 
@@ -213,7 +227,7 @@ class TargetLogic {
     targetLogicTank3() {
         if (!this.attackMode || character.rip || smart.moving) return null;
 
-        if (this.eventsEnabled && parent.S.snowman.live) {
+        if (this.eventsEnabled && (parent.S.snowman.live || parent.S.icegolem)) {
             return this.targetLogicTank();
         }
 

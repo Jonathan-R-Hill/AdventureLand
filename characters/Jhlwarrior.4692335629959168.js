@@ -70,7 +70,14 @@ class MyChar extends BaseClass {
 
         if (!get_player(`Jhlpriest`)) { return; }
         if (now - this.lastTaunt < 8000 || !this.getClosestMonsterByName(this.currentMobFarm)) { return; }
+        const farmMob = this.getClosestMonsterByName(this.currentMobFarm);
 
+        // Only proceed if mob exists AND is within 100 units
+        if (farmMob && this.distance(character, farmMob) <= 75) {
+            use_skill("agitate");
+            this.lastTaunt = now;
+            set_message("AOE Taunting!");
+        }
         use_skill("agitate");
         this.lastTaunt = now;
     }
@@ -127,6 +134,8 @@ class MyChar extends BaseClass {
         else if (!is_on_cooldown("attack")) {
             set_message("Attacking");
 
+            target = get_nearest_monster();
+            change_target(target);
             this.attack(target);
         }
     }
@@ -146,10 +155,15 @@ class MyChar extends BaseClass {
         await this.equipMainHandWeap();
         await this.equipOffHandWeap();
 
+        if (this.bosses.includes(target.name)) {
+            await this.attack(target);
+            return;
+        }
+
         const attackers = this.getMobsAttackingMe();
         if (this.aoeTaunt) { this.skillAoeTaunt(); }
         if (this.aoeTaunt && !this.pullThree) {
-            circleTargets(attackers); // , this.circleX, this.circleY, this.radius
+            circleTargets(attackers, this.circleX, this.circleY, this.radius);
             this.circleModeAttack(target);
         }
         else if ((this.pullThree && attackers.length >= 3)) {
@@ -182,6 +196,7 @@ async function mainLoop() {
                 await getNewTask();
                 const targetInfo = await setNewTask();
                 handleNewTarget(targetInfo ? targetInfo.travel : "spider");
+
                 continue;
             }
 
@@ -194,10 +209,13 @@ async function mainLoop() {
 
             // Target & attack
             if (["Dark Hound", "Poisio", "Wild Boar", "Water Spirit", "Hawk", "Scorpion", "Spider", "Mole"].includes(myChar.currentMobFarm)) {
-                target = get_nearest_monster({ target: "Jhlpriest" }) ||
+                target = get_nearest_monster({ target: "Jhlpriest" }) || get_nearest_monster({ target: "Jhlmerch" }) ||
                     get_nearest_monster({ target: "Jhlranger" }) || get_nearest_monster({ target: "Jhlrogue" }) ||
-                    get_nearest_monster({ target: "Jhlmage" }) || get_nearest_monster({ target: "Jhlpally" }) ||
-                    get_nearest_monster({ target: "Jhlmerch" });
+                    get_nearest_monster({ target: "Jhlmage" }) || get_nearest_monster({ target: "Jhlpally" });
+            }
+
+            if (parent.S.snowman.live || parent.S.icegolem) {
+                target = myChar.targetLogicTank();
             }
 
             if (!target) {
