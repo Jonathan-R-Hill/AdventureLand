@@ -26,27 +26,33 @@ async function startCharacter(charName: string, config: any) {
 	await clearCache(userDataDir);
 
 	// Launch browser
+	// xvfb-run --server-args="-screen 0 640x480x24" npm start
 	const browser = await puppeteer.launch({
-		headless: "shell",
-		defaultViewport: { width: 1280, height: 720 },
+		headless: false, // Alt: "shell"
+		executablePath: "/usr/bin/chromium", // check: which chromium for le path   alt: comment this line out
+		defaultViewport: { width: 640, height: 480 },
 		userDataDir: userDataDir,
 		args: [
+			"--window-size=640,480",
+			"--no-sandbox",
+			"--disable-setuid-sandbox",
+			"--disable-gpu",
+			"--disable-software-rasterizer",
+			"--single-process",
+			"--no-zygote",
+			"--disable-web-security",
+			"--mute-audio",
 			"--no-first-run",
 			"--disable-dev-shm-usage",
-			"--disable-extensions",
-			"--disable-component-update",
-			"--mute-audio",
-			"--js-flags=--max-old-space-size=512 --expose-gc",
-			// CPU Optimizations
-			"--disable-gpu", // Disables hardware acceleration
-			"--disable-software-rasterizer",
-			"--disable-gl-drawing-for-tests",
-			"--disable-canvas-aa",
-			"--disable-2d-canvas-clip-stacking",
+			"--disable-background-networking",
+			"--disable-background-timer-throttling",
+			"--disable-backgrounding-occluded-windows",
+			"--disable-renderer-backgrounding",
+			"--disable-ipc-flooding-protection",
 			"--disable-breakpad",
-			"--proxy-server='direct://'",
+			"--js-flags=--max-old-space-size=512 --expose-gc",
+			"--proxy-server=direct://",
 			"--proxy-bypass-list=*",
-			// "--no-sandbox",
 		],
 	});
 

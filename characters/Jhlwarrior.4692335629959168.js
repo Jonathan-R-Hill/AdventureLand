@@ -161,12 +161,19 @@ class MyChar extends BaseClass {
         }
 
         const attackers = this.getMobsAttackingMe();
+        // Prioritize attackers matching currentMobFarm first
+        attackers.sort((a, b) => {
+            const aMatch = a && a.name === this.currentMobFarm ? 0 : 1;
+            const bMatch = b && b.name === this.currentMobFarm ? 0 : 1;
+            return aMatch - bMatch;
+        });
+        console.log(attackers);
         if (this.aoeTaunt) { this.skillAoeTaunt(); }
         if (this.aoeTaunt && !this.pullThree) {
             circleTargets(attackers, this.circleX, this.circleY, this.radius);
             this.circleModeAttack(target);
         }
-        else if ((this.pullThree && attackers.length >= 3)) {
+        else if ((this.pullThree && attackers.length >= 3 && attackers[0].name == this.currentMobFarm)) {
             circleTargets(attackers);
             this.circleModeAttack(target);
         }

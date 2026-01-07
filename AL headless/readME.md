@@ -67,25 +67,59 @@ libpango-1.0-0 libcairo2 libxshmfence1
 
 ## QoL scripts to launch in one click!
 
-1. Create a luanch .sh script
+1. Create a luanch .sh script comment/uncomment according to your setup
 
 ```bash
 #!/bin/bash
 
-# Function to kill all chrome/chromium instances
+# using Xvfb
+# Function to kill all chrome/chromium and xvfb instances
 cleanup() {
     echo "Terminal closed. Killing all bot instances..."
     pkill -f chrome
     pkill -f chromium
+    pkill -f Xvfb
     exit
 }
 
 # Trap the EXIT signal (covers terminal closing, Ctrl+C, etc.)
 trap cleanup EXIT
 
-# Navigate and start the bots
+# Navigate to directory
 cd /home/hilly/al-headless || exit
-npm start
+
+# Ensure Xvfb is installed before running
+if ! command -v xvfb-run &> /dev/null; then
+    echo "Error: xvfb-run is not installed. Run: sudo apt install xvfb"
+    exit 1
+fi
+
+echo "Starting bots in virtual framebuffer..."
+
+# Start the bots using Xvfb
+# --server-args defines the 'fake' monitor resolution and bit depth
+xvfb-run --server-args="-screen 0 800x600x24" npm start
+
+
+# OLD using shell in code
+#!/bin/bash
+
+# Function to kill all chrome/chromium instances
+#cleanup() {
+#    echo "Terminal closed. Killing all bot instances..."
+#    pkill -f chrome
+#    pkill -f chromium
+#    exit
+#}
+
+# Trap the EXIT signal (covers terminal closing, Ctrl+C, etc.)
+#trap cleanup EXIT
+
+# Navigate and start the bots
+#cd /home/hilly/al-headless || exit
+#npm start
+
+
 ```
 
 2. Create a desktop launcher

@@ -208,8 +208,7 @@ class TargetLogic {
 
             if (e.s.fullguardx) { continue; }
             if (
-                e.type == "monster" &&
-                !e.dead &&
+                e.type == "monster" && !e.dead &&
                 (this.bosses.includes(e.name) || e.name == this.currentMobFarm || e.name == this.secondaryTarget) &&
                 get_target_of(e) !== character
             ) {

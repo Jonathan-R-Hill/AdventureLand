@@ -8,6 +8,7 @@ profiles/
 config.json
 package-lock.json
 
+.vs/
 .vs/*
 Properties/PublishProfiles/*
 config/*
@@ -17,6 +18,9 @@ Properties/launchSettings.json
 
 
 # Build results
+ALHeadlessCppWindows/ALHeadlessCpp
+ALHeadlessCppWindows/ALHeadlessCpp/
+ALHeadlessCppWindows/ALHeadlessCpp/*
 bin/
 obj/
 
