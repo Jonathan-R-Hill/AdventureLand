@@ -2,7 +2,7 @@ import puppeteer from "puppeteer";
 import fs from "fs/promises";
 import path from "path";
 
-const characters: string[] = [`Jhlpriest`, `Jhlwarrior`, `Jhlmage`, `Jhlmerch`];
+const characters: string[] = [`Jhlwarrior`, `Jhlpriest`, `Jhlmage`, `Jhlmerch`];
 const region: string = `EU/II/`;
 
 async function clearCache(userDataDir: string) {
@@ -10,7 +10,7 @@ async function clearCache(userDataDir: string) {
 		const cachePath = path.join(userDataDir, "Default", "Cache");
 		const codeCachePath = path.join(userDataDir, "Default", "Code Cache");
 
-		// We only delete the Cache, not the LocalStorage <- don't ask me how I learned that..
+		// We only delete the Cache, not the LocalStorage (which holds your settings/code)
 		await fs.rm(cachePath, { recursive: true, force: true }).catch(() => {});
 		await fs.rm(codeCachePath, { recursive: true, force: true }).catch(() => {});
 		console.log(`[System] Cleared cache for ${path.basename(userDataDir)}`);
@@ -58,17 +58,6 @@ async function startCharacter(charName: string, config: any) {
 
 	try {
 		const page = await browser.newPage();
-
-		await page.setRequestInterception(true);
-
-		page.on("request", (req) => {
-			const type = req.resourceType();
-			if (type === "font" || type === "media") {
-				req.abort();
-			} else {
-				req.continue();
-			}
-		});
 
 		await page.evaluateOnNewDocument(() => {
 			const style = document.createElement("style");
@@ -165,7 +154,7 @@ async function startCharacter(charName: string, config: any) {
 						// @ts-ignore
 						if (window.PIXI.ticker.shared) window.PIXI.ticker.shared.stop();
 						// @ts-ignore
-						if (window.PIXI.ticker.system) window.PIXI.ticker.system.stop(); // yeah turns out we don't actually need this at all
+						if (window.PIXI.ticker.system) window.PIXI.ticker.system.stop();
 
 						// Hide Canvas
 						const canvas = document.querySelector("canvas");
@@ -181,7 +170,6 @@ async function startCharacter(charName: string, config: any) {
 					if (success) {
 						console.log(`[${charName}] Optimization applied successfully.`);
 						isOptimized = true;
-
 						break;
 					}
 				}
@@ -198,13 +186,8 @@ async function startCharacter(charName: string, config: any) {
 		}
 
 		// ---------- Watchdog Loop ---------- //
-		let iterationCount = 0;
-		const GC_THRESHOLD = 50;
-
-		let now = new Date().toLocaleString();
 		while (true) {
 			await new Promise((r) => setTimeout(r, 12 * 1000));
-			iterationCount++;
 
 			// Check if browser crashed
 			if (page.isClosed()) throw new Error("Page closed");
@@ -230,26 +213,6 @@ async function startCharacter(charName: string, config: any) {
 			});
 
 			if (isCodePaused) throw new Error("Code execution stopped unexpectedly (Engage button visible)");
-
-			if (iterationCount >= GC_THRESHOLD) {
-				now = now = new Date().toLocaleString();
-				console.log(`${now} - [${charName}] Running scheduled memory maintenance...`);
-				await page
-					.evaluate(() => {
-						// Clear DOM
-						const gameLog = document.querySelector("#gamelog");
-						const chatLog = document.querySelector("#chatlog");
-						if (gameLog) gameLog.innerHTML = "";
-						if (chatLog) chatLog.innerHTML = "";
-
-						// Clear JS Heap
-						// @ts-ignore
-						if (window.gc) window.gc();
-					})
-					.catch(() => {});
-
-				iterationCount = 0; // Reset counter
-			}
 		}
 	} finally {
 		console.log(`[${charName}] Shutting down browser instance...`);
@@ -261,14 +224,13 @@ async function startCharacterWithRecovery(charName: string, config: any) {
 	try {
 		await startCharacter(charName, config);
 	} catch (error: any) {
-		const now = new Date().toLocaleString();
-		console.error(`${now} - [${charName}] [${now}] ⚠️ ERROR: ${error.message}`);
+		console.error(`[${charName}] ⚠️ ERROR: ${error.message}`);
 
 		// ----------  Cleanup singleton lock ---------- //
 		const lockPath = path.join(process.env.HOME || "", ".adventure_land_profiles", charName, "SingletonLock");
 		await fs.rm(lockPath, { force: true }).catch(() => {});
 
-		console.log(`${now} - [${charName}] Restarting in 12 seconds...`);
+		console.log(`[${charName}] Restarting in 12 seconds...`);
 		setTimeout(() => startCharacterWithRecovery(charName, config), 12 * 1000);
 	}
 }
