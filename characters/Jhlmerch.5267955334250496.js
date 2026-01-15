@@ -82,7 +82,7 @@ class Merchant extends combineItems {
 			holidayExchange: 0,
 		};
 
-		setInterval(async () => await this.mainLoop(), 1000);
+		setInterval(async () => await this.mainLoop(), 1000); 3
 		// setInterval(snowball, 4200);
 		setInterval(exportCharacterData, 8 * 1000);
 		setInterval(useSkillJacko, 1200);
@@ -97,7 +97,7 @@ class Merchant extends combineItems {
 		scaleUI(0.8);
 
 		// setInterval(recoverOutOfCombat, 1000);
-		// setInterval(async () => await this.upgradeAllByName("cape", 5, 1), 1500);
+		// setInterval(async () => await this.upgradeAllByName("sshield", 7, 1), 1500);
 		// setTimeout(async () => {
 		// 	await this.buyBasicUpgrade();
 		// 	setTimeout(async () => { await this.buyBasicUpgrade(); }, 2000);
@@ -213,7 +213,7 @@ class Merchant extends combineItems {
 			}
 		}
 
-		if (now - this.lastRun.holidayExchange > (15 * 60 * 1000)) {
+		if (now - this.lastRun.holidayExchange > (15 * 60 * 1000) && parent.S.holidayseason) {
 			if (!this.checkIfDoingSOmething()) {
 				this.lastRun.holidayExchange = now;
 				await this.exchangeHolidayItems();
@@ -668,14 +668,26 @@ class Merchant extends combineItems {
 	// Auto Exchange
 	async exchangeItems() {
 		this.busy = true;
-
+		let exchangeableItems;
 		await smart_move({ to: "bank" });
 
-		const exchangeableItems = [
-			{ item: "gem0", min: 1, x: 30.92, y: -381.1, map: "main" },
-			{ item: "gem1", min: 1, x: 30.92, y: -381.1, map: "main" },
-			{ item: "seashell", min: 20, x: -1496, y: 580, map: "main" }
-		];
+		if (!parent.S.holidayseason) {
+			exchangeableItems = [
+				{ item: "gem0", min: 1, x: 30.92, y: -381.1, map: "main" },
+				{ item: "gem1", min: 1, x: 30.92, y: -381.1, map: "main" },
+				{ item: "candycane", min: 1, x: 30.92, y: -381.1, map: "main" },
+				{ item: "mistletoe", min: 1, x: 30.92, y: -381.1, map: "main" },
+				{ item: "ornament", min: 1, x: 30.92, y: -381.1, map: "main" },
+				{ item: "seashell", min: 20, x: -1496, y: 580, map: "main" }
+			];
+		}
+		else {
+			exchangeableItems = [
+				{ item: "gem0", min: 1, x: 30.92, y: -381.1, map: "main" },
+				{ item: "gem1", min: 1, x: 30.92, y: -381.1, map: "main" },
+				{ item: "seashell", min: 20, x: -1496, y: 580, map: "main" }
+			]
+		}
 
 		let itemSlot = -1;
 		let currentKey = null;

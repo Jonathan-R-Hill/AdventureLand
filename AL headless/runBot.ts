@@ -198,13 +198,12 @@ async function startCharacter(charName: string, config: any) {
 		}
 
 		// ---------- Watchdog Loop ---------- //
-		let iterationCount = 0;
-		const GC_THRESHOLD = 50;
+		let loopCount = 0;
 
 		let now = new Date().toLocaleString();
 		while (true) {
 			await new Promise((r) => setTimeout(r, 12 * 1000));
-			iterationCount++;
+			loopCount++;
 
 			// Check if browser crashed
 			if (page.isClosed()) throw new Error("Page closed");
@@ -231,24 +230,21 @@ async function startCharacter(charName: string, config: any) {
 
 			if (isCodePaused) throw new Error("Code execution stopped unexpectedly (Engage button visible)");
 
-			if (iterationCount >= GC_THRESHOLD) {
-				now = now = new Date().toLocaleString();
-				console.log(`${now} - [${charName}] Running scheduled memory maintenance...`);
+			if (loopCount % 15 === 0) {
+				now = new Date().toLocaleString();
+				console.log(`${now} - [${charName}] HTML cleanup.`);
 				await page
 					.evaluate(() => {
-						// Clear DOM
-						const gameLog = document.querySelector("#gamelog");
-						const chatLog = document.querySelector("#chatlog");
-						if (gameLog) gameLog.innerHTML = "";
-						if (chatLog) chatLog.innerHTML = "";
+						const gl = document.getElementById("gamelog");
+						const cl = document.getElementById("chatlog");
+						if (gl) gl.innerHTML = "";
+						if (cl) cl.innerHTML = "";
 
-						// Clear JS Heap
+						// Optional: Clear PIXI texture cache if it exists
 						// @ts-ignore
-						if (window.gc) window.gc();
+						if (window.PIXI && window.PIXI.utils) window.PIXI.utils.clearTextureCache();
 					})
 					.catch(() => {});
-
-				iterationCount = 0; // Reset counter
 			}
 		}
 	} finally {

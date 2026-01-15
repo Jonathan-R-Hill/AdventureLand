@@ -7,11 +7,11 @@ graphicsLimiter();
 class MyChar extends BaseClass {
     monsterHunter = false;
     gettingNewTask = false;
-    pullThree = true;
+    pullThree = false;
 
     lastFarmCheck = 0;
     lastTaunt = 0;
-    aoeTaunt = true;
+    aoeTaunt = false;
 
     circleX = 1240;
     circleY = -100;
@@ -141,7 +141,6 @@ class MyChar extends BaseClass {
     }
 
     async attackLogic(target) {
-
         if (character.mp > 450) {
             await this.skillStun();
 
@@ -167,13 +166,16 @@ class MyChar extends BaseClass {
             const bMatch = b && b.name === this.currentMobFarm ? 0 : 1;
             return aMatch - bMatch;
         });
-        console.log(attackers);
-        if (this.aoeTaunt) { this.skillAoeTaunt(); }
+
+        if (this.aoeTaunt && !parent.S.snowman.live && !parent.S.icegolem) {
+            this.skillAoeTaunt();
+        }
+
         if (this.aoeTaunt && !this.pullThree) {
             circleTargets(attackers, this.circleX, this.circleY, this.radius);
             this.circleModeAttack(target);
         }
-        else if ((this.pullThree && attackers.length >= 3 && attackers[0].name == this.currentMobFarm)) {
+        else if (this.pullThree && attackers.length >= 3 && attackers[0].name == this.currentMobFarm) {
             circleTargets(attackers);
             this.circleModeAttack(target);
         }
@@ -215,17 +217,17 @@ async function mainLoop() {
             }
 
             // Target & attack
-            if (["Dark Hound", "Poisio", "Wild Boar", "Water Spirit", "Hawk", "Scorpion", "Spider", "Mole"].includes(myChar.currentMobFarm)) {
+            if (["Dark Hound", "Wild Boar", "Water Spirit", "Hawk", "Scorpion", "Spider", "Mole"].includes(myChar.currentMobFarm)) {
                 target = get_nearest_monster({ target: "Jhlpriest" }) || get_nearest_monster({ target: "Jhlmerch" }) ||
                     get_nearest_monster({ target: "Jhlranger" }) || get_nearest_monster({ target: "Jhlrogue" }) ||
                     get_nearest_monster({ target: "Jhlmage" }) || get_nearest_monster({ target: "Jhlpally" });
             }
 
-            if (parent.S.snowman.live || parent.S.icegolem) {
+            if (parent.S.snowman || parent.S.icegolem) {
                 target = myChar.targetLogicTank();
             }
 
-            if (!target) {
+            if (!target || target.dead) {
                 target = myChar.pullThree && get_player(healer) ? myChar.targetLogicTank3() : myChar.targetLogicTank();
             }
 

@@ -182,7 +182,7 @@ class TargetLogic {
         let target = get_targeted_monster();
 
         // Current farm mob
-        if (target && target.name !== this.currentMobFarm && target.name !== this.secondaryTarget) {
+        if (target && target.name != this.currentMobFarm && target.name != this.secondaryTarget) {
             target = null;
         }
 
@@ -284,7 +284,7 @@ class BaseClass extends TargetLogic {
 
         this.kite = false;
         this.attackMode = true;
-        this.followLeader = true;
+        this.followLeader = false;
         this.fightTogeather = false;
 
         this.surge = false;
@@ -293,8 +293,8 @@ class BaseClass extends TargetLogic {
         this.gettingBuff = false;
         this.movingToEvent = false;
 
-        this.currentMobFarm = "Dark Hound";
-        this.secondaryTarget = "Dark Hound";
+        this.currentMobFarm = "Poisio";
+        this.secondaryTarget = "Bee";
 
         this.lastTarget = "";
         this.lastEvent = null;
