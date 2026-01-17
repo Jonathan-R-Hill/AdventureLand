@@ -81,8 +81,8 @@ class MyChar extends BaseClass {
 	async weaponLogic(target) {
 		let targets = [];
 		for (let id in parent.entities) {
-			let entity = parent.entities[id];
-			if ((this.myCharacters.includes(entity.target) || entity.target === "trololol")
+			let entity = parent.entities[id]; // this.myCharacters.includes(entity.target)
+			if ((entity.target === "Jhlwarrior" || entity.target === "trololol")
 				&& entity.type === "monster" && this.is_in_range(entity)) {
 				targets.push(entity);
 			}
@@ -99,7 +99,7 @@ class MyChar extends BaseClass {
 			this.equipItem("sparkstaff", 5, "mainhand");
 		}
 		else {
-			this.equipItem("harbringer", 6, "mainhand");
+			this.equipItem("firestaff", 8, "mainhand");
 			this.equipItem("wbook0", 4, "offhand");
 		}
 

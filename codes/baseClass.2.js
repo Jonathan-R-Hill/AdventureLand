@@ -284,7 +284,7 @@ class BaseClass extends TargetLogic {
 
         this.kite = false;
         this.attackMode = true;
-        this.followLeader = false;
+        this.followLeader = true;
         this.fightTogeather = false;
 
         this.surge = false;
@@ -293,13 +293,13 @@ class BaseClass extends TargetLogic {
         this.gettingBuff = false;
         this.movingToEvent = false;
 
-        this.currentMobFarm = "Poisio";
-        this.secondaryTarget = "Bee";
+        this.currentMobFarm = "Mole";
+        this.secondaryTarget = "Mole";
 
         this.lastTarget = "";
         this.lastEvent = null;
 
-        this.bosses = ["Phoenix", "Grinch", "Green Jr.", "Snowman", "Ice Golem", "Dracul"];
+        this.bosses = ["Phoenix", "Grinch", "Dracul", "Green Jr.", "Snowman", "Ice Golem",];
         this.tank = "Jhlwarrior";
         this.lastWarriorEscape = 0;
 
@@ -345,7 +345,7 @@ class BaseClass extends TargetLogic {
             use_skill(`town`)
         }
 
-        if (parent.S.snowman.live) {
+        if (parent.S.snowman && parent.S.snowman.live) {
             this.lastEvent = 'snowman';
             if (this.lastTarget == "") {
                 this.lastTarget = this.currentMobFarm;
@@ -504,7 +504,7 @@ class BaseClass extends TargetLogic {
                 const target = data;
 
                 if (character.name == "Jhlmage") {
-                    this.useSkillPort(target);
+                    this.skillPort(target);
                 }
 
                 break;
@@ -696,7 +696,7 @@ class BaseClass extends TargetLogic {
 
         const character_radius = get_width(character) / 2;
         const target_radius = target.width / 2;
-        const desired_buffer = 3;
+        const desired_buffer = 5;
 
         // The maximum dist that still allows an attack
         const maxCenter2CenterRange = character.range + target_radius + character_radius;

@@ -82,7 +82,7 @@ class Merchant extends combineItems {
 			holidayExchange: 0,
 		};
 
-		setInterval(async () => await this.mainLoop(), 1000); 3
+		setInterval(async () => await this.mainLoop(), 1000);
 		// setInterval(snowball, 4200);
 		setInterval(exportCharacterData, 8 * 1000);
 		setInterval(useSkillJacko, 1200);
@@ -97,7 +97,7 @@ class Merchant extends combineItems {
 		scaleUI(0.8);
 
 		// setInterval(recoverOutOfCombat, 1000);
-		// setInterval(async () => await this.upgradeAllByName("sshield", 7, 1), 1500);
+		// setInterval(async () => await this.upgradeAllByName("vboots", 5, 2), 1500);
 		// setTimeout(async () => {
 		// 	await this.buyBasicUpgrade();
 		// 	setTimeout(async () => { await this.buyBasicUpgrade(); }, 2000);
@@ -677,7 +677,7 @@ class Merchant extends combineItems {
 				{ item: "gem1", min: 1, x: 30.92, y: -381.1, map: "main" },
 				{ item: "candycane", min: 1, x: 30.92, y: -381.1, map: "main" },
 				{ item: "mistletoe", min: 1, x: 30.92, y: -381.1, map: "main" },
-				{ item: "ornament", min: 1, x: 30.92, y: -381.1, map: "main" },
+				{ item: "ornament", min: 20, x: 30.92, y: -381.1, map: "main" },
 				{ item: "seashell", min: 20, x: -1496, y: 580, map: "main" }
 			];
 		}
@@ -750,6 +750,7 @@ class Merchant extends combineItems {
 		}
 
 		this.busy = false;
+		this.sellItems();
 	}
 
 	// restock & buff

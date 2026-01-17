@@ -71,6 +71,7 @@ class MyChar extends BaseClass {
     useSkillCurse(target) {
         if (is_on_cooldown("curse") || target.s.curse) { return; }
         if (target.hp < target.max_hp * 0.2 || target.hp < 12000 || target.s.cursed) { return; }
+        if (this.distance(character, target) >= character.range) { return; }
         use_skill("curse", target);
     }
 
