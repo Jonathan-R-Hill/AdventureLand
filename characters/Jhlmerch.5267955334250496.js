@@ -18,6 +18,7 @@ const sellWhiteList = [
 	"xmace", "xbow", "merry", "snowball", "xmashat", "rednose", "candycanesword", "xmassweater", "xmaspants", "xmasshoes", "warmscarf",
 	"iceskates", "gcape", "santasbelt", "angelwings", "swifty",
 	"snowflakes", "ornamentstaff", "mshield", "ringsj", "lspores", "mittens",
+	"shield", "hbow",
 ];
 
 const bankWhitelist = [
@@ -42,7 +43,7 @@ const bankWhitelist = [
 	// Mats
 	"spores", "beewings", "whiteegg", "spidersilk", "cscale", "rattail", "crabclaw", "bfur", "feather0", "gslime", "smush",
 	"snakeoil", "ascale", "snakefang", "vitscroll", "essenceoffire", "essenceoffrost", "carrot", "snowball", "frogt", "ink",
-	"sstinger", "btusk", "bwing", "forscroll", "electronics", "dstones", "pleather",
+	"sstinger", "btusk", "bwing", "forscroll", "electronics", "dstones", "pleather", "cshell",
 	// Misc
 	"offeringp", "offering", "funtoken", "cryptkey", "poison",
 	"x0", "x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x9",
@@ -83,10 +84,10 @@ class Merchant extends combineItems {
 		};
 
 		setInterval(async () => await this.mainLoop(), 1000);
-		// setInterval(snowball, 4200);
 		setInterval(exportCharacterData, 8 * 1000);
 		setInterval(useSkillJacko, 1200);
 		setInterval(crossMapHeal, 800);
+		setInterval(() => this.escapeIceGolemIsle, 6000);
 		setInterval(() => {
 			if (character.afk && !is_paused())
 				pause();
@@ -96,8 +97,9 @@ class Merchant extends combineItems {
 
 		scaleUI(0.8);
 
+		// setInterval(snowball, 4200);
 		// setInterval(recoverOutOfCombat, 1000);
-		// setInterval(async () => await this.upgradeAllByName("vboots", 5, 2), 1500);
+		// setInterval(async () => await this.upgradeAllByName("firestaff", 7, 1), 1500);
 		// setTimeout(async () => {
 		// 	await this.buyBasicUpgrade();
 		// 	setTimeout(async () => { await this.buyBasicUpgrade(); }, 2000);
@@ -256,6 +258,13 @@ class Merchant extends combineItems {
 					await this.bankItems();
 				}
 			}
+		}
+	}
+
+	escapeIceGolemIsle() {
+		if (character.map == "winterland" && this.distance(character, { map: "winterland", x: 820, y: 425 }) < 400) {
+
+			use_skill(`town`)
 		}
 	}
 

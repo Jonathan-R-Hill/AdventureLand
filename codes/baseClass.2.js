@@ -284,7 +284,7 @@ class BaseClass extends TargetLogic {
 
         this.kite = false;
         this.attackMode = true;
-        this.followLeader = true;
+        this.followLeader = false;
         this.fightTogeather = false;
 
         this.surge = false;
@@ -293,8 +293,8 @@ class BaseClass extends TargetLogic {
         this.gettingBuff = false;
         this.movingToEvent = false;
 
-        this.currentMobFarm = "Mole";
-        this.secondaryTarget = "Mole";
+        this.currentMobFarm = "Porcupine";
+        this.secondaryTarget = "Porcupine";
 
         this.lastTarget = "";
         this.lastEvent = null;
@@ -310,7 +310,7 @@ class BaseClass extends TargetLogic {
             "snakefang", "vitscroll", "offeringp", "offering", "essenceoffrost", "carrot", "snowball", "candy1", "frogt", "ink",
             "sstinger", "candycane", "ornament", "mistletoe", "frozenkey", "funtoken", "leather", "btusk", "bwing",
             "x0", "x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x9", "electronics", "cocoon",
-            "intbelt", "strbelt", "dexbelt", "dstones", "poison", "pleather",
+            "intbelt", "strbelt", "dexbelt", "dstones", "poison", "pleather", "cshell",
             "handofmidas", "mcape", "sweaterhs", "cryptkey", "forscroll", "gemfragment",
             // Upgrade
             "ringsj", "intbelt", "intearring", "strearring", "dexearring", "dexamulet", "stramulet", "intamulet", "wbookhs",
@@ -318,6 +318,7 @@ class BaseClass extends TargetLogic {
             "hpbelt", "hpamulet", "shoes", "coat", "pants", "strring", "intring", "vitring", "dexring",
             "wattire", "wshoes", "wcap", "cclaw", "mushroomstaff", "wbreeches", "slimestaff", "stinger",
             "vitearring", "wgloves", "quiver", "xmace", "xbow", "iceskates", "gcape", "swifty", "lspores",
+            "shield", "hbow",
         ];
 
         this.returningToGroup = false;

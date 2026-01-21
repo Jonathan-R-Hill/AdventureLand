@@ -9,6 +9,9 @@ class MyChar extends BaseClass {
     gettingNewTask = false;
     pullThree = false;
 
+    currentMobFarm = 'Tortoise'
+    secondaryTarget = 'Tortoise'
+
     lastFarmCheck = 0;
     lastTaunt = 0;
     aoeTaunt = false;

@@ -1,5 +1,5 @@
 
-const TILE = 25;
+const TILE = 23;
 const FF_RANGE = 34;       // tiles around player
 const FF_REPLAN_CD = 800; // ms
 const FF_GOAL_EPS = 2;
