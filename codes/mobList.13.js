@@ -30,7 +30,7 @@ const mobData = [
     { travel: "sparkbot", targetName: "Spark Bot", map: "Underground" },
     { travel: "targetNameron", targetName: "targetNameron", map: "Underground" },
     { travel: "mechagnome", targetName: "Mech-a Gnome", map: "cyberland" },
-    { travel: "bbpompom", targetName: "Pom Pom", map: "winter_cave" },
+    { travel: "bbpompom", targetName: "Pom Pom", map: "winter_cave", x: -11.49, y: -57.49 },
     { travel: "cgoo", targetName: "Irradiated Goo", map: "arena" },
     { travel: "mole", targetName: "Mole", map: "tunnel" },
     { travel: "pppompom", targetName: "Pom Pom", map: "level2n" },

@@ -7,11 +7,11 @@ graphicsLimiter();
 class MyChar extends BaseClass {
     monsterHunter = false;
     gettingNewTask = false;
-    pullThree = true;
+    pullThree = false;
 
     lastFarmCheck = 0;
     lastTaunt = 0;
-    aoeTaunt = true;
+    aoeTaunt = false;
 
     circleX = 1240;
     circleY = -100;
@@ -38,6 +38,7 @@ class MyChar extends BaseClass {
             this.equipItem("ololipop", 5, "offhand");
         } else {
             this.equipItem(`fireblade`, 7, "offhand");
+            // this.equipItem(`sshield`, 8, "offhand");
         }
     }
 
@@ -235,8 +236,6 @@ async function mainLoop() {
 
             if (target) {
                 await myChar.attackLogic(target);
-            } else {
-                set_message("Searching...");
             }
 
         } catch (e) {

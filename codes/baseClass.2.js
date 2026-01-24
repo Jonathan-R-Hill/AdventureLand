@@ -319,7 +319,7 @@ class BaseClass extends TargetLogic {
 
         this.gettingBuff = false;
 
-        this.validTargets = [`spider`, `scorpion`, `hawk`,];
+        this.validTargets = [`bbpompom`];
         this.bosses = ["phoenix", "grinch", "mvampire", "greenjr", "jr", "snowman", "icegolem",];
 
         this.lastTarget = "";
@@ -693,7 +693,7 @@ class BaseClass extends TargetLogic {
             const primaryTarget = this.validTargets[0];
             if (!primaryTarget) return;
 
-            let farm = mobData.find(m => m.target === primaryTarget);
+            let farm = mobData.find(m => m.travel === primaryTarget);
 
             if (this.lastEvent == "icegolem") {
                 use_skill("use_town");
@@ -702,7 +702,12 @@ class BaseClass extends TargetLogic {
                 this.lastEvent = null;
             }
             else if (farm) {
-                await smart_move(farm.travel);
+                if (farm.map && farm.x !== undefined && farm.y !== undefined) {
+                    await smart_move({ map: farm.map, x: farm.x, y: farm.y });
+                }
+                else {
+                    await smart_move(farm.travel);
+                }
             }
         }
 

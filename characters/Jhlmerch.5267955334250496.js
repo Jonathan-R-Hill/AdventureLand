@@ -99,7 +99,7 @@ class Merchant extends combineItems {
 
 		// setInterval(snowball, 4200);
 		// setInterval(recoverOutOfCombat, 1000);
-		// setInterval(async () => await this.upgradeAllByName("firestaff", 7, 1), 1500);
+		// setInterval(async () => await this.upgradeAllByName("firestaff", 8, 1), 1500);
 		// setTimeout(async () => {
 		// 	await this.buyBasicUpgrade();
 		// 	setTimeout(async () => { await this.buyBasicUpgrade(); }, 2000);
@@ -820,13 +820,13 @@ class Merchant extends combineItems {
 
 			set_message("On call..");
 
-			if (character.map !== "main") {
+			if (character.map !== "main" && !smart.moving) {
 				await smart_move({ map: "main" });
 			} else {
-				if (Math.abs(character.real_x) <= 100 && Math.abs(character.real_y) <= 100) {
+				if (Math.abs(character.real_x) <= 100 && Math.abs(character.real_y) <= 100 && character.map == `main`) {
 					console.log("No need to move");
 
-					await this.sellItems();
+					this.sellItems();
 					return;
 				} else {
 					use_skill("use_town");
