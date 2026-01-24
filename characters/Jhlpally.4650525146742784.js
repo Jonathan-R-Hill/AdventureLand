@@ -44,7 +44,7 @@ const myChar = new MyChar();
 async function mainLoop() {
 	while (true) {
 		try {
-			if (myChar.movingToEvent || character.cc >= 170) {
+			if (character.cc >= 170) {
 				await sleep(200);
 				continue;
 			}
@@ -53,7 +53,7 @@ async function mainLoop() {
 			loot();
 
 			const now = Date.now();
-			if (now - myChar.lastFarmCheck > 5000 && myChar.currentMobFarm != "") {
+			if (now - myChar.lastFarmCheck > 5000 && myChar.validTargets[0] != "") {
 				myChar.checkNearbyFarmMob();
 				myChar.lastFarmCheck = now;
 			}

@@ -87,7 +87,7 @@ class Merchant extends combineItems {
 		setInterval(exportCharacterData, 8 * 1000);
 		setInterval(useSkillJacko, 1200);
 		setInterval(crossMapHeal, 800);
-		setInterval(() => this.escapeIceGolemIsle, 6000);
+		setInterval(() => this.escapeIceGolemIsle(), 6000);
 		setInterval(() => {
 			if (character.afk && !is_paused())
 				pause();
@@ -265,6 +265,7 @@ class Merchant extends combineItems {
 		if (character.map == "winterland" && this.distance(character, { map: "winterland", x: 820, y: 425 }) < 400) {
 
 			use_skill(`town`)
+			this.busy = false;
 		}
 	}
 

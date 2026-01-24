@@ -4,8 +4,7 @@ load_code("floodFill");
 load_code("UI");
 
 class TargetLogic {
-    currentMobFarm;
-    secondaryTarget;
+    validTargets = [`scorpion`, `hawk`, `spider`];
     tank;
     bosses;
     attackMode;
@@ -15,15 +14,15 @@ class TargetLogic {
 
     allies = ["trololol", "YTFAN", "derped", "Knight", "Bonjour"];
 
-    // TARGETING
-    getClosestMonsterByName(name) {
+    getClosestMonsterByType(mtype) {
         let closest = null;
         let minDist = Infinity;
 
         for (const id in parent.entities) {
             const ent = parent.entities[id];
+
             if (ent.type !== "monster" || ent.dead || !ent.visible) continue;
-            if (ent.name !== name) continue;
+            if (ent.mtype !== mtype) continue;
 
             const dist = parent.distance(character, ent);
             if (dist < minDist) {
@@ -37,11 +36,10 @@ class TargetLogic {
 
     getTankTarget() {
         const tank = get_player(this.tank);
-
         let target = get_target_of(tank);
 
         if (!target) {
-            target = get_nearest_monster({ target: "Jhlwarrior" })
+            target = get_nearest_monster({ target: "Jhlwarrior" });
         }
 
         return target;
@@ -54,11 +52,7 @@ class TargetLogic {
         for (let id in parent.entities) {
             const e = parent.entities[id];
 
-            if (
-                e.type === "monster" &&
-                e.s && e.s.stunned &&      // must be stunned
-                !e.dead                    // ignore dead mobs
-            ) {
+            if (e.type === "monster" && e.s && e.s.stunned && !e.dead) {
                 const d = distance(character, e);
                 if (d < closestDist) {
                     closest = e;
@@ -72,8 +66,8 @@ class TargetLogic {
 
     findBosses() {
         const target = this.bosses
-            .map(name => this.getClosestMonsterByName(name))
-            .find(mon => mon) // first non-null result
+            .map(mtype => this.getClosestMonsterByType(mtype))
+            .find(mon => mon);
 
         if (target && !target.s.fullguardx) {
             change_target(target);
@@ -96,37 +90,52 @@ class TargetLogic {
             }
         }
 
+        // Check Bosses
         target = this.bosses
-            .map(name => this.getClosestMonsterByName(name))
-            .find(mon => mon) // first non-null result
-            || this.getClosestMonsterByName(this.currentMobFarm) || this.getClosestMonsterByName(this.secondaryTarget);
+            .map(mtype => this.getClosestMonsterByType(mtype))
+            .find(mon => mon);
 
-        if (this.currentMobFarm == "") {
-            target = get_nearest_monster();
-            if (target) {
-                change_target(target);
+        // Check Valid Targets
+        if (!target) {
+            for (const mtype of this.validTargets) {
+                target = this.getClosestMonsterByType(mtype);
+
+                if (target) break; // Stop at the first valid target found
             }
+        }
+
+        // If no primary farm target is set, just get whatever is nearest
+        if (this.validTargets.length === 0) {
+            target = get_nearest_monster();
+            if (target) change_target(target);
 
             return target;
         }
 
+        // Handle fullguardx logic
         if (target && !target.s.fullguardx) {
             change_target(target);
 
             return target;
-        } else if (target && target.s.fullguardx) {
-            target = this.getClosestMonsterByName(this.currentMobFarm) || this.getClosestMonsterByName(this.secondaryTarget);
 
-            return target;
+        } else if (target && target.s.fullguardx) {
+            // Try to find another valid target in the list
+            for (const mtype of this.validTargets) {
+                const alt = this.getClosestMonsterByType(mtype);
+                if (alt && !alt.s.fullguardx) {
+                    change_target(alt);
+
+                    return alt;
+                }
+            }
         }
 
         if (target) {
             change_target(target);
-
             return target;
         }
 
-        if (target && target.name != this.currentMobFarm) {
+        if (target && !this.validTargets.includes(target.mtype)) {
             target = null;
         }
 
@@ -181,8 +190,8 @@ class TargetLogic {
 
         let target = get_targeted_monster();
 
-        // Current farm mob
-        if (target && target.name != this.currentMobFarm && target.name != this.secondaryTarget) {
+        // Check if current target is within validTargets or Bosses (by mtype)
+        if (target && !this.validTargets.includes(target.mtype) && !this.bosses.includes(target.mtype)) {
             target = null;
         }
 
@@ -191,7 +200,10 @@ class TargetLogic {
         }
 
         if (!target) {
-            set_message(`No target, moving to farm ${mobData[this.currentMobFarm]}`);
+            const primary = this.validTargets[0] || "Unknown";
+            const niceName = mobData.find(m => m.travel === primary) || primary;
+
+            set_message(`No target, moving to ${niceName.targetName}`);
 
             return null;
         }
@@ -209,7 +221,7 @@ class TargetLogic {
             if (e.s.fullguardx) { continue; }
             if (
                 e.type == "monster" && !e.dead &&
-                (this.bosses.includes(e.name) || e.name == this.currentMobFarm || e.name == this.secondaryTarget) &&
+                (this.bosses.includes(e.mtype) || this.validTargets.includes(e.mtype)) &&
                 get_target_of(e) !== character
             ) {
                 const d = this.distance(character, e);
@@ -226,38 +238,54 @@ class TargetLogic {
     targetLogicTank3() {
         if (!this.attackMode || character.rip || smart.moving) return null;
 
-        if (this.eventsEnabled && (parent.S.snowman.live || parent.S.icegolem)) {
+        if (this.eventsEnabled && (parent.S.snowman || parent.S.icegolem)) {
             return this.targetLogicTank();
         }
 
         const attackers = this.getMobsAttackingMe();
-
         const attackerCount = attackers.length;
+        const boss = this.findBosses(); // Checks for boss existence
 
-        // If already tanking 3+, STOP pulling new mobs
+        if (boss) {
+            const amITankingBoss = attackers.some(e => e.id === boss.id);
+
+            if (!amITankingBoss) {
+                return boss;
+            }
+        }
+
+        // If we are already tanking 3+ mobs including the bosses, stop pulling
         if (attackerCount >= 3) {
-            let target = get_targeted_monster();
+            // If we have a boss, focus damage on it while tanking the rest
+            if (boss) return boss;
 
+            // Otherwise focus the current target or the first attacker
+            let target = get_targeted_monster();
             if (!target || target.dead) {
                 target = attackers[0] || null;
             }
-
             return target;
         }
 
-        // pulling logic
         let target = null;
 
         if (!target) {
             target = this.findTargetNotAttackingMe();
         }
 
-        if (!target) {
-            set_message(`No target, moving to farm ${this.currentMobFarm}`);
-            return null;
+        if (target) {
+            return target;
         }
 
-        return target;
+        if (boss) {
+            return boss;
+        }
+
+        // If nothing at all, go to farm spawn
+        const primary = this.validTargets[0];
+        set_message(`No target, moving to ${primary}`);
+
+        return null;
     }
 
     getMobsAttackingMe() {
@@ -267,7 +295,6 @@ class TargetLogic {
             e.target == character.name
         );
     }
-
 }
 
 class BaseClass extends TargetLogic {
@@ -284,22 +311,20 @@ class BaseClass extends TargetLogic {
 
         this.kite = false;
         this.attackMode = true;
-        this.followLeader = false;
+        this.followLeader = true;
         this.fightTogeather = false;
 
         this.surge = false;
         this.surgeLastUsed = 0;
 
         this.gettingBuff = false;
-        this.movingToEvent = false;
 
-        this.currentMobFarm = "Porcupine";
-        this.secondaryTarget = "Porcupine";
+        this.validTargets = [`spider`, `scorpion`, `hawk`,];
+        this.bosses = ["phoenix", "grinch", "mvampire", "greenjr", "jr", "snowman", "icegolem",];
 
         this.lastTarget = "";
         this.lastEvent = null;
 
-        this.bosses = ["Phoenix", "Grinch", "Dracul", "Green Jr.", "Snowman", "Ice Golem",];
         this.tank = "Jhlwarrior";
         this.lastWarriorEscape = 0;
 
@@ -349,11 +374,10 @@ class BaseClass extends TargetLogic {
         if (parent.S.snowman && parent.S.snowman.live) {
             this.lastEvent = 'snowman';
             if (this.lastTarget == "") {
-                this.lastTarget = this.currentMobFarm;
+                this.lastTarget = this.validTargets;
             }
 
-            this.currentMobFarm = 'Arctic Bee';
-            this.secondaryTarget = 'Arctic Bee';
+            this.validTargets = ['Arctic Bee'];
         }
         else if (parent.S.icegolem) {
             //if (character.name == "Jhlmage") { return; }
@@ -361,17 +385,16 @@ class BaseClass extends TargetLogic {
             this.lastEvent = 'icegolem';
             if (!get_nearest_monster({ type: 'icegolem' })) { join('icegolem'); }
             if (this.lastTarget == "") {
-                this.lastTarget = this.currentMobFarm;
+                this.lastTarget = this.validTargets;
             }
         }
         else {
             if (this.lastTarget != "") {
-                this.currentMobFarm = this.lastTarget;
-                this.secondaryTarget = this.lastTarget;
+                this.validTargets = this.lastTarget;
+
                 this.lastTarget = "";
             }
 
-            this.movingToEvent = false;
         }
     }
 
@@ -443,8 +466,7 @@ class BaseClass extends TargetLogic {
 
             case "set_new_target": {
                 const dataSplit = data.split(',');
-                this.currentMobFarm = dataSplit[1];
-                this.secondaryTarget = dataSplit[1];
+                this.validTargets = [dataSplit[1]];
 
                 if (!smart.moving) await smart_move({ to: dataSplit[0] });
 
@@ -454,13 +476,13 @@ class BaseClass extends TargetLogic {
             case "set_new_hunter_target": {
                 const [travel, target, map] = data.split(',');
 
-                this.currentMobFarm = target;
-                this.secondaryTarget = target;
+                this.validTargets = [travel];
 
                 if (!smart.moving) {
                     if (character.map !== map) {
                         await smart_move({ map: map });
                     }
+
                     await smart_move(travel);
                 }
 
@@ -619,7 +641,7 @@ class BaseClass extends TargetLogic {
     }
 
     async checkNearbyFarmMob() {
-        // If fighting together and not the tank, stop here for follow logic
+        // If fighting together and not the tank, stop here
         if (this.fightTogeather && get_player(this.tank) && character.name !== this.tank) {
             if (smart.moving) { stop(); }
             return;
@@ -631,9 +653,9 @@ class BaseClass extends TargetLogic {
             if (!ent || ent.type !== "monster" || ent.dead || !ent.visible) continue;
 
             const dist = parent.distance(character, ent);
-            if (dist > 300) { continue; }
+            if (dist > 400) { continue; }
 
-            if (this.bosses.includes(ent.name)) {
+            if (this.bosses.includes(ent.mtype)) {
                 if (smart.moving) { stop(); }
                 set_message("Boss spotted nearby, engaging");
 
@@ -641,16 +663,15 @@ class BaseClass extends TargetLogic {
             }
         }
 
-        const targetsToCheck = [this.currentMobFarm, this.secondaryTarget];
+        for (const mtype of this.validTargets) {
+            const mobEntry = mobData.find(m => m.travel === mtype);
 
-        for (const targetName of targetsToCheck) {
-            const mobEntry = mobData.find(m => m.target === targetName);
             if (!mobEntry) {
-                game_log(`Mob ${targetName} not found in dictionary`);
+                game_log(`Mob ${mtype} not found in dictionary`);
                 continue;
             }
 
-            // Scan nearby entities for this mob
+            // Scan nearby entities for this mtype
             for (const id in parent.entities) {
                 const ent = parent.entities[id];
                 if (!ent || ent.type !== "monster" || ent.dead || !ent.visible) continue;
@@ -658,35 +679,38 @@ class BaseClass extends TargetLogic {
                 const dist = parent.distance(character, ent);
                 if (dist > 300) continue;
 
-                if (ent.name === mobEntry.target) {
+                if (ent.mtype === mtype) {
                     stop();
-                    set_message(`Engaging ${mobEntry.target}`);
+                    set_message(`Engaging ${mtype}`);
+
                     return;
                 }
             }
         }
 
-        // If none found nearby, move toward this mob’s spawn
+        // If none found nearby, move toward primary targets spawn
         if (!smart.moving) {
-            let farm = mobData.find(m => m.target === this.currentMobFarm);
+            const primaryTarget = this.validTargets[0];
+            if (!primaryTarget) return;
+
+            let farm = mobData.find(m => m.target === primaryTarget);
 
             if (this.lastEvent == "icegolem") {
                 use_skill("use_town");
                 await sleep(6000);
+
                 this.lastEvent = null;
             }
-
-            if (this.currentMobFarm == `Irradiated Goo`) {
-                await smart_move(`arena`);
-            }
-            else {
+            else if (farm) {
                 await smart_move(farm.travel);
             }
         }
 
-        set_message(`No ${this.currentMobFarm} nearby, moving to farm`);
-        return;
+        // Safety check for display
+        const dispName = this.validTargets[0];
+        set_message(`No ${dispName} nearby, moving...`);
 
+        return;
     }
 
     is_in_range(target) {

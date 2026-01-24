@@ -16,6 +16,7 @@ async function getNewTask() {
     if (character.map !== "main") {
         await smart_move({ map: "main" });
     }
+
     await smart_move({ to: "monsterhunter" });
 
     parent.socket.emit("monsterhunt");
@@ -36,7 +37,7 @@ async function setNewTask() {
     const mobEntry = mobData.find(m => m.travel === huntBuff.id);
     if (!mobEntry) { return null; }
 
-    return mobEntry; // { travel, target, map }
+    return mobEntry; // { travel, targetName, map }
 }
 
 
@@ -48,7 +49,7 @@ function handleNewTarget(travelTag) {
         mobEntry = mobData.find(m => m.travel === "armadillo");
         set_message(`Unknown travel tag: ${travelTag} - Going back to armadillos.`);
 
-        const { travel, target, map } = mobEntry;
+        const { travel, target, map, x, y } = mobEntry;
         for (const name of partyMembers) {
             send_cm(name, `set_new_hunter_target ${travel},${target},${map}`);
         }
@@ -58,7 +59,7 @@ function handleNewTarget(travelTag) {
 
     const { travel, target, map } = mobEntry;
     for (const name of partyMembers) {
-        if (["Poisio", "Wild Boar", "Water Spirit", "Hawk", "Scorpion"].includes(target)) {
+        if (["Hawk", "Scorpion"].includes(target)) {
             send_cm("fightTogeather true")
         }
         else {

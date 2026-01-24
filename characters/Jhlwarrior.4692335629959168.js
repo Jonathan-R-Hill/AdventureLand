@@ -7,14 +7,11 @@ graphicsLimiter();
 class MyChar extends BaseClass {
     monsterHunter = false;
     gettingNewTask = false;
-    pullThree = false;
-
-    currentMobFarm = 'Tortoise'
-    secondaryTarget = 'Tortoise'
+    pullThree = true;
 
     lastFarmCheck = 0;
     lastTaunt = 0;
-    aoeTaunt = false;
+    aoeTaunt = true;
 
     circleX = 1240;
     circleY = -100;
@@ -72,8 +69,8 @@ class MyChar extends BaseClass {
         const now = Date.now();
 
         if (!get_player(`Jhlpriest`)) { return; }
-        if (now - this.lastTaunt < 8000 || !this.getClosestMonsterByName(this.currentMobFarm)) { return; }
-        const farmMob = this.getClosestMonsterByName(this.currentMobFarm);
+        if (now - this.lastTaunt < 8000 || !this.getClosestMonsterByType(this.validTargets[0])) { return; }
+        const farmMob = this.getClosestMonsterByType(this.validTargets[0]);
 
         // Only proceed if mob exists AND is within 100 units
         if (farmMob && this.distance(character, farmMob) <= 75) {
@@ -157,20 +154,21 @@ class MyChar extends BaseClass {
         await this.equipMainHandWeap();
         await this.equipOffHandWeap();
 
-        if (this.bosses.includes(target.name)) {
+        if (this.bosses.includes(target.mtype)) {
             await this.attack(target);
             return;
         }
 
         const attackers = this.getMobsAttackingMe();
-        // Prioritize attackers matching currentMobFarm first
+
         attackers.sort((a, b) => {
-            const aMatch = a && a.name === this.currentMobFarm ? 0 : 1;
-            const bMatch = b && b.name === this.currentMobFarm ? 0 : 1;
+            const aMatch = a && a.mtype === this.validTargets[0] ? 0 : 1;
+            const bMatch = b && b.mtype === this.validTargets[0] ? 0 : 1;
+
             return aMatch - bMatch;
         });
 
-        if (this.aoeTaunt && !parent.S.snowman.live && !parent.S.icegolem) {
+        if (this.aoeTaunt && !parent.S.snowman && !parent.S.icegolem) {
             this.skillAoeTaunt();
         }
 
@@ -178,7 +176,7 @@ class MyChar extends BaseClass {
             circleTargets(attackers, this.circleX, this.circleY, this.radius);
             this.circleModeAttack(target);
         }
-        else if (this.pullThree && attackers.length >= 3 && attackers[0].name == this.currentMobFarm) {
+        else if (this.pullThree && attackers.length >= 3 && attackers[0].mtype == this.validTargets[0]) {
             circleTargets(attackers);
             this.circleModeAttack(target);
         }
@@ -195,8 +193,9 @@ const healer = `Jhlpriest`
 async function mainLoop() {
     while (true) {
         try {
-            if (myChar.movingToEvent || character.cc >= 170) {
+            if (character.cc >= 170) {
                 await sleep(200);
+
                 continue;
             }
 
@@ -214,13 +213,13 @@ async function mainLoop() {
 
             // Periodic Farm Check
             const now = Date.now();
-            if (now - myChar.lastFarmCheck > 5000 && myChar.currentMobFarm != "") {
+            if (now - myChar.lastFarmCheck > 5000 && myChar.validTargets[0] != "") {
                 myChar.checkNearbyFarmMob();
                 myChar.lastFarmCheck = now;
             }
 
             // Target & attack
-            if (["Dark Hound", "Wild Boar", "Water Spirit", "Hawk", "Scorpion", "Spider", "Mole"].includes(myChar.currentMobFarm)) {
+            if (["wolfie", "wolf", "boar", "iceroamer", "bigbird", "ent", "scorpion", "spider", "mole"].includes(myChar.validTargets[0])) {
                 target = get_nearest_monster({ target: "Jhlpriest" }) || get_nearest_monster({ target: "Jhlmerch" }) ||
                     get_nearest_monster({ target: "Jhlranger" }) || get_nearest_monster({ target: "Jhlrogue" }) ||
                     get_nearest_monster({ target: "Jhlmage" }) || get_nearest_monster({ target: "Jhlpally" });

@@ -38,7 +38,7 @@ class MyChar extends BaseClass {
         let targets = [];
         for (let id in parent.entities) {
             let entity = parent.entities[id];
-            if ((entity.name === this.currentMobFarm || entity.name == this.secondaryTarget)
+            if ((this.validTargets.includes(entity.mtype))
                 && entity.type === "monster" && this.is_in_range(entity)) {
                 targets.push(entity);
             }
@@ -73,14 +73,14 @@ const myChar = new MyChar(character.name);
 async function mainLoop() {
     while (true) {
         try {
-            if (myChar.gettingBuff || myChar.movingToEvent || character.cc >= 170) {
+            if (myChar.gettingBuff || character.cc >= 170) {
                 await sleep(100);
                 continue;
             }
 
             // Farm Check
             const now = Date.now();
-            if (now - myChar.lastFarmCheck > 5000 && !myChar.gettingBuff && myChar.currentMobFarm != "") {
+            if (now - myChar.lastFarmCheck > 5000 && !myChar.gettingBuff && myChar.validTargets[0] != "") {
                 myChar.checkNearbyFarmMob();
                 myChar.lastFarmCheck = now;
             }

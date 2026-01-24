@@ -118,13 +118,8 @@ class MyChar extends BaseClass {
                 this.healParty();
                 this.revivePartyMembers();
 
-                if (this.movingToEvent) {
-                    await sleep(250);
-                    continue;
-                }
-
                 // Farm Check
-                if (now - this.lastFarmCheck > 5000 && this.currentMobFarm != "") {
+                if (now - this.lastFarmCheck > 5000 && this.validTargets[0] != "") {
                     this.checkNearbyFarmMob();
                     this.lastFarmCheck = now;
                 }

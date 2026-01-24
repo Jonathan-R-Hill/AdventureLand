@@ -16,7 +16,7 @@ function updateTarget(travelKey) {
     const partyMembers = ["Jhlranger", "Jhlmerch", "Jhlmage", "Jhlwarrior", "Jhlpriest", "Jhlrogue"];
 
     for (const name of partyMembers) {
-        send_cm(name, `set_new_target ${mobEntry.travel},${mobEntry.target}`);
+        send_cm(name, `set_new_target ${mobEntry.travel},${mobEntry.travel}`);
     }
 }
 

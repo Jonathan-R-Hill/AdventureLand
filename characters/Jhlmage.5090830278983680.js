@@ -8,9 +8,6 @@ class MyChar extends BaseClass {
 	lastSnowmanCheck = 0;
 	cburstpull = false;
 
-	// currentMobFarm = "Arctic Bee";
-	// secondaryTarget = "Arctic Bee";
-
 	skillCBurst() {
 		const USE_ABOVE_MANA = 3000;
 		if (character.mp > USE_ABOVE_MANA && !is_on_cooldown("cburst") && this.cburstpull) {
@@ -125,7 +122,7 @@ async function mainLoop() {
 			}
 
 			// Periodic Farm Check
-			if (now - myChar.lastFarmCheck > 5000 && !myChar.gettingBuff && myChar.currentMobFarm != "") {
+			if (now - myChar.lastFarmCheck > 5000 && !myChar.gettingBuff && myChar.validTargets[0] != "") {
 				myChar.checkNearbyFarmMob();
 				myChar.lastFarmCheck = now;
 			}
