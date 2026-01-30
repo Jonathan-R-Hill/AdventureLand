@@ -7,7 +7,7 @@ graphicsLimiter();
 class MyChar extends BaseClass {
     monsterHunter = false;
     gettingNewTask = false;
-    pullThree = false;
+    pullThree = true;
 
     lastFarmCheck = 0;
     lastTaunt = 0;
@@ -220,18 +220,19 @@ async function mainLoop() {
             }
 
             // Target & attack
-            if (["wolfie", "wolf", "boar", "iceroamer", "bigbird", "ent", "scorpion", "spider", "mole"].includes(myChar.validTargets[0])) {
+            if (["wolfie", "wolf", "boar", "iceroamer", "bigbird", "ent", "scorpion", "gscorpion", "spider", "mole"].includes(myChar.validTargets[0])) {
                 target = get_nearest_monster({ target: "Jhlpriest" }) || get_nearest_monster({ target: "Jhlmerch" }) ||
                     get_nearest_monster({ target: "Jhlranger" }) || get_nearest_monster({ target: "Jhlrogue" }) ||
                     get_nearest_monster({ target: "Jhlmage" }) || get_nearest_monster({ target: "Jhlpally" });
             }
 
-            if (parent.S.snowman || parent.S.icegolem) {
+            let activeEvent = parent.S.snowman || parent.S.icegolem;
+            if (activeEvent) {
                 target = myChar.targetLogicTank();
             }
 
             if (!target || target.dead) {
-                target = myChar.pullThree && get_player(healer) ? myChar.targetLogicTank3() : myChar.targetLogicTank();
+                target = myChar.pullThree && get_player(healer) && !activeEvent ? myChar.targetLogicTank3() : myChar.targetLogicTank();
             }
 
             if (target) {

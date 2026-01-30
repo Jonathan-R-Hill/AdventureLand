@@ -319,7 +319,7 @@ class BaseClass extends TargetLogic {
 
         this.gettingBuff = false;
 
-        this.validTargets = [`bbpompom`];
+        this.validTargets = [`gscorpion`];
         this.bosses = ["phoenix", "grinch", "mvampire", "greenjr", "jr", "snowman", "icegolem",];
 
         this.lastTarget = "";
@@ -377,7 +377,7 @@ class BaseClass extends TargetLogic {
                 this.lastTarget = this.validTargets;
             }
 
-            this.validTargets = ['Arctic Bee'];
+            this.validTargets = ['arcticbee'];
         }
         else if (parent.S.icegolem) {
             //if (character.name == "Jhlmage") { return; }

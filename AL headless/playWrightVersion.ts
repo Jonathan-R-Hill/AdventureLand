@@ -1,4 +1,4 @@
-import puppeteer from "puppeteer";
+import { chromium } from "playwright";
 import fs from "fs/promises";
 import path from "path";
 
@@ -27,11 +27,10 @@ async function startCharacter(charName: string, config: any) {
 
 	// Launch browser
 	// xvfb-run --server-args="-screen 0 640x480x24" npm start
-	const browser = await puppeteer.launch({
+	const context = await chromium.launchPersistentContext(userDataDir, {
 		headless: true, // Alt: "shell", false
 		executablePath: "/usr/bin/chromium", // check: 'which chromium' for le path   alt: comment this line out
-		defaultViewport: { width: 640, height: 480 },
-		userDataDir: userDataDir,
+		viewport: { width: 640, height: 480 },
 		args: [
 			"--window-size=640,480",
 			"--no-sandbox",
@@ -59,20 +58,18 @@ async function startCharacter(charName: string, config: any) {
 	});
 
 	try {
-		const page = await browser.newPage();
+		const page = await context.newPage();
 
-		await page.setRequestInterception(true);
-
-		page.on("request", (req) => {
-			const type = req.resourceType();
+		await page.route("**/*", (route: any) => {
+			const type = route.request().resourceType();
 			if (type === "font" || type === "media") {
-				req.abort();
+				route.abort();
 			} else {
-				req.continue();
+				route.continue();
 			}
 		});
 
-		await page.evaluateOnNewDocument(() => {
+		await page.addInitScript(() => {
 			const style = document.createElement("style");
 			style.innerHTML = `
                 /* Stop all CSS animations */
@@ -87,15 +84,13 @@ async function startCharacter(charName: string, config: any) {
 			document.head.appendChild(style);
 
 			let lastTime = 0;
-			const originalRAF = window.requestAnimationFrame;
 
 			window.requestAnimationFrame = (callback) => {
 				const currTime = new Date().getTime();
 				const timeToCall = Math.max(0, 150 - (currTime - lastTime)); // 100ms = 10 FPS
 
-				const id = window.setTimeout(function () {
-					const currTime = performance.now();
-					callback(currTime);
+				const id = window.setTimeout(() => {
+					callback(performance.now());
 				}, timeToCall);
 
 				lastTime = currTime + timeToCall;
@@ -108,7 +103,7 @@ async function startCharacter(charName: string, config: any) {
 		});
 
 		console.log(`[${charName}] Navigating to Adventure Land...`);
-		await page.goto(`https://adventure.land/`, { waitUntil: "networkidle2" });
+		await page.goto(`https://adventure.land/`, { waitUntil: "networkidle" });
 
 		// Login Logic
 		const loginVisible = await page.$("#loginbuttons");
@@ -117,10 +112,10 @@ async function startCharacter(charName: string, config: any) {
 
 			const startLoginSelector = "#loginbuttons > div.whiteheader.mb4.clickable";
 
-			await page.waitForSelector(startLoginSelector, { visible: true, timeout: 5000 });
-			await page.evaluate((s) => (document.querySelector(s) as HTMLElement)?.click(), startLoginSelector);
+			await page.waitForSelector(startLoginSelector, { state: "visible", timeout: 5000 });
+			await page.evaluate((s: any) => (document.querySelector(s) as HTMLElement)?.click(), startLoginSelector);
 
-			await page.waitForSelector("#email2", { visible: true });
+			await page.waitForSelector("#email2", { state: "visible" });
 			await page.type("#email2", config.email, { delay: 50 });
 			await page.type("#password2", config.password, { delay: 50 });
 
@@ -130,7 +125,7 @@ async function startCharacter(charName: string, config: any) {
 		}
 
 		console.log(`[${charName}] Entering game...`);
-		await page.goto(`https://adventure.land/character/${charName}/in/${region}`, { waitUntil: "networkidle2" });
+		await page.goto(`https://adventure.land/character/${charName}/in/${region}`, { waitUntil: "networkidle" });
 
 		// ---------- Start Logic ---------- //
 		let codeStarted = false;
@@ -149,7 +144,7 @@ async function startCharacter(charName: string, config: any) {
 				if (!isModalVisible) {
 					await page.click(`#toprightcorner > div:nth-child(4)`);
 					// Wait for modal to slide in
-					await page.waitForSelector(engageButton, { visible: true, timeout: 2000 }).catch(() => {});
+					await page.waitForSelector(engageButton, { state: "visible", timeout: 2000 }).catch(() => {});
 				}
 
 				// Clicky
@@ -177,9 +172,7 @@ async function startCharacter(charName: string, config: any) {
 				const frame = await frameElement?.contentFrame();
 
 				if (frame) {
-					// We ask the browser: Did the optimization work?
 					const success = await frame.evaluate(() => {
-						// Check if the game engine is actually loaded yet
 						// @ts-ignore
 						if (!window.PIXI || !window.PIXI.ticker) return false;
 
@@ -188,17 +181,14 @@ async function startCharacter(charName: string, config: any) {
 						// @ts-ignore
 						parent.no_graphics = true;
 
-						// Stop Tickers
 						// @ts-ignore
 						if (window.PIXI.ticker.shared) window.PIXI.ticker.shared.stop();
 						// @ts-ignore
-						if (window.PIXI.ticker.system) window.PIXI.ticker.system.stop(); // yeah turns out we don't actually need this at all
+						if (window.PIXI.ticker.system) window.PIXI.ticker.system.stop();
 
-						// Hide Canvas
 						const canvas = document.querySelector("canvas");
 						if (canvas) canvas.style.display = "none";
 
-						// Force Cleanup
 						// @ts-ignore
 						if (window.gc && performance.memory.usedJSHeapSize > 600_000_000) {
 							window.gc();
@@ -220,15 +210,11 @@ async function startCharacter(charName: string, config: any) {
 					if (success) {
 						console.log(`[${charName}] Optimization applied successfully.`);
 						isOptimized = true;
-
 						break;
 					}
 				}
-			} catch (e) {
-				// Ignore errors we don't care for them
-			}
+			} catch (e) {}
 
-			// Wait 2 sec before trying again
 			await new Promise((r) => setTimeout(r, 2000));
 		}
 
@@ -236,21 +222,16 @@ async function startCharacter(charName: string, config: any) {
 			console.warn(`[${charName}] Warning: Could not optimize PIXI (Game might be lagging or stuck).`);
 		}
 
-		// page.removeAllListeners("request");   // leaving this here so I don't try it again as it doesnt work
-		// await page.setRequestInterception(false);
-
 		// ---------- Watchdog Loop ---------- //
 		let loopCount = 0;
-
 		let now = new Date().toLocaleString();
+
 		while (true) {
 			await new Promise((r) => setTimeout(r, 12 * 1000));
 			loopCount++;
 
-			// Check if browser crashed
 			if (page.isClosed()) throw new Error("Page closed");
 
-			// Check for Disconnects
 			const isDisconnected = await page.evaluate(() => {
 				return (
 					document.body.innerText.includes("Disconnected") || document.querySelector(".gameerror") !== null
@@ -258,18 +239,10 @@ async function startCharacter(charName: string, config: any) {
 			});
 			if (isDisconnected) throw new Error("Game Server Disconnected");
 
-			// CHECK IF CODE STOPPED
 			const isCodePaused = await page.evaluate(() => {
-				// If the "Engage" button is visible, it means the code is NOT running.
-				// We check for the class '.iengagebutton' and if it is visible to the user.
 				const engageBtn = document.querySelector(".iengagebutton");
-				if (engageBtn && (engageBtn as HTMLElement).offsetParent !== null) {
-					return true;
-				}
-
-				return false;
+				return !!(engageBtn && (engageBtn as HTMLElement).offsetParent !== null);
 			});
-
 			if (isCodePaused) throw new Error("Code execution stopped unexpectedly (Engage button visible)");
 
 			if (loopCount % 15 === 0) {
@@ -282,7 +255,6 @@ async function startCharacter(charName: string, config: any) {
 						if (gl) gl.innerHTML = "";
 						if (cl) cl.innerHTML = "";
 
-						// Optional: Clear PIXI texture cache if it exists
 						// @ts-ignore
 						if (window.PIXI && window.PIXI.utils) window.PIXI.utils.clearTextureCache();
 					})
@@ -291,7 +263,7 @@ async function startCharacter(charName: string, config: any) {
 		}
 	} finally {
 		console.log(`[${charName}] Shutting down browser instance...`);
-		await browser.close().catch(() => {});
+		await context.close().catch(() => {});
 	}
 }
 
@@ -302,7 +274,6 @@ async function startCharacterWithRecovery(charName: string, config: any) {
 		const now = new Date().toLocaleString();
 		console.error(`${now} - [${charName}] [${now}] ⚠️ ERROR: ${error.message}`);
 
-		// ----------  Cleanup singleton lock ---------- //
 		const lockPath = path.join(process.env.HOME || "", ".adventure_land_profiles", charName, "SingletonLock");
 		await fs.rm(lockPath, { force: true }).catch(() => {});
 
@@ -317,7 +288,6 @@ async function run() {
 	for (const char of characters) {
 		startCharacterWithRecovery(char, config);
 		console.log(`[SYSTEM] Waiting 1.5s before starting next character...`);
-
 		await new Promise((r) => setTimeout(r, 1500));
 	}
 

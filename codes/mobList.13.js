@@ -36,4 +36,5 @@ const mobData = [
     { travel: "pppompom", targetName: "Pom Pom", map: "level2n" },
     { travel: "ent", targetName: "Ent", map: "desertland" },
     { travel: "wolfie", targetName: "Dark Hound", map: "winterland", x: -82, y: -2059 },
+    { travel: "gscorpion", targetName: "Scorpion", map: "desertland" }
 ];

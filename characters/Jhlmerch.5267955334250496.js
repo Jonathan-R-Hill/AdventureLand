@@ -529,6 +529,13 @@ class Merchant extends combineItems {
 	async processDeliveries() {
 		if ((this.busy || this.mining || this.fishing) || this.deliveryList.length === 0) { return; }
 
+		const currentHp = countItem(HP_POTION);
+		const currentMp = countItem(MP_POTION);
+
+		if (currentHp < POT_BUFFER || currentMp < POT_BUFFER) {
+			await this.restockPotions();
+		}
+
 		const request = this.deliveryList[0];
 		this.busy = true;
 
@@ -774,6 +781,7 @@ class Merchant extends combineItems {
 			if (character.gold < 2_000_000) {
 				set_message(`Getting gold to buy pots`);
 				await smart_move("bank");
+				await sleep(200);
 				bank_withdraw(2_000_000);
 			}
 
