@@ -319,8 +319,8 @@ class BaseClass extends TargetLogic {
 
         this.gettingBuff = false;
 
-        this.validTargets = [`gscorpion`];
-        this.bosses = ["phoenix", "grinch", "mvampire", "greenjr", "jr", "snowman", "icegolem",];
+        this.validTargets = [`ghost`];
+        this.bosses = ["phoenix", "grinch", "fvampire", "mvampire", "greenjr", "jr", "snowman", "icegolem",];
 
         this.lastTarget = "";
         this.lastEvent = null;

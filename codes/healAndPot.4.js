@@ -48,13 +48,17 @@ function checkPotions() {
     const hpCount = countItem(HP_POTION);
     const mpCount = countItem(MP_POTION);
 
-    const player = get_player(character.name);
+    const x = character.real_x;
+    const y = character.real_y;
+    const map = character.map;
+
+    console.log(x, y, map);
 
     if (hpCount < MIN_POTIONS) {
-        send_cm("Jhlmerch", `need_Hpots ${player.x},${player.y},${player.map}`);
+        send_cm("Jhlmerch", `need_Hpots ${x},${y},${map}`);
     }
     if (mpCount < MIN_POTIONS) {
-        send_cm("Jhlmerch", `need_Mpots ${player.x},${player.y},${player.map}`);
+        send_cm("Jhlmerch", `need_Mpots ${x},${y},${map}`);
     }
 }
 
