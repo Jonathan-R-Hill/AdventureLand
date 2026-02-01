@@ -921,14 +921,21 @@ class Merchant extends combineItems {
 					use_skill("fishing");
 				}
 			}
+
 			await sleep(300);
+
+			if (is_on_cooldown("fishing")) {
+				this.fishing = false;
+				this.equipBroom();
+				break;
+			}
 		}
 	}
 
 	async goMining() {
 		const pickaxeItemId = "pickaxe";
 
-		if ((this.mining && is_on_cooldown("mining")) || character.slots.mainhand?.name !== pickaxeItemId && locate_item(pickaxeItemId) === -1) {
+		if ((this.mining && is_on_cooldown("mining")) || (character.slots.mainhand?.name !== pickaxeItemId && locate_item(pickaxeItemId) === -1)) {
 			this.mining = false;
 			this.equipBroom();
 
@@ -957,7 +964,14 @@ class Merchant extends combineItems {
 					use_skill("mining");
 				}
 			}
+
 			await sleep(300);
+
+			if (is_on_cooldown("mining")) {
+				this.mining = false;
+				this.equipBroom();
+				break;
+			}
 		}
 	}
 
