@@ -34,6 +34,28 @@ class TargetLogic {
         return closest;
     }
 
+    getClosestMonsterByName(name) {
+        let closest = null;
+        let minDist = Infinity;
+
+        name = name.toLowerCase();
+
+        for (const id in parent.entities) {
+            const ent = parent.entities[id];
+
+            if (ent.type !== "monster" || ent.dead || !ent.visible) continue;
+            if (!ent.name || ent.name.toLowerCase() !== name) continue;
+
+            const dist = parent.distance(character, ent);
+            if (dist < minDist) {
+                minDist = dist;
+                closest = ent;
+            }
+        }
+
+        return closest;
+    }
+
     getTankTarget() {
         const tank = get_player(this.tank);
         let target = get_target_of(tank);
@@ -69,7 +91,7 @@ class TargetLogic {
             .map(mtype => this.getClosestMonsterByType(mtype))
             .find(mon => mon);
 
-        if (target && !target.s.fullguardx) {
+        if (target && !target.s.fullguardx && !target.s.fullguard) {
             change_target(target);
 
             return target;
@@ -319,8 +341,8 @@ class BaseClass extends TargetLogic {
 
         this.gettingBuff = false;
 
-        this.validTargets = [`ghost`];
-        this.bosses = ["phoenix", "grinch", "fvampire", "mvampire", "greenjr", "jr", "snowman", "icegolem",];
+        this.validTargets = [`bigbird`];
+        this.bosses = ["phoenix", "dragold", "pinkgoo", "grinch", "fvampire", "mvampire", "greenjr", "jr", "snowman", "icegolem",];
 
         this.lastTarget = "";
         this.lastEvent = null;
@@ -334,9 +356,9 @@ class BaseClass extends TargetLogic {
             "rattail", "crabclaw", "bfur", "feather0", "gslime", "smush", "lostearring", "spiderkey", "snakeoil", "ascale",
             "snakefang", "vitscroll", "offeringp", "offering", "essenceoffrost", "carrot", "snowball", "candy1", "frogt", "ink",
             "sstinger", "candycane", "ornament", "mistletoe", "frozenkey", "funtoken", "leather", "btusk", "bwing",
-            "x0", "x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x9", "electronics", "cocoon",
-            "intbelt", "strbelt", "dexbelt", "dstones", "poison", "pleather", "cshell",
-            "handofmidas", "mcape", "sweaterhs", "cryptkey", "forscroll", "gemfragment",
+            "x0", "x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x9", "electronics", "cocoon", "goldenegg",
+            "intbelt", "strbelt", "dexbelt", "dstones", "poison", "pleather", "cshell", "pmace", "lmace",
+            "handofmidas", "mcape", "sweaterhs", "cryptkey", "forscroll", "gemfragment", "candypop", "essenceofether",
             // Upgrade
             "ringsj", "intbelt", "intearring", "strearring", "dexearring", "dexamulet", "stramulet", "intamulet", "wbookhs",
             // Sell
@@ -379,13 +401,51 @@ class BaseClass extends TargetLogic {
 
             this.validTargets = ['arcticbee'];
         }
-        else if (parent.S.icegolem) {
-            //if (character.name == "Jhlmage") { return; }
-
-            this.lastEvent = 'icegolem';
-            if (!get_nearest_monster({ type: 'icegolem' })) { join('icegolem'); }
+        else if (parent.S.dragold && parent.S.dragold.live) {
+            this.lastEvent = 'dragold'
             if (this.lastTarget == "") {
                 this.lastTarget = this.validTargets;
+            }
+
+            this.validTargets = ['dragold'];
+
+            if (!this.getClosestMonsterByName('Dragold')) {
+                await smart_move({ map: "cave", x: 1115.5, y: -747.5 })
+            }
+        }
+        // else if (parent.S.pinkgoo && parent.S.pinkgoo.live) {
+        //     this.lastEvent = "pinkgoo";
+        //     if (this.lastTarget == "") {
+        //         this.lastTarget = this.validTargets;
+        //     }
+
+        //     this.validTargets = ['pinkgoo'];
+
+        //     if (!this.getClosestMonsterByType('pinkgoo')) {
+        //         game.on("event", function (data) {
+        //             // "pinkgoo" is the keyname of 'Love Goo'
+        //             if (data.name == "pinkgoo") {
+        //                 smart_move(data);
+        //             }
+        //         });
+        //     }
+        // }
+        else if (parent.S.icegolem && parent.S.icegolem.live) {
+            this.lastEvent = 'icegolem';
+            if (!get_nearest_monster({ type: 'icegolem' })) { join('icegolem'); }
+
+            if (this.lastTarget == "") {
+                this.lastTarget = this.validTargets;
+            }
+        }
+        else if (parent.S.wabbit && parent.S.wabbit.live) {
+            this.lastEvent = "wabbit";
+            if (this.lastTarget == "") this.lastTarget = this.validTargets;
+
+            this.validTargets = ['wabbit'];
+
+            if (!this.getClosestMonsterByType('wabbit')) {
+                await smart_move('wabbit');
             }
         }
         else {

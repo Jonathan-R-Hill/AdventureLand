@@ -38,5 +38,8 @@ const mobData = [
     { travel: "wolfie", targetName: "Dark Hound", map: "winterland", x: -82, y: -2059 },
     { travel: "gscorpion", targetName: "Scorpion", map: "desertland" },
     { travel: "booboo", targetName: "Boo Boo", map: "spookytown", x: 122.56, y: -679.46 },
-    { travel: "ghost", targetName: "Ghost", map: "halloween", x: 491.39, y: -1091 }
+    { travel: "ghost", targetName: "Ghost", map: "halloween", x: 491.39, y: -1091 },
+    { travel: "dragold", targetName: "Dragold", map: "cave", x: 1115.5, y: -747.5 },
+    { travel: "pinkgoo", targetName: "Love Goo", map: "anywhere" },
+    { travel: "wabbit", targetName: "Wabbit", map: "idk", },
 ];

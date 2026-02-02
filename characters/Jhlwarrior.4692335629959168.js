@@ -7,7 +7,7 @@ graphicsLimiter();
 class MyChar extends BaseClass {
     monsterHunter = false;
     gettingNewTask = false;
-    pullThree = false;
+    pullThree = true;
 
     lastFarmCheck = 0;
     lastTaunt = 0;
@@ -169,7 +169,7 @@ class MyChar extends BaseClass {
             return aMatch - bMatch;
         });
 
-        if (this.aoeTaunt && !parent.S.snowman && !parent.S.icegolem) {
+        if (this.aoeTaunt && !parent.S.snowman && !parent.S.icegolem && (parent.S.dragold && !parent.S.dragold.live)) {
             this.skillAoeTaunt();
         }
 
@@ -220,7 +220,7 @@ async function mainLoop() {
             }
 
             // Target & attack
-            if (["wolfie", "booboo", "ghost", "wolf", "boar", "iceroamer", "bigbird", "ent", "scorpion", "gscorpion", "spider", "mole"].includes(myChar.validTargets[0])) {
+            if (["dragold", "wolfie", "booboo", "ghost", "wolf", "boar", "iceroamer", "bigbird", "ent", "scorpion", "gscorpion", "spider", "mole"].includes(myChar.validTargets[0])) {
                 target = get_nearest_monster({ target: "Jhlpriest" }) || get_nearest_monster({ target: "Jhlmerch" }) ||
                     get_nearest_monster({ target: "Jhlranger" }) || get_nearest_monster({ target: "Jhlrogue" }) ||
                     get_nearest_monster({ target: "Jhlmage" }) || get_nearest_monster({ target: "Jhlpally" });
