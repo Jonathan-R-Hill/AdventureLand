@@ -48,7 +48,13 @@ function getPartyHealth() {
     return parent.party_list
         .map(name => get_player(name))
         .filter(p => p && p.hp > 0)
-        .map(p => ({ name: p.name, hp: p.hp, max_hp: p.max_hp }));
+        .map(p => ({
+            name: p.name,
+            hp: p.hp,
+            max_hp: p.max_hp,
+            hp_percent: p.hp / p.max_hp
+        }))
+        .sort((a, b) => a.hp_percent - b.hp_percent);
 }
 
 async function manageParty() {

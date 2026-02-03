@@ -342,7 +342,7 @@ class BaseClass extends TargetLogic {
         this.gettingBuff = false;
 
         this.validTargets = [`bigbird`];
-        this.bosses = ["phoenix", "dragold", "pinkgoo", "grinch", "fvampire", "mvampire", "greenjr", "jr", "snowman", "icegolem",];
+        this.bosses = ["dragold", "phoenix", "pinkgoo", "grinch", "fvampire", "mvampire", "greenjr", "jr", "snowman", "icegolem",];
 
         this.lastTarget = "";
         this.lastEvent = null;
@@ -358,14 +358,14 @@ class BaseClass extends TargetLogic {
             "sstinger", "candycane", "ornament", "mistletoe", "frozenkey", "funtoken", "leather", "btusk", "bwing",
             "x0", "x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x9", "electronics", "cocoon", "goldenegg",
             "intbelt", "strbelt", "dexbelt", "dstones", "poison", "pleather", "cshell", "pmace", "lmace",
-            "handofmidas", "mcape", "sweaterhs", "cryptkey", "forscroll", "gemfragment", "candypop", "essenceofether",
+            "handofmidas", "mcape", "sweaterhs", "cryptkey", "forscroll", "gemfragment", "candypop", "essenceofether", "essenceoffire",
             // Upgrade
             "ringsj", "intbelt", "intearring", "strearring", "dexearring", "dexamulet", "stramulet", "intamulet", "wbookhs",
             // Sell
             "hpbelt", "hpamulet", "shoes", "coat", "pants", "strring", "intring", "vitring", "dexring",
             "wattire", "wshoes", "wcap", "cclaw", "mushroomstaff", "wbreeches", "slimestaff", "stinger",
             "vitearring", "wgloves", "quiver", "xmace", "xbow", "iceskates", "gcape", "swifty", "lspores",
-            "shield", "hbow",
+            "shield", "hbow", "cupid",
         ];
 
         this.returningToGroup = false;

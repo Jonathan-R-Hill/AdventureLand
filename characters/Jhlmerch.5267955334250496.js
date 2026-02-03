@@ -18,7 +18,7 @@ const sellWhiteList = [
 	"xmace", "xbow", "merry", "snowball", "xmashat", "rednose", "candycanesword", "xmassweater", "xmaspants", "xmasshoes", "warmscarf",
 	"iceskates", "gcape", "santasbelt", "angelwings", "swifty",
 	"snowflakes", "ornamentstaff", "mshield", "ringsj", "lspores", "mittens",
-	"shield", "hbow",
+	"shield", "hbow", "cupid",
 ];
 
 const bankWhitelist = [
@@ -84,8 +84,6 @@ class Merchant extends combineItems {
 			holidayExchange: 0,
 		};
 
-		this.startBotLoop();
-
 		setInterval(() => {
 			console.log(`busy: ${this.busy}, fishing: ${this.fishing}, mining: ${this.mining}`);
 			const now = Date.now();
@@ -131,17 +129,6 @@ class Merchant extends combineItems {
 
 	}
 
-	async startBotLoop() {
-		try {
-			await this.mainLoop();
-		} catch (e) {
-			console.error("Main Loop Crash:", e);
-			this.setBusy(false); // Safety reset on crash
-		}
-		// Wait 1 second AFTER the previous loop finishes before starting the next
-		setTimeout(() => this.startBotLoop(), 1000);
-	}
-
 	setBusy(state) {
 		this.busy = state;
 		if (state) {
@@ -163,122 +150,139 @@ class Merchant extends combineItems {
 		return this.busy || this.fishing || this.mining;
 	}
 
-	async mainLoop() {
-		const now = Date.now();
+	async run() {
+		while (true) {
+			try {
+				await sleep(250);
 
-		if (this.busy && this.busyStartTime > 0 && (now - this.busyStartTime > 90 * 1000)) {
-			console.log("⚠️ Busy timeout triggered! Resetting flags.");
-			set_message("Busy Timeout");
-			this.setBusy(false);
-		}
+				const now = Date.now();
 
-		if (character.rip) {
-			this.resetFlags;
+				if (character.rip) {
+					this.resetFlags();
 
-			return;
-		}
+					continue;
+				}
 
-		if (this.checkIfDoingSOmething()) {
-			return;
-		}
+				if (this.busy && this.busyStartTime > 0 && (now - this.busyStartTime > 90 * 1000)) {
+					console.log("⚠️ Busy timeout triggered! Resetting flags.");
+					set_message("Busy Timeout");
+					this.setBusy(false);
+				}
 
-		// if (now - this.lastRun.autoUpgrade > 4 * 60 * 1000) {
-		// 	if (!this.checkIfDoingSOmething()) {
-		// 		this.lastRun.autoUpgrade = now;
-		// 		await this.buyAndUpgrade("shoes", 7);
-		// 		await this.buyAndUpgrade("helmet", 7);
-		// 		await this.buyAndUpgrade("pants", 7);
-		// 		await this.buyAndUpgrade("coat", 7);
-		// 		await this.buyAndUpgrade("mace", 7);
-		// 	}
-		// }
+				if (now - this.lastRun.resetFlags > 8 * 60 * 1000) {
+					this.lastRun.resetFlags = now;
+					this.resetFlags();
+				}
 
-		if (now - this.lastRun.buffs > 30 * 1000) {
-			if (!this.checkIfDoingSOmething()) {
-				this.lastRun.buffs = now;
-				await this.handleHolidayBuffs();
-			}
-		}
+				if (this.checkIfDoingSOmething()) {
+					if (now - this.lastRun.healBuff > 300) {
+						this.lastRun.healBuff = now;
+						this.healAndBuff();
+					}
 
-		if (now - this.lastRun.processDeliveries > 8 * 1000) {
-			if (this.deliveryList.length > 0) {
-				this.lastRun.processDeliveries = now;
-				await this.processDeliveries();
-			}
-		}
+					continue;
+				}
 
-		if (now - this.lastRun.exchange > 5 * 60 * 1000) {
-			this.lastRun.exchange = now;
-			await this.exchangeItems();
-		}
+				// --- MAIN LOGIC TASKS ---
 
-		if (now - this.lastRun.combine > 3 * 60 * 1000) {
-			this.lastRun.combine = now;
+				// Buffs
+				if (now - this.lastRun.buffs > 30 * 1000) {
+					this.lastRun.buffs = now;
+					await this.handleHolidayBuffs();
+				}
 
-			const upgrades = [
-				"intearring", "strearring", "dexearring", "strring", "intring", "dexring", // Rings & Earrings
-				"wbook0", // Books
-				"dexamulet", "stramulet", "intamulet", // Necks
-				"intbelt", "strbelt", "dexbelt",
-			];
-			const levels = [0, 1, 2];
+				// Deliveries
+				if (now - this.lastRun.processDeliveries > 8 * 1000) {
+					if (this.deliveryList.length > 0) {
+						this.lastRun.processDeliveries = now;
+						await this.processDeliveries();
+					}
+				}
 
-			for (const item of upgrades) {
-				await this.autoCombineItems(item, levels);
-			}
+				// Exchange
+				if (now - this.lastRun.exchange > 5 * 60 * 1000) {
+					this.lastRun.exchange = now;
+					await this.exchangeItems();
+				}
 
-			await this.bankItems()
-		}
+				// Combine / Bank
+				if (now - this.lastRun.combine > 3 * 60 * 1000) {
+					this.lastRun.combine = now;
+					const upgrades = [
+						"intearring", "strearring", "dexearring", "strring", "intring", "dexring",
+						"wbook0", "dexamulet", "stramulet", "intamulet", "intbelt", "strbelt", "dexbelt",
+					];
+					const levels = [0, 1, 2];
+					for (const item of upgrades) {
+						await this.autoCombineItems(item, levels);
+					}
+					await this.bankItems();
+				}
 
-		if (now - this.lastRun.fishing > 11 * 1000) {
-			this.lastRun.fishing = now;
-			await this.goFishing();
-		}
+				// Fishing
+				if (now - this.lastRun.fishing > 11 * 1000) {
+					if (!this.busy && !this.mining) {
+						this.lastRun.fishing = now;
+						await this.goFishing();
+					}
+				}
 
-		if (now - this.lastRun.mining > 12 * 1000) {
-			if (!this.busy && !this.fishing) {
-				this.lastRun.mining = now;
-				await this.goMining();
-			}
-		}
+				// Mining
+				if (now - this.lastRun.mining > 12 * 1000) {
+					if (!this.busy && !this.fishing) {
+						this.lastRun.mining = now;
+						await this.goMining();
+					}
+				}
 
-		if (now - this.lastRun.restock > 250 * 1000) {
-			this.lastRun.restock = now;
-			await this.restockPotions();
-		}
+				// Restock
+				if (now - this.lastRun.restock > 250 * 1000) {
+					this.lastRun.restock = now;
+					await this.restockPotions();
+				}
 
-		if (now - this.lastRun.holidayExchange > (15 * 60 * 1000) && parent.S.holidayseason) {
-			this.lastRun.holidayExchange = now;
-			await this.exchangeHolidayItems();
-		}
+				// Holiday Exchange
+				if (now - this.lastRun.holidayExchange > (15 * 60 * 1000) && parent.S.holidayseason) {
+					this.lastRun.holidayExchange = now;
+					await this.exchangeHolidayItems();
+				}
 
-		if (now - this.lastRun.dismantle > 200 * 1000) {
-			this.lastRun.dismantle = now;
-			await this.dismantleFireWeapons();
-		}
+				// Dismantle
+				if (now - this.lastRun.dismantle > 200 * 1000) {
+					this.lastRun.dismantle = now;
+					await this.dismantleFireWeapons();
+				}
 
-		if (now - this.lastRun.manageInventory > 300 * 1000) {
-			this.lastRun.manageInventory = now;
-			await this.manageInventory();
-		}
+				// Inventory Manage
+				if (now - this.lastRun.manageInventory > 300 * 1000) {
+					this.lastRun.manageInventory = now;
+					await this.manageInventory();
+				}
 
-		if (now - this.lastRun.healBuff > 300) {
-			this.lastRun.healBuff = now;
-			this.healAndBuff();
-		}
+				// Heal/Buff (Standard)
+				if (now - this.lastRun.healBuff > 300) {
+					this.lastRun.healBuff = now;
+					this.healAndBuff();
+				}
 
-		if (now - this.lastRun.returnHome > 30 * 1000) {
-			this.lastRun.returnHome = now;
-			await this.returnHome();
-		}
+				// Return Home
+				if (now - this.lastRun.returnHome > 30 * 1000) {
+					this.lastRun.returnHome = now;
+					await this.returnHome();
+				}
 
-		if (now - this.lastRun.sellCheck > 10 * 1000) {
-			this.lastRun.sellCheck = now;
-			const { used } = this.getInventoryUsage();
-			if (used >= 15) {
-				this.sellItems();
+				// Sell Check
+				if (now - this.lastRun.sellCheck > 10 * 1000) {
+					this.lastRun.sellCheck = now;
+					const { used } = this.getInventoryUsage();
+					if (used >= 15) {
+						this.sellItems();
+						await this.bankItems();
+					}
+				}
 
-				await this.bankItems();
+			} catch (e) {
+				console.error("Main Loop Crash:", e);
 			}
 		}
 	}
@@ -906,91 +910,78 @@ class Merchant extends combineItems {
 	// Fishing & Mining
 	async goFishing() {
 		const fishingRodName = "rod";
+		const rodIdx = locate_item(fishingRodName);
 
-		if ((this.fishing && is_on_cooldown("fishing"))
-			|| (character.slots.mainhand?.name !== fishingRodName && locate_item(fishingRodName) === -1)
-		) {
-			this.fishing = false;
-			this.equipBroom();
-			set_message("Finished Fishing");
-
+		if (rodIdx === -1 || is_on_cooldown("fishing")) {
+			if (this.fishing) {
+				this.fishing = false;
+				this.equipBroom();
+				set_message("Finished Fishing");
+			}
 			return;
 		}
 
-		if (is_on_cooldown("fishing") || this.busy || this.mining) { return; }
+		if (this.busy || this.mining) return;
 
+		this.fishing = true;
 		while (!is_on_cooldown("fishing")) {
-
-			if (parent.distance(character, this.fishingLocation) > 1) {
-				if (!this.fishing) {
-					this.equipBroom();
-					this.fishing = true;
-
-					await smart_move(this.fishingLocation);
-				}
-			}
-
-			if (this.fishing && parent.distance(character, this.fishingLocation) <= 1) {
+			if (parent.distance(character, this.fishingLocation) > 2) {
+				this.equipBroom();
+				await smart_move(this.fishingLocation);
+			} else {
 				if (!character.c.fishing) {
 					potionUse();
-					equip(locate_item(fishingRodName));
-					await sleep(80);
+					equip(rodIdx);
+					await sleep(100);
 
 					use_skill("fishing");
 				}
 			}
 
-			await sleep(300);
-
-			if (is_on_cooldown("fishing")) {
-				this.fishing = false;
-				this.equipBroom();
-				break;
-			}
+			await sleep(500);
 		}
+
+		this.fishing = false;
+		this.equipBroom();
 	}
 
 	async goMining() {
 		const pickaxeItemId = "pickaxe";
+		const pickIdx = locate_item(pickaxeItemId);
 
-		if ((this.mining && is_on_cooldown("mining")) || (character.slots.mainhand?.name !== pickaxeItemId && locate_item(pickaxeItemId) === -1)) {
-			this.mining = false;
-			this.equipBroom();
+		if (pickIdx === -1 || is_on_cooldown("mining")) {
+			if (this.mining) {
+				this.mining = false;
+				this.equipBroom();
+				set_message("Finished Mining");
+			}
 
-			set_message("Finished Mining");
 			return;
 		}
 
-		if (is_on_cooldown("mining") || this.busy || this.fishing) { return; }
+		if (this.busy || this.fishing) { return; }
 
+		this.mining = true;
 		while (!is_on_cooldown("mining")) {
-
-			if (character.real_x != this.miningLocation.x && character.real_y != this.miningLocation.y && !this.mining) {
+			if (parent.distance(character, this.miningLocation) > 2) {
 				this.equipBroom();
-				this.mining = true;
-
 				await smart_move(this.miningLocation);
-			}
-
-			if (character.real_x == this.miningLocation.x && character.real_y == this.miningLocation.y && this.mining) {
-				potionUse();
-				await sleep(50);
-
+			} else {
 				if (!character.c.mining) {
-					equip(locate_item(pickaxeItemId));
-					await sleep(50);
+					potionUse();
+
+					equip(pickIdx);
+
+					await sleep(100);
 					use_skill("mining");
 				}
 			}
 
-			await sleep(300);
-
-			if (is_on_cooldown("mining")) {
-				this.mining = false;
-				this.equipBroom();
-				break;
-			}
+			await sleep(500);
 		}
+
+		this.mining = false;
+		this.equipBroom();
 	}
 
 	healAndBuff() {
@@ -1035,3 +1026,6 @@ class Merchant extends combineItems {
 
 // Instantiate manager
 const myChar = new Merchant();
+
+// Start the main bot loop
+myChar.run().catch(err => console.error("Bot crashed:", err));
