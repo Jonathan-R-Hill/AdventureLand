@@ -11,7 +11,7 @@ class MyChar extends BaseClass {
 
     lastFarmCheck = 0;
     lastTaunt = 0;
-    aoeTaunt = false;
+    aoeTaunt = true;
 
     circleX = 476;
     circleY = -717;
@@ -129,8 +129,11 @@ class MyChar extends BaseClass {
     async circleModeAttack(target) {
         if (smart.moving) { return; }
 
+        if (is_on_cooldown("attack")) { return; }
+
         if (!this.is_in_range(target, "attack")) {
-            set_message("waiting for target to come to me");
+            target = get_nearest_monster();
+            change_target(target);
         }
         else if (!is_on_cooldown("attack")) {
             set_message("Attacking");
@@ -169,7 +172,9 @@ class MyChar extends BaseClass {
             return aMatch - bMatch;
         });
 
-        if (this.aoeTaunt && !parent.S.snowman && !parent.S.icegolem && (parent.S.dragold && !parent.S.dragold.live)) {
+        let activeEvent = parent.S.snowman?.live || parent.S.icegolem?.live || parent.S.dragold?.live;
+
+        if (this.aoeTaunt && !activeEvent) {
             this.skillAoeTaunt();
         }
 
@@ -226,10 +231,7 @@ async function mainLoop() {
                     get_nearest_monster({ target: "Jhlmage" }) || get_nearest_monster({ target: "Jhlpally" });
             }
 
-            let activeEvent = parent.S.snowman || parent.S.icegolem;
-            if (activeEvent) {
-                target = myChar.targetLogicTank();
-            }
+            let activeEvent = parent.S.snowman?.live || parent.S.icegolem?.live || parent.S.dragold?.live;
 
             if (!target || target.dead) {
                 target = myChar.pullThree && get_player(healer) && !activeEvent ? myChar.targetLogicTank3() : myChar.targetLogicTank();

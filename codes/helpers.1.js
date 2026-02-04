@@ -273,6 +273,13 @@ function crossMapHeal() {
     }
 }
 
+function suicide() {
+    if (!character.rip && character.hp < 1100) {
+        parent.socket.emit("harakiri");
+        game_log("Harakiri");
+    }
+}
+
 // ----- Holiday Buffs ----- //
 // Christmas buffs
 function needChristmasBuff() {

@@ -108,7 +108,7 @@ class Merchant extends combineItems {
 
 		// setInterval(snowball, 4200);
 		// setInterval(recoverOutOfCombat, 1000);
-		// setInterval(async () => await this.upgradeAllByName("pmace", 8, 1), 1500);
+		// setInterval(async () => await this.upgradeAllByName("firestaff", 8, 1), 1500);
 		// setTimeout(async () => {
 		// 	await this.buyBasicUpgrade();
 		// 	setTimeout(async () => { await this.buyBasicUpgrade(); }, 2000);
@@ -276,7 +276,7 @@ class Merchant extends combineItems {
 					this.lastRun.sellCheck = now;
 					const { used } = this.getInventoryUsage();
 					if (used >= 15) {
-						this.sellItems();
+						await this.sellItems();
 						await this.bankItems();
 					}
 				}
@@ -365,21 +365,16 @@ class Merchant extends combineItems {
 				send_cm("Jhlmage", "portMe Jhlmerch");
 				await sleep(2000);
 
-				if (map && character.map !== map) {
-					await smart_move({ to: map });
-				}
-				await xmove(x, y);
+				await smart_move({ to: map, x: x, y: y });
 
-				if (character.x === x && character.y === y) {
-					const target = get_player(sender.name);
-					if (target && !is_on_cooldown("mluck")) {
+				if (target && distance(character, target) < G.skills.mluck.range) {
+					if (!is_on_cooldown("mluck")) {
 						use_skill("mluck", target);
-						set_message(`Buffed ${sender.name} with MLuck`);
+						set_message(`Buffed ${sender.name}`);
 					}
-
-					this.setBusy(false);
 				}
 
+				this.setBusy(false);
 				break;
 			}
 
@@ -557,70 +552,102 @@ class Merchant extends combineItems {
 	}
 
 	async processDeliveries() {
-		if ((this.mining || this.fishing) || this.deliveryList.length === 0) { return; }
+		// 1. Basic Checks
+		if (this.mining || this.fishing || this.deliveryList.length === 0) { return; }
 
+		// 2. Calculate Total Needs
+		const HP_PER_DELIVERY = 3000;
+		const MP_PER_DELIVERY = 3000;
+
+		let hpNeeded = 0;
+		let mpNeeded = 0;
+
+		// Loop through the list to see what we need for this run
+		for (const req of this.deliveryList) {
+			if (req.type === "need_Hpots") {
+				hpNeeded += HP_PER_DELIVERY;
+			} else if (req.type === "need_Mpots") {
+				mpNeeded += MP_PER_DELIVERY;
+			}
+		}
+
+		// Add a small buffer (e.g., 500) so we aren't left with exactly 0 after trading
+		const SAFE_BUFFER = 500;
 		const currentHp = countItem(HP_POTION);
 		const currentMp = countItem(MP_POTION);
 
-		if (currentHp < POT_BUFFER || currentMp < POT_BUFFER) {
+		// 3. Stock Check vs Requirements
+		// If we don't have enough for ALL deliveries + buffer, restock first.
+		if (currentHp < (hpNeeded + SAFE_BUFFER) || currentMp < (mpNeeded + SAFE_BUFFER)) {
+			game_log(`Need ${hpNeeded} HP / ${mpNeeded} MP. Restocking first.`);
+			this.setBusy(true);
 			await this.restockPotions();
+			return; // Main loop will trigger processDeliveries again after restock finishes
 		}
 
-		const request = this.deliveryList[0];
-		console.log(request);
 		this.setBusy(true);
 
-		game_log(`Delivery started for ${request.name}...`);
+		// 4. Move to the group (Commute Phase)
+		const firstReq = this.deliveryList[0];
 
-		if (distance(character, { x: request.x, y: request.y, map: request.map }) > 700 && character.map != "bank" && !get_player('Jhlmage')) {
-			send_cm("Jhlmage", "portMe Jhlmerch");
+		game_log(`Commuting to ${firstReq.name}...`);
 
-			// WAIT FOR PORT
-			let ported = false;
-			for (let i = 0; i < 24; i++) {
-				if (get_player('Jhlmage')) {
-					ported = true;
-					break;
+		// Port Logic
+		if (distance(character, { x: firstReq.x, y: firstReq.y, map: firstReq.map }) > 400) {
+			if (firstReq.map !== "bank" && !get_player('Jhlmage')) {
+				send_cm("Jhlmage", "portMe Jhlmerch");
+				for (let i = 0; i < 24; i++) {
+					if (get_player('Jhlmage')) break;
+					await sleep(250);
 				}
-
-				await sleep(250);
-			}
-
-			if (!ported) {
-				game_log("Magiport failed or timed out. Walking...");
-			} else {
-				game_log("Magiport received!");
 				await sleep(500);
 			}
-		}
 
-		try {
-			await smart_move({ to: request.map, x: request.x, y: request.y });
-		} catch (e) {
-			console.log("Movement interrupted (likely already there): " + e);
-		}
-
-		const amountToSend = 3000;
-
-		// Double check distance before sending
-		if (this.distance(character, get_player(request.name)) < 400) {
-			if (request.type === "need_Hpots") {
-				await this.sendPotionsTo(request.name, HP_POTION, MP_POTION, amountToSend, 0);
-			} else if (request.type === "need_Mpots") {
-				await this.sendPotionsTo(request.name, HP_POTION, MP_POTION, 0, amountToSend);
+			try {
+				await smart_move({ to: firstReq.map, x: firstReq.x, y: firstReq.y });
+			} catch (e) {
+				console.log("Move error: " + e);
 			}
-		} else {
-			game_log("Target too far to trade.");
 		}
 
-		this.deliveryList.shift();
+		// 5. Batch Delivery Loop
+		while (this.deliveryList.length > 0) {
+			this.setBusy(true);
+
+			// Double check we haven't run out mid-run (unlikely with new check, but safe)
+			if (countItem(HP_POTION) < 100 || countItem(MP_POTION) < 100) {
+				game_log("Ran out of potions mid-delivery!");
+				break;
+			}
+
+			const request = this.deliveryList[0];
+			const targetPlayer = get_player(request.name);
+
+			if (targetPlayer) {
+				if (distance(character, targetPlayer) > 400) {
+					try { await xmove(targetPlayer.x, targetPlayer.y); } catch (e) { }
+				}
+
+				if (distance(character, targetPlayer) < 400) {
+					// Using the constant we defined earlier
+					if (request.type === "need_Hpots") {
+						await this.sendPotionsTo(request.name, HP_POTION, MP_POTION, HP_PER_DELIVERY, 0);
+					} else if (request.type === "need_Mpots") {
+						await this.sendPotionsTo(request.name, HP_POTION, MP_POTION, 0, MP_PER_DELIVERY);
+					}
+				} else {
+					game_log(`Skipping ${request.name} (Too far)`);
+				}
+			} else {
+				game_log(`Skipping ${request.name} (Player missing)`);
+			}
+
+			this.deliveryList.shift();
+
+			if (this.deliveryList.length > 0) await sleep(800);
+		}
+
 		this.setBusy(false);
-
-		// Process next if exists
-		if (this.deliveryList.length > 0) {
-			await sleep(1000);
-			await this.processDeliveries();
-		}
 	}
 
 	async sendPotionsTo(name, hpPotion, mpPotion, hpAmount = 2000, mpAmount = 2000) {
@@ -669,13 +696,17 @@ class Merchant extends combineItems {
 			await smart_move({ to: "potions" });
 			await sleep(500);
 
-			this.sellItems();
+			await this.sellItems();
 		}
 	}
 
-	sellItems() {
+	async sellItems() {
 		// if (character.map !== "main") { return; }
 		// if (this.distance(character, { x: 0, y: 0 }) > 220) { return; }
+
+		if (character.map == 'bank') {
+			await smart_move('potions');
+		}
 
 		for (let i = 0; i < character.items.length; i++) {
 			const item = character.items[i];
@@ -820,6 +851,7 @@ class Merchant extends combineItems {
 		for (let i = 0; i < item.q / exchInfo.min; i++) {
 
 			if (item.q < exchInfo.min) { break; } // not enough to exchange
+			this.busyStartTime = Date.now();
 
 			exchange(itemSlot);
 			await sleep(6000);
@@ -830,7 +862,7 @@ class Merchant extends combineItems {
 		}
 
 		this.setBusy(false);
-		this.sellItems();
+		await this.sellItems();
 	}
 
 	// restock & buff
@@ -897,7 +929,7 @@ class Merchant extends combineItems {
 				if (Math.abs(character.real_x) <= 100 && Math.abs(character.real_y) <= 100 && character.map == `main`) {
 					console.log("No need to move");
 
-					this.sellItems();
+					await this.sellItems();
 					return;
 				} else {
 					use_skill("use_town");
@@ -969,7 +1001,6 @@ class Merchant extends combineItems {
 			} else {
 				if (!character.c.mining) {
 					potionUse();
-
 					equip(pickIdx);
 
 					await sleep(100);

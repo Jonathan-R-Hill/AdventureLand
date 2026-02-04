@@ -143,6 +143,7 @@ async function mainLoop() {
 
 				myChar.attack(target);
 			} else {
+				await myChar.weaponLogic(target);
 				set_message("No Target");
 			}
 

@@ -2,6 +2,17 @@ import puppeteer from "puppeteer";
 import fs from "fs/promises";
 import path from "path";
 
+// TODO: Add toggle wep animations off
+/*
+	selectors:
+	CONF - #toprightcorner > div:nth-child(15)
+	performance - body > div.modal.hideinbackground > div > div:nth-child(6)
+	wep anim - body > div:nth-child(36) > div > div.mt4.blockbutton.naoff
+	wep anim txt (ensure its off if not off click to toggle)- body > div:nth-child(36) > div > div.mt4.blockbutton.naon > span
+	pre-cache - body > div:nth-child(36) > div > div.mt4.blockbutton.faston
+	pre-cache-txt  - body > div:nth-child(36) > div > div.mt4.blockbutton.faston > span
+*/
+
 const characters: string[] = [`Jhlpriest`, `Jhlwarrior`, `Jhlmage`, `Jhlmerch`];
 const region: string = `EU/II/`;
 
@@ -16,6 +27,55 @@ async function clearCache(userDataDir: string) {
 		console.log(`[System] Cleared cache for ${path.basename(userDataDir)}`);
 	} catch (e) {
 		// Ignore errors
+	}
+}
+
+async function setupGamePerformance(page: puppeteer.Page) {
+	const SELECTORS = {
+		CONF: "#toprightcorner > div:nth-child(15)",
+		PERFORMANCE: "body > div.modal.hideinbackground > div > div:nth-child(6)",
+		WEP_ANIM_BTN: "body > div:nth-child(36) > div > div.mt4.blockbutton.naoff",
+		WEP_ANIM_TXT: "body > div:nth-child(36) > div > div.mt4.blockbutton.naon > span",
+		PRECACHE_BTN: "body > div:nth-child(36) > div > div.mt4.blockbutton.faston",
+		PRECACHE_TXT: "body > div:nth-child(36) > div > div.mt4.blockbutton.faston > span",
+	};
+
+	try {
+		await page.waitForSelector(SELECTORS.CONF, { timeout: 20_000 });
+
+		// Click CONF
+		await page.click(SELECTORS.CONF);
+		await new Promise((r) => setTimeout(r, 500));
+
+		// Click Performance
+		await page.waitForSelector(SELECTORS.PERFORMANCE);
+		await page.click(SELECTORS.PERFORMANCE);
+		await new Promise((r) => setTimeout(r, 500));
+
+		// Weapon Animations
+		const wepAnimStatus = await page.$(SELECTORS.WEP_ANIM_TXT);
+		if (wepAnimStatus) {
+			const text = await page.evaluate((el) => el.textContent, wepAnimStatus);
+			if (text?.includes("ON")) {
+				await page.click(SELECTORS.WEP_ANIM_BTN);
+				console.log("Toggled Weapon Animations to OFF");
+			}
+		}
+
+		// Pre-cache Maps
+		const precacheStatus = await page.$(SELECTORS.PRECACHE_TXT);
+		if (precacheStatus) {
+			const text = await page.evaluate((el) => el.textContent, precacheStatus);
+			if (text?.includes("ON")) {
+				await page.click(SELECTORS.PRECACHE_BTN);
+				console.log("Toggled Pre-cache Maps to OFF");
+			}
+		}
+
+		await page.keyboard.press("Escape");
+		await page.keyboard.press("Escape");
+	} catch (e) {
+		console.error("Failed to set performance options:", e);
 	}
 }
 
@@ -164,9 +224,12 @@ async function startCharacter(charName: string, config: any) {
 			}
 		}
 		await page.keyboard.press("Escape").catch(() => {});
+		await page.keyboard.press("Escape").catch(() => {});
 		console.log(`[${charName}] Bot active.`);
 
 		// ---------- Optimization Logic ---------- //
+		await setupGamePerformance(page);
+
 		console.log(`[${charName}] Attempting to optimize CPU usage...`);
 
 		let isOptimized = false;

@@ -410,26 +410,14 @@ class BaseClass extends TargetLogic {
             this.validTargets = ['dragold'];
 
             if (!this.getClosestMonsterByName('Dragold')) {
+                if (!smart.moving) {
+                    await smart_move({ map: "cave", x: 1115.5, y: -747.5 })
+                }
+            }
+            else if (this.getClosestMonsterByName('Dragold') && this.distance(character, this.getClosestMonsterByName('Dragold')) > 400) {
                 await smart_move({ map: "cave", x: 1115.5, y: -747.5 })
             }
         }
-        // else if (parent.S.pinkgoo && parent.S.pinkgoo.live) {
-        //     this.lastEvent = "pinkgoo";
-        //     if (this.lastTarget == "") {
-        //         this.lastTarget = this.validTargets;
-        //     }
-
-        //     this.validTargets = ['pinkgoo'];
-
-        //     if (!this.getClosestMonsterByType('pinkgoo')) {
-        //         game.on("event", function (data) {
-        //             // "pinkgoo" is the keyname of 'Love Goo'
-        //             if (data.name == "pinkgoo") {
-        //                 smart_move(data);
-        //             }
-        //         });
-        //     }
-        // }
         else if (parent.S.icegolem && parent.S.icegolem.live) {
             this.lastEvent = 'icegolem';
             if (!get_nearest_monster({ type: 'icegolem' })) { join('icegolem'); }
@@ -446,6 +434,18 @@ class BaseClass extends TargetLogic {
 
             if (!this.getClosestMonsterByType('wabbit')) {
                 await smart_move('wabbit');
+            }
+        }
+        else if (parent.S.pinkgoo && parent.S.pinkgoo.live) {
+            this.lastEvent = "pinkgoo";
+            if (this.lastTarget == "") {
+                this.lastTarget = this.validTargets;
+            }
+
+            this.validTargets = ['pinkgoo'];
+
+            if (!this.getClosestMonsterByType('pinkgoo')) {
+                await smart_move({ x: parent.S.pinkgoo.x, y: parent.S.pinkgoo.y, to: parent.S.pinkgoo.map })
             }
         }
         else {
@@ -895,6 +895,7 @@ class BaseClass extends TargetLogic {
 
     moveAwayFromWarrior() {
         const now = Date.now();
+        if (smart.moving) return;
 
         if (this.lastWarriorEscape && now - this.lastWarriorEscape < 500) {
             return;
