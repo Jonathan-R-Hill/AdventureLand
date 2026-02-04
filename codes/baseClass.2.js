@@ -445,7 +445,7 @@ class BaseClass extends TargetLogic {
             this.validTargets = ['pinkgoo'];
 
             if (!this.getClosestMonsterByType('pinkgoo')) {
-                await smart_move({ x: parent.S.pinkgoo.x, y: parent.S.pinkgoo.y, map: parent.S.pinkgoo.map })
+                if (!smart.moving) await smart_move({ x: parent.S.pinkgoo.x, y: parent.S.pinkgoo.y, map: parent.S.pinkgoo.map })
             }
         }
         else {
