@@ -357,8 +357,9 @@ class BaseClass extends TargetLogic {
             "snakefang", "vitscroll", "offeringp", "offering", "essenceoffrost", "carrot", "snowball", "candy1", "frogt", "ink",
             "sstinger", "candycane", "ornament", "mistletoe", "frozenkey", "funtoken", "leather", "btusk", "bwing",
             "x0", "x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x9", "electronics", "cocoon", "goldenegg",
-            "intbelt", "strbelt", "dexbelt", "dstones", "poison", "pleather", "cshell", "pmace", "lmace",
+            "intbelt", "strbelt", "dexbelt", "dstones", "poison", "pleather", "cshell", "pmace", "lmace", "armorbox",
             "handofmidas", "mcape", "sweaterhs", "cryptkey", "forscroll", "gemfragment", "candypop", "essenceofether", "essenceoffire",
+            "greenenvelope",
             // Upgrade
             "ringsj", "intbelt", "intearring", "strearring", "dexearring", "dexamulet", "stramulet", "intamulet", "wbookhs",
             // Sell
@@ -623,10 +624,9 @@ class BaseClass extends TargetLogic {
             if (character.items[i]) used++;
         }
 
-        if (used >= 25) {
+        if (used >= 20) {
             send_cm("Jhlmerch", `need_luck ${character.x},${character.y},${character.map}`);
         }
-
     }
 
     sendWhitelistedItemsToMerchant() {

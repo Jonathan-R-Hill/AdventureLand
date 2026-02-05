@@ -280,6 +280,15 @@ function suicide() {
     }
 }
 
+function getInventoryUsage() {
+    let used = 0;
+    for (let i = 0; i < character.items.length; i++) {
+        if (character.items[i]) { used++; }
+    }
+
+    return { used, total: character.items.length };
+}
+
 // ----- Holiday Buffs ----- //
 // Christmas buffs
 function needChristmasBuff() {

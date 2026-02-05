@@ -89,7 +89,7 @@ class MyChar extends BaseClass {
 			this.equipItem("wand", 7, "mainhand");
 			this.equipItem("wbook0", 4, "offhand");
 		}
-		else if (targets.length >= 3) {
+		else if (targets.length >= 3 && getInventoryUsage().used < 41) {
 			if (this.isEquipped("sparkstaff", 5)) { return; }
 
 			this.removeWeapons();

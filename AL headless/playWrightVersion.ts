@@ -1,4 +1,4 @@
-import { chromium } from "playwright";
+import { chromium, type Page } from "playwright";
 import fs from "fs/promises";
 import path from "path";
 
@@ -16,6 +16,58 @@ async function clearCache(userDataDir: string) {
 		console.log(`[System] Cleared cache for ${path.basename(userDataDir)}`);
 	} catch (e) {
 		// Ignore errors
+	}
+}
+
+async function setupGamePerformance(page: Page) {
+	const SELECTORS = {
+		CONF: "#toprightcorner > div:nth-child(15)",
+		PERFORMANCE: "body > div.modal.hideinbackground > div > div:nth-child(6)",
+		// WEP 애니메이션 텍스트 및 버튼
+		WEP_ANIM_TXT: "body > div:nth-child(36) > div > div.mt4.blockbutton.naon > span",
+		WEP_ANIM_BTN: "body > div:nth-child(36) > div > div.mt4.blockbutton.naoff",
+		// 프리캐시 텍스트 및 버튼
+		PRECACHE_TXT: "body > div:nth-child(36) > div > div.mt4.blockbutton.faston > span",
+		PRECACHE_BTN: "body > div:nth-child(36) > div > div.mt4.blockbutton.faston",
+	};
+
+	try {
+		// 게임 UI 로드 대기
+		await page.waitForSelector(SELECTORS.CONF, { timeout: 20000 });
+
+		// 설정
+		await page.click(SELECTORS.CONF);
+		await page.waitForTimeout(500);
+
+		// 성능(Performance)
+		await page.waitForSelector(SELECTORS.PERFORMANCE);
+		await page.click(SELECTORS.PERFORMANCE);
+		await page.waitForTimeout(500);
+
+		// 무기 애니메이션 설정
+		const wepAnimTxt = await page.$(SELECTORS.WEP_ANIM_TXT);
+		if (wepAnimTxt) {
+			const status = await wepAnimTxt.innerText();
+			if (status.includes("ON")) {
+				await page.click(SELECTORS.WEP_ANIM_BTN);
+				console.log("[System] Weapon Animations toggled to OFF");
+			}
+		}
+
+		// 프리캐시 맵 설정
+		const precacheTxt = await page.$(SELECTORS.PRECACHE_TXT);
+		if (precacheTxt) {
+			const status = await precacheTxt.innerText();
+			if (status.includes("ON")) {
+				await page.click(SELECTORS.PRECACHE_BTN);
+				console.log("[System] Pre-cache Maps toggled to OFF");
+			}
+		}
+
+		// 모달 닫기
+		await page.keyboard.press("Escape");
+	} catch (e) {
+		console.error("Performance setup failed:", e);
 	}
 }
 
@@ -159,10 +211,13 @@ async function startCharacter(charName: string, config: any) {
 			}
 		}
 		await page.keyboard.press("Escape").catch(() => {});
+		await page.keyboard.press("Escape").catch(() => {});
 		console.log(`[${charName}] Bot active.`);
 
 		// ---------- Optimization Logic ---------- //
 		console.log(`[${charName}] Attempting to optimize CPU usage...`);
+
+		await setupGamePerformance(page);
 
 		let isOptimized = false;
 		// Try 15 times, waiting 2 seconds between attempts (Total 30s)

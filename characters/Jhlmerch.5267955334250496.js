@@ -45,7 +45,7 @@ const bankWhitelist = [
 	"snakeoil", "ascale", "snakefang", "vitscroll", "essenceoffire", "essenceoffrost", "carrot", "snowball", "frogt", "ink",
 	"sstinger", "btusk", "bwing", "forscroll", "electronics", "dstones", "pleather", "cshell",
 	// Misc
-	"offeringp", "offering", "funtoken", "cryptkey", "poison", "essenceofether",
+	"offeringp", "offering", "funtoken", "cryptkey", "poison", "essenceofether", "greenenvelope",
 	"x0", "x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x9",
 ];
 
