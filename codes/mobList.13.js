@@ -40,6 +40,6 @@ const mobData = [
     { travel: "booboo", targetName: "Boo Boo", map: "spookytown", x: 122.56, y: -679.46 },
     { travel: "ghost", targetName: "Ghost", map: "halloween", x: 491.39, y: -1091 },
     { travel: "dragold", targetName: "Dragold", map: "cave", x: 1115.5, y: -747.5 },
-    { travel: "pinkgoo", targetName: "Love Goo", map: parent.S.pinkgoo.map, x: parent.S.pinkgoo.x, y: parent.S.pinkgoo.y },
+    { travel: "pinkgoo", targetName: "Love Goo", map: "main" }, //map: parent.S.pinkgoo.map, x: parent.S.pinkgoo.x, y: parent.S.pinkgoo.y
     { travel: "wabbit", targetName: "Wabbit", map: "idk", },
 ];

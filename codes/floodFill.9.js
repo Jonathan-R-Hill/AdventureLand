@@ -1,8 +1,9 @@
 
 const TILE = 23;
-const FF_RANGE = 34;       // tiles around player
+const FF_RANGE = 42;       // tiles around player
 const FF_REPLAN_CD = 800; // ms
 const FF_GOAL_EPS = 2;
+const MAX_ITER = 5000;
 
 let ffPath = null;
 let ffIndex = 0;
@@ -130,7 +131,6 @@ function floodfillPathMultiStart(starts, goal) {
     }
 
     let iterations = 0;
-    const MAX_ITER = 3000;
 
     while (queue.length) {
         if (++iterations > MAX_ITER) return null;

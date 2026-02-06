@@ -62,11 +62,17 @@ function checkPotions() {
     }
 }
 
-function countItem(name) {
-    for (let i = 0; i < character.items.length; i++) {
-        const item = character.items[i];
-        if (item && item.name === name) return item.q;
+function countItemTotal(itemName) {
+    let total = 0;
+
+    for (const slot of character.items) {
+        if (!slot) continue;
+
+        if (slot.name === itemName) {
+            total += slot.q || 1;
+        }
     }
 
-    return 0;
+    return total;
 }
+

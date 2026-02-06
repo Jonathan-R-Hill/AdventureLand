@@ -76,16 +76,41 @@ class MyChar extends BaseClass {
     }
 
     useSkillAbsorb() {
-        const partyMembers = ["Jhlrogue", "Jhlmage", "Jhlranger", "Jhlpally"];
-        for (const id of partyMembers) {
-            const member = get_player(id);
-            if (!member || !member.map || member.rip) { continue; }
+        const absorbAll = false;
+
+        if (is_on_cooldown("absorb") || character.mp < G.skills.absorb.mp) return;
+
+        let targetsToCheck = [];
+
+        if (absorbAll) {
+            // Protect ANY player nearby
+            for (const id in parent.entities) {
+                const ent = parent.entities[id];
+                if (ent.name == "Jhlwarrior") { continue; }
+                if (ent.type === "character" && !ent.rip && ent.name !== character.name && !ent.npc) {
+                    targetsToCheck.push(ent);
+                }
+            }
+        } else {
+            const partyMembers = ["Jhlrogue", "Jhlmage", "Jhlranger", "Jhlpally"];
+            for (const id of partyMembers) {
+                const member = get_player(id);
+                if (member && !member.rip && member.map === character.map) {
+                    targetsToCheck.push(member);
+                }
+            }
+        }
+
+        for (const member of targetsToCheck) {
+            if (parent.distance(character, member) > G.skills.absorb.range) continue;
 
             for (const entId in parent.entities) {
                 const ent = parent.entities[entId];
-                if (!ent.target || ent.type !== "monster") { continue; }
-                if (ent.target === member.name && !is_on_cooldown("absorb")) {
+                if (!ent.target || ent.type !== "monster") continue;
+
+                if (ent.target === member.name) {
                     use_skill("absorb", member);
+                    game_log(`Absorbing agro from ${member.name}`);
                     return;
                 }
             }
@@ -135,7 +160,7 @@ class MyChar extends BaseClass {
                     if (this.kite) { this.kiteTarget(); }
                     this.moveAwayFromWarrior();
 
-                    // this.useSkillAbsorb();
+                    this.useSkillAbsorb();
                     this.useSkillDarkBlessing();
                     this.useSkillCurse(target);
 

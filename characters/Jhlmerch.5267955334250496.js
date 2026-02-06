@@ -329,27 +329,35 @@ class Merchant extends combineItems {
 				if (this.checkIfDoingSOmething()) return;
 
 				const [xStr, yStr, map] = data.split(",");
-				const x = Number(xStr);
-				const y = Number(yStr);
+				let x = Number(xStr);
+				let y = Number(yStr);
 
 				this.setBusy(true);
 
 				send_cm("Jhlmage", "portMe Jhlmerch");
-
 				await sleep(2000);
 
-				console.log(xStr, yStr, map)
 				if (map && character.map !== map) {
-					await smart_move({ to: map });
+					await smart_move({ to: map }).catch((e) => stop());
 				}
 
-				await xmove(x, y);
-
-				if (this.distance(character, { x, y }) <= 2) {
-					set_message(`Arrived at group location (${x}, ${y})`);
-					this.setBusy(false);
+				const targetPlayer = get_player(sender.name);
+				if (targetPlayer) {
+					x = targetPlayer.x;
+					y = targetPlayer.y;
 				}
 
+				if (this.distance(character, { x, y }) > 400) {
+					await smart_move({ x, y }).catch(() => { });
+				} else {
+					await xmove(x, y).catch(() => { });
+				}
+
+				if (this.distance(character, { x, y }) <= 200) {
+					set_message(`Arrived at group`);
+				}
+
+				this.setBusy(false);
 				break;
 			}
 
@@ -357,15 +365,18 @@ class Merchant extends combineItems {
 				if (this.checkIfDoingSOmething()) return;
 
 				const [xStr, yStr, map] = data.split(",");
-				const x = Number(xStr);
-				const y = Number(yStr);
+				let x = Number(xStr);
+				let y = Number(yStr);
 
 				this.setBusy(true);
 
 				send_cm("Jhlmage", "portMe Jhlmerch");
 				await sleep(2000);
 
-				await smart_move({ to: map, x: x, y: y });
+				// Move to map/location
+				await smart_move({ to: map, x: x, y: y }).catch((e) => stop());
+
+				const target = get_player(sender.name);
 
 				if (target && distance(character, target) < G.skills.mluck.range) {
 					if (!is_on_cooldown("mluck")) {
@@ -389,7 +400,7 @@ class Merchant extends combineItems {
 		this.setBusy(true);
 
 		if (character.map !== "bank") {
-			await smart_move({ to: "bank" });
+			await smart_move({ to: "bank" }).catch((e) => stop());
 		}
 
 		const holidayItems = [
@@ -453,7 +464,7 @@ class Merchant extends combineItems {
 
 		// 3. Move to the correct location
 		if (character.map !== exchInfo.map || distance(character, { x: exchInfo.x, y: exchInfo.y }) > 100) {
-			await smart_move({ x: exchInfo.x, y: exchInfo.y, map: exchInfo.map });
+			await smart_move({ x: exchInfo.x, y: exchInfo.y, map: exchInfo.map }).catch((e) => stop());
 		}
 
 		const freeSpaces = this.getInventoryUsage();
@@ -477,7 +488,7 @@ class Merchant extends combineItems {
 		this.sellItems();
 
 		if (character.map !== "main") {
-			await smart_move({ to: "potions" });
+			await smart_move({ to: "potions" }).catch((e) => stop());
 		}
 		this.sellItems();
 
@@ -488,7 +499,7 @@ class Merchant extends combineItems {
 		this.setBusy(true);
 
 		if (character.map !== "winter_inn") {
-			await smart_move({ to: "winter_inn" });
+			await smart_move({ to: "winter_inn" }).catch((e) => stop());
 		}
 
 		await exchange(0);
@@ -552,10 +563,8 @@ class Merchant extends combineItems {
 	}
 
 	async processDeliveries() {
-		// 1. Basic Checks
 		if (this.mining || this.fishing || this.deliveryList.length === 0) { return; }
 
-		// 2. Calculate Total Needs
 		const HP_PER_DELIVERY = 3000;
 		const MP_PER_DELIVERY = 3000;
 
@@ -571,23 +580,22 @@ class Merchant extends combineItems {
 			}
 		}
 
-		// Add a small buffer (e.g., 500) so we aren't left with exactly 0 after trading
 		const SAFE_BUFFER = 500;
 		const currentHp = countItem(HP_POTION);
 		const currentMp = countItem(MP_POTION);
 
-		// 3. Stock Check vs Requirements
 		// If we don't have enough for ALL deliveries + buffer, restock first.
 		if (currentHp < (hpNeeded + SAFE_BUFFER) || currentMp < (mpNeeded + SAFE_BUFFER)) {
 			game_log(`Need ${hpNeeded} HP / ${mpNeeded} MP. Restocking first.`);
 			this.setBusy(true);
 			await this.restockPotions();
+
 			return; // Main loop will trigger processDeliveries again after restock finishes
 		}
 
 		this.setBusy(true);
 
-		// 4. Move to the group (Commute Phase)
+		// Move to the group
 		const firstReq = this.deliveryList[0];
 
 		game_log(`Commuting to ${firstReq.name}...`);
@@ -600,21 +608,22 @@ class Merchant extends combineItems {
 					if (get_player('Jhlmage')) break;
 					await sleep(250);
 				}
+
 				await sleep(500);
 			}
 
 			try {
-				await smart_move({ to: firstReq.map, x: firstReq.x, y: firstReq.y });
+				await smart_move({ to: firstReq.map, x: firstReq.x, y: firstReq.y }).catch((e) => stop());
 			} catch (e) {
 				console.log("Move error: " + e);
 			}
 		}
 
-		// 5. Batch Delivery Loop
+		// Batch Delivery Loop
 		while (this.deliveryList.length > 0) {
 			this.setBusy(true);
 
-			// Double check we haven't run out mid-run (unlikely with new check, but safe)
+			// Double check we haven't run out mid-run (unlikely, but safe)
 			if (countItem(HP_POTION) < 100 || countItem(MP_POTION) < 100) {
 				game_log("Ran out of potions mid-delivery!");
 				break;
@@ -625,26 +634,15 @@ class Merchant extends combineItems {
 
 			if (targetPlayer) {
 				if (distance(character, targetPlayer) > 400) {
+					try { await smart_move({ x: targetPlayer.x, y: targetPlayer.y }); } catch (e) { }
+				} else if (distance(character, targetPlayer) > 50) {
 					try { await xmove(targetPlayer.x, targetPlayer.y); } catch (e) { }
 				}
-
-				if (distance(character, targetPlayer) < 400) {
-					// Using the constant we defined earlier
-					if (request.type === "need_Hpots") {
-						await this.sendPotionsTo(request.name, HP_POTION, MP_POTION, HP_PER_DELIVERY, 0);
-					} else if (request.type === "need_Mpots") {
-						await this.sendPotionsTo(request.name, HP_POTION, MP_POTION, 0, MP_PER_DELIVERY);
-					}
-				} else {
-					game_log(`Skipping ${request.name} (Too far)`);
-				}
-			} else {
-				game_log(`Skipping ${request.name} (Player missing)`);
 			}
 
 			this.deliveryList.shift();
 
-			if (this.deliveryList.length > 0) await sleep(800);
+			if (this.deliveryList.length > 0) { await sleep(800); }
 		}
 
 		this.setBusy(false);
@@ -693,7 +691,7 @@ class Merchant extends combineItems {
 		if (used >= 20) {
 			this.setBusy(true);
 
-			await smart_move({ to: "potions" });
+			await smart_move({ to: "potions" }).catch((e) => stop());
 			await sleep(500);
 
 			await this.sellItems();
@@ -705,7 +703,7 @@ class Merchant extends combineItems {
 		// if (this.distance(character, { x: 0, y: 0 }) > 220) { return; }
 
 		if (character.map == 'bank') {
-			await smart_move('potions');
+			await smart_move('potions').catch((e) => stop());
 		}
 
 		for (let i = 0; i < character.items.length; i++) {
@@ -722,7 +720,7 @@ class Merchant extends combineItems {
 
 	async bankItems() {
 		if (character.map !== "bank") {
-			await smart_move({ to: "bank" });
+			await smart_move({ to: "bank" }).catch((e) => stop());
 		}
 
 		for (let i = 0; i < character.items.length; i++) {
@@ -762,7 +760,7 @@ class Merchant extends combineItems {
 			return;
 		}
 
-		await smart_move({ x: 29.10676790733877, y: 651.4848803418221, map: `main` });
+		await smart_move({ x: 29.10676790733877, y: 651.4848803418221, map: `main` }).catch((e) => stop());
 
 		for (const slot of dismantleSlots) {
 			try {
@@ -780,7 +778,15 @@ class Merchant extends combineItems {
 	async exchangeItems() {
 		this.setBusy(true);
 		let exchangeableItems;
-		await smart_move({ to: "bank" });
+
+		try {
+			await smart_move({ to: "bank" });
+		} catch (e) {
+			console.log("Move to bank failed: " + e);
+			stop();
+			this.setBusy(false);
+			return;
+		}
 
 		if (!parent.S.holidayseason) {
 			exchangeableItems = [
@@ -789,14 +795,16 @@ class Merchant extends combineItems {
 				{ item: "candycane", min: 1, x: 30.92, y: -381.1, map: "main" },
 				{ item: "mistletoe", min: 1, x: 30.92, y: -381.1, map: "main" },
 				{ item: "ornament", min: 20, x: 30.92, y: -381.1, map: "main" },
-				{ item: "seashell", min: 20, x: -1496, y: 580, map: "main" }
+				{ item: "seashell", min: 20, x: -1496, y: 580, map: "main" },
+				{ item: "candypop", min: 1, x: 30.92, y: -381.1, map: "main" },
 			];
 		}
 		else {
 			exchangeableItems = [
 				{ item: "gem0", min: 1, x: 30.92, y: -381.1, map: "main" },
 				{ item: "gem1", min: 1, x: 30.92, y: -381.1, map: "main" },
-				{ item: "seashell", min: 20, x: -1496, y: 580, map: "main" }
+				{ item: "seashell", min: 20, x: -1496, y: 580, map: "main" },
+				{ item: "candypop", min: 1, x: 30.92, y: -381.1, map: "main" },
 			]
 		}
 
@@ -805,6 +813,7 @@ class Merchant extends combineItems {
 		let exchInfo = null;
 		const slots = [];
 
+		// Collect items from bank
 		if (character.bank) {
 			for (const packName in character.bank) {
 				const pack = character.bank[packName];
@@ -835,30 +844,51 @@ class Merchant extends combineItems {
 
 				currentKey = exch.item;
 				exchInfo = exch;
-				await smart_move({ x: exch.x, y: exch.y, map: exch.map });
+
+				try {
+					await smart_move({ x: exch.x, y: exch.y, map: exch.map });
+				} catch (e) {
+					console.log("Move to exchange NPC failed: " + e);
+					stop();
+					this.setBusy(false);
+					return;
+				}
 
 				game_log(`Exchanging item in slot ${itemSlot}: ${character.items[itemSlot].name}`);
 				break;
 			}
 		}
 
-
-
 		if (itemSlot === -1) { this.setBusy(false); return; } // nothing to exchange
 
 		const item = character.items[itemSlot];
+		const MAX_TRADES = 20;
 
+		// Loop: Run until out of items OR we hit the 20 trade limit
 		for (let i = 0; i < item.q / exchInfo.min; i++) {
+			// Limit Check
+			if (i >= MAX_TRADES) {
+				game_log("Hit 20 trade limit. Stopping for now.");
+				break;
+			}
 
-			if (item.q < exchInfo.min) { break; } // not enough to exchange
+			if (item.q < exchInfo.min) { break; }
+
 			this.busyStartTime = Date.now();
 
-			exchange(itemSlot);
+			try {
+				exchange(itemSlot);
+			}
+			catch (e) {
+				stop();
+				break;
+			}
+
 			await sleep(6000);
 
 			// Re‑find slot
 			itemSlot = this.getItemSlot(currentKey);
-			if (itemSlot === -1) { break; } // no more to exchange
+			if (itemSlot === -1) { break; }
 		}
 
 		this.setBusy(false);
@@ -867,32 +897,47 @@ class Merchant extends combineItems {
 
 	// restock & buff
 	async restockPotions() {
-		const currentHp = countItem(HP_POTION);
-		const currentMp = countItem(MP_POTION);
+
+		const currentHp = countItemTotal(HP_POTION);
+		const currentMp = countItemTotal(MP_POTION);
 
 		if (currentHp < POT_BUFFER || currentMp < POT_BUFFER) {
+
 			this.setBusy(true);
 
+			// Make sure we have enough gold
 			if (character.gold < 2_000_000) {
-				set_message(`Getting gold to buy pots`);
-				await smart_move("bank");
+
+				set_message(`Getting gold to buy pots...`);
+
+				await smart_move("bank").catch((e) => stop());
 				await sleep(200);
+
 				bank_withdraw(2_000_000);
 			}
 
 			set_message("Restocking potions...");
-			await smart_move({ to: "potions" });
 
-			if (currentHp < POTSMINSTOCK) buy(HP_POTION, POTSMINSTOCK - currentHp);
-			if (currentMp < POTSMINSTOCK) buy(MP_POTION, POTSMINSTOCK - currentMp);
+			await smart_move({ to: "potions" }).catch((e) => stop());
+
+			if (currentHp < POTSMINSTOCK) {
+				buy(HP_POTION, POTSMINSTOCK - currentHp);
+			}
+
+			if (currentMp < POTSMINSTOCK) {
+				buy(MP_POTION, POTSMINSTOCK - currentMp);
+			}
 
 			set_message("Potions restocked!");
 		}
 
+		// Reset flags once safe
 		if (currentHp >= POT_BUFFER && currentMp >= POT_BUFFER) {
+			this.setBusy(false);
 			this.resetFlags();
 		}
 	}
+
 
 	buffPartyWithMLuck() {
 		for (const id in parent.party) {
@@ -924,7 +969,7 @@ class Merchant extends combineItems {
 			set_message("On call..");
 
 			if (character.map !== "main" && !smart.moving) {
-				await smart_move({ map: "main" });
+				await smart_move({ map: "main" }).catch((e) => stop());
 			} else {
 				if (Math.abs(character.real_x) <= 100 && Math.abs(character.real_y) <= 100 && character.map == `main`) {
 					console.log("No need to move");
@@ -959,7 +1004,7 @@ class Merchant extends combineItems {
 		while (!is_on_cooldown("fishing")) {
 			if (parent.distance(character, this.fishingLocation) > 2) {
 				this.equipBroom();
-				await smart_move(this.fishingLocation);
+				await smart_move(this.fishingLocation).catch((e) => stop());
 			} else {
 				if (!character.c.fishing) {
 					potionUse();
@@ -997,7 +1042,7 @@ class Merchant extends combineItems {
 		while (!is_on_cooldown("mining")) {
 			if (parent.distance(character, this.miningLocation) > 2) {
 				this.equipBroom();
-				await smart_move(this.miningLocation);
+				await smart_move(this.miningLocation).catch((e) => stop());
 			} else {
 				if (!character.c.mining) {
 					potionUse();

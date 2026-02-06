@@ -1,6 +1,7 @@
 load_code("helpers");
 load_code("commCommands");
 load_code("floodFill");
+load_code('AStar');
 load_code("UI");
 
 class TargetLogic {
@@ -412,11 +413,11 @@ class BaseClass extends TargetLogic {
 
             if (!this.getClosestMonsterByName('Dragold')) {
                 if (!smart.moving) {
-                    await smart_move({ map: "cave", x: 1115.5, y: -747.5 })
+                    await smart_move({ map: "cave", x: 1115.5, y: -747.5 }).catch((e) => stop());
                 }
             }
             else if (this.getClosestMonsterByName('Dragold') && this.distance(character, this.getClosestMonsterByName('Dragold')) > 400) {
-                await smart_move({ map: "cave", x: 1115.5, y: -747.5 })
+                await smart_move({ map: "cave", x: 1115.5, y: -747.5 }).catch((e) => stop());
             }
         }
         else if (parent.S.icegolem && parent.S.icegolem.live) {
@@ -434,19 +435,23 @@ class BaseClass extends TargetLogic {
             this.validTargets = ['wabbit'];
 
             if (!this.getClosestMonsterByType('wabbit')) {
-                await smart_move('wabbit');
+                await smart_move('wabbit').catch((e) => stop());
             }
         }
         else if (parent.S.pinkgoo && parent.S.pinkgoo.live) {
             this.lastEvent = "pinkgoo";
-            if (this.lastTarget == "") {
-                this.lastTarget = this.validTargets;
-            }
-
+            if (this.lastTarget == "") this.lastTarget = this.validTargets;
             this.validTargets = ['pinkgoo'];
 
             if (!this.getClosestMonsterByType('pinkgoo')) {
-                if (!smart.moving) await smart_move({ x: parent.S.pinkgoo.x, y: parent.S.pinkgoo.y, map: parent.S.pinkgoo.map })
+                if (!smart.moving) {
+                    // Force the move using live event data
+                    await smart_move({
+                        x: parent.S.pinkgoo.x,
+                        y: parent.S.pinkgoo.y,
+                        map: parent.S.pinkgoo.map
+                    }).catch((e) => stop());
+                }
             }
         }
         else {
@@ -512,7 +517,7 @@ class BaseClass extends TargetLogic {
 
                 console.log(xStr, yStr, map)
                 if (map && character.map !== map) {
-                    await smart_move({ to: map });
+                    await smart_move({ to: map }).catch((e) => stop());
                 }
 
                 await xmove(x, y);
@@ -529,7 +534,7 @@ class BaseClass extends TargetLogic {
                 const dataSplit = data.split(',');
                 this.validTargets = [dataSplit[1]];
 
-                if (!smart.moving) await smart_move({ to: dataSplit[0] });
+                if (!smart.moving) await smart_move({ to: dataSplit[0] }).catch((e) => stop());
 
                 break;
             }
@@ -541,10 +546,10 @@ class BaseClass extends TargetLogic {
 
                 if (!smart.moving) {
                     if (character.map !== map) {
-                        await smart_move({ map: map });
+                        await smart_move({ map: map }).catch((e) => stop());
                     }
 
-                    await smart_move(travel);
+                    await smart_move(travel).catch((e) => stop());
                 }
 
                 break;
@@ -571,7 +576,7 @@ class BaseClass extends TargetLogic {
 
                 console.log(xStr, yStr, map)
                 if (map && character.map !== map) {
-                    await smart_move({ to: map });
+                    await smart_move({ to: map }).catch((e) => stop());
                 }
 
                 await xmove(x, y);
@@ -737,7 +742,7 @@ class BaseClass extends TargetLogic {
                 if (!ent || ent.type !== "monster" || ent.dead || !ent.visible) continue;
 
                 const dist = parent.distance(character, ent);
-                if (dist > 300) continue;
+                if (dist > 200) continue;
 
                 if (ent.mtype === mtype) {
                     stop();
@@ -753,6 +758,16 @@ class BaseClass extends TargetLogic {
             const primaryTarget = this.validTargets[0];
             if (!primaryTarget) return;
 
+            if (primaryTarget === "pinkgoo" && parent.S.pinkgoo?.live) {
+                await smart_move({
+                    x: parent.S.pinkgoo.x,
+                    y: parent.S.pinkgoo.y,
+                    map: parent.S.pinkgoo.map
+                }).catch((e) => stop());
+
+                return;
+            }
+
             let farm = mobData.find(m => m.travel === primaryTarget);
 
             if (this.lastEvent == "icegolem") {
@@ -763,10 +778,10 @@ class BaseClass extends TargetLogic {
             }
             else if (farm) {
                 if (farm.map && farm.x !== undefined && farm.y !== undefined) {
-                    await smart_move({ map: farm.map, x: farm.x, y: farm.y });
+                    await smart_move({ map: farm.map, x: farm.x, y: farm.y }).catch((e) => stop());
                 }
                 else {
-                    await smart_move(farm.travel);
+                    await smart_move(farm.travel).catch((e) => stop());
                 }
             }
         }
@@ -824,6 +839,7 @@ class BaseClass extends TargetLogic {
 
         if (!this.is_in_range(target, "attack")) {
             moveTowardTargetFloodfill(target.real_x, target.real_y);
+            // moveTowardTargetAStar(target.real_x, target.real_y);
 
             set_message("Moving to target");
         } else if (!is_on_cooldown("attack")) {
