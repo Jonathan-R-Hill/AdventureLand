@@ -118,7 +118,7 @@ class Merchant extends combineItems {
 		parent.socket.on("magiport", (d) => {
 			const mage = "Jhlmage";
 
-			if (d.name == mage) {
+			if (!this.fishing && !this.mining && d.name == mage) {
 				accept_magiport(mage);
 			}
 		});
@@ -275,7 +275,7 @@ class Merchant extends combineItems {
 				if (now - this.lastRun.sellCheck > 10 * 1000) {
 					this.lastRun.sellCheck = now;
 					const { used } = this.getInventoryUsage();
-					if (used >= 15) {
+					if (used >= 18) {
 						await this.sellItems();
 						await this.bankItems();
 					}
@@ -640,6 +640,9 @@ class Merchant extends combineItems {
 				}
 			}
 
+			if (request.type == 'need_Mpots') { this.sendPotionsTo(request.name, HP_POTION, MP_POTION, 0, 3000); }
+			else if (request.type == 'need_Hpots') { this.sendPotionsTo(request.name, HP_POTION, MP_POTION, 3000, 0); }
+
 			this.deliveryList.shift();
 
 			if (this.deliveryList.length > 0) { await sleep(800); }
@@ -688,7 +691,7 @@ class Merchant extends combineItems {
 		if (this.checkIfDoingSOmething()) { return; }
 
 		// If inventory is getting full, go sell
-		if (used >= 20) {
+		if (used > 20) {
 			this.setBusy(true);
 
 			await smart_move({ to: "potions" }).catch((e) => stop());
@@ -766,6 +769,7 @@ class Merchant extends combineItems {
 			try {
 				dismantle(slot);
 				game_log(`Dismantled ${character.items[slot].name} in slot ${slot}`);
+				stop();
 			} catch (e) {
 				game_log(`Failed to dismantle slot ${slot}: ${e}`);
 			}
@@ -796,7 +800,7 @@ class Merchant extends combineItems {
 				{ item: "mistletoe", min: 1, x: 30.92, y: -381.1, map: "main" },
 				{ item: "ornament", min: 20, x: 30.92, y: -381.1, map: "main" },
 				{ item: "seashell", min: 20, x: -1496, y: 580, map: "main" },
-				{ item: "candypop", min: 1, x: 30.92, y: -381.1, map: "main" },
+				{ item: "candypop", min: 10, x: 30.92, y: -381.1, map: "main" },
 			];
 		}
 		else {
@@ -804,7 +808,7 @@ class Merchant extends combineItems {
 				{ item: "gem0", min: 1, x: 30.92, y: -381.1, map: "main" },
 				{ item: "gem1", min: 1, x: 30.92, y: -381.1, map: "main" },
 				{ item: "seashell", min: 20, x: -1496, y: 580, map: "main" },
-				{ item: "candypop", min: 1, x: 30.92, y: -381.1, map: "main" },
+				{ item: "candypop", min: 10, x: 30.92, y: -381.1, map: "main" },
 			]
 		}
 
@@ -866,7 +870,6 @@ class Merchant extends combineItems {
 
 		// Loop: Run until out of items OR we hit the 20 trade limit
 		for (let i = 0; i < item.q / exchInfo.min; i++) {
-			// Limit Check
 			if (i >= MAX_TRADES) {
 				game_log("Hit 20 trade limit. Stopping for now.");
 				break;
@@ -898,8 +901,8 @@ class Merchant extends combineItems {
 	// restock & buff
 	async restockPotions() {
 
-		const currentHp = countItemTotal(HP_POTION);
-		const currentMp = countItemTotal(MP_POTION);
+		const currentHp = countItem(HP_POTION);
+		const currentMp = countItem(MP_POTION);
 
 		if (currentHp < POT_BUFFER || currentMp < POT_BUFFER) {
 
@@ -974,7 +977,7 @@ class Merchant extends combineItems {
 				if (Math.abs(character.real_x) <= 100 && Math.abs(character.real_y) <= 100 && character.map == `main`) {
 					console.log("No need to move");
 
-					await this.sellItems();
+					await this.manageInventory();
 					return;
 				} else {
 					use_skill("use_town");

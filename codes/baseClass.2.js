@@ -382,12 +382,14 @@ class BaseClass extends TargetLogic {
         setInterval(() => this.askForLuck(), 20 * 1000);
         setInterval(() => this.callMerchant(), 20 * 1000);
         setInterval(() => parent.socket.emit("send_updates", {}), 21 * 1000); // Clear ghost entities
+        setInterval(() => this.stuckCheck(), 40 * 1000);
 
         startSharedTasks();
 
         // scaleUI(0.80);
     }
 
+    // Events
     async handleEvents() {
         if (character.map == "winterland" && this.distance(character, { map: "winterland", x: 820, y: 425 }) < 400
             && !get_nearest_monster({ type: 'icegolem' })) {
@@ -474,6 +476,7 @@ class BaseClass extends TargetLogic {
         }
     }
 
+    // Surge
     async useTemporalSurge(keepMana) {
         if (Date.now() < this.surgeLastUsed + 62000 || !this.surge) {
             return;
@@ -613,6 +616,7 @@ class BaseClass extends TargetLogic {
         }
     }
 
+    // Merchant stuff
     askForLuck() {
         const mluckBuff = character.s?.mluck;
         const remaining = mluckBuff?.ms || 0;
@@ -705,6 +709,33 @@ class BaseClass extends TargetLogic {
         unequip("offhand");
     }
 
+    // Movement checks
+    stuckCheck() {
+        if (character.rip || this.gettingBuff || character.cc > 0) return;
+
+        // Don't run stuck check if we are doing dynamic events
+        const eventMobs = ["icegolem", "grinch"];
+        const currentTarget = this.validTargets[0];
+        if (eventMobs.includes(currentTarget)) return;
+
+        // Check distance to intended farm spot
+        const farm = mobData.find(m => m.travel === currentTarget);
+        if (!farm) return;
+
+        let isLost = false;
+
+        if (!this.getClosestMonsterByType(farm.travel)) {
+            isLost = true;
+        }
+
+        if (isLost) {
+            game_log(`[Watchdog] Stuck/Lost detected! Resetting path to ${currentTarget}`);
+            stop();
+            smart.moving = false; // Force clear smart.moving 
+            this.checkNearbyFarmMob();
+        }
+    }
+
     async checkNearbyFarmMob() {
         // If fighting together and not the tank, stop here
         if (this.fightTogeather && get_player(this.tank) && character.name !== this.tank) {
@@ -763,6 +794,15 @@ class BaseClass extends TargetLogic {
                     x: parent.S.pinkgoo.x,
                     y: parent.S.pinkgoo.y,
                     map: parent.S.pinkgoo.map
+                }).catch((e) => stop());
+
+                return;
+            }
+            else if (primaryTarget === "dragold" && parent.S.dragold?.live) {
+                await smart_move({
+                    x: parent.S.dragold.x,
+                    y: parent.S.dragold.y,
+                    map: parent.S.dragold.map
                 }).catch((e) => stop());
 
                 return;

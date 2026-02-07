@@ -76,6 +76,15 @@ class MyChar extends BaseClass {
 	}
 
 	async weaponLogic(target) {
+		if (target == null) {
+			this.equipItem("firestaff", 8, "mainhand");
+			this.equipItem("wbook0", 4, "offhand");
+
+			await sleep(20);
+
+			return;
+		}
+
 		let targets = [];
 		for (let id in parent.entities) {
 			let entity = parent.entities[id]; // this.myCharacters.includes(entity.target)
@@ -109,6 +118,8 @@ const myChar = new MyChar(character.name);
 async function mainLoop() {
 	while (true) {
 		try {
+			if (smart.moving) { myChar.weaponLogic(); }
+
 			if (myChar.gettingBuff || character.cc >= 190) {
 				await sleep(100);
 				continue;

@@ -62,7 +62,7 @@ function checkPotions() {
     }
 }
 
-function countItemTotal(itemName) {
+function countItem(itemName) {
     let total = 0;
 
     for (const slot of character.items) {
