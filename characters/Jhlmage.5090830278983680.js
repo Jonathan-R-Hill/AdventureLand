@@ -28,7 +28,7 @@ class MyChar extends BaseClass {
 	}
 
 	skillPort(char) {
-		const USE_ABOVE_MANA = 920;
+		const USE_ABOVE_MANA = 1100;
 		if (is_on_cooldown("magiport") || character.mp <= USE_ABOVE_MANA) { return; }
 		use_skill("magiport", char);
 	}
@@ -60,7 +60,7 @@ class MyChar extends BaseClass {
 	}
 
 	snowmanPort() {
-		if (!parent.S || !parent.S.snowman || !parent.S.snowman.live) { return; }
+		if (!parent.S.snowman?.live) { return; }
 		const snowman = get_nearest_monster({ type: "snowman" });
 
 		if (!snowman || distance(character, snowman) >= 900) {
@@ -71,6 +71,9 @@ class MyChar extends BaseClass {
 			this.skillPort("Jhlpriest");
 		}
 		if (!get_player("Jhlranger")) {
+			this.skillPort("Jhlranger");
+		}
+		if (!get_player("Jhlwarrior")) {
 			this.skillPort("Jhlranger");
 		}
 	}
@@ -94,11 +97,15 @@ class MyChar extends BaseClass {
 			}
 		}
 
-		if (target.name == 'Snowman' && !target.s.fullguardx) {
+		if ((target.name == 'Snowman' || target.name == 'Love Goo') && !target.s.fullguardx) {
 			this.equipItem("wand", 7, "mainhand");
 			this.equipItem("wbook0", 4, "offhand");
 		}
-		else if (targets.length >= 3 && getInventoryUsage().used < 41) {
+		else if (getInventoryUsage().used + 2 == 42 && this.isEquipped('wbook0', 4, 'offhand')) {
+			this.equipItem("firestaff", 8, "mainhand");
+			this.equipItem("wbook0", 4, "offhand");
+		}
+		else if (targets.length >= 3 && getInventoryUsage().used + 1 < 42) {
 			if (this.isEquipped("sparkstaff", 5)) { return; }
 
 			this.removeWeapons();
@@ -118,8 +125,6 @@ const myChar = new MyChar(character.name);
 async function mainLoop() {
 	while (true) {
 		try {
-			if (smart.moving) { myChar.weaponLogic(); }
-
 			if (myChar.gettingBuff || character.cc >= 190) {
 				await sleep(100);
 				continue;
@@ -154,7 +159,6 @@ async function mainLoop() {
 
 				myChar.attack(target);
 			} else {
-				await myChar.weaponLogic(target);
 				set_message("No Target");
 			}
 

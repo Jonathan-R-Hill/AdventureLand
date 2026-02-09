@@ -118,7 +118,7 @@ class Merchant extends combineItems {
 		parent.socket.on("magiport", (d) => {
 			const mage = "Jhlmage";
 
-			if (!this.fishing && !this.mining && d.name == mage) {
+			if (!this.fishing && !this.mining && this.getInventoryUsage().used < 30 && d.name == mage) {
 				accept_magiport(mage);
 			}
 		});
@@ -338,7 +338,12 @@ class Merchant extends combineItems {
 				await sleep(2000);
 
 				if (map && character.map !== map) {
-					await smart_move({ to: map }).catch((e) => stop());
+					await smart_move({ to: map }).catch((e) => {
+						stop();
+						if (e && e.reason === "unable") {
+							this.setBusy(false);
+						}
+					});
 				}
 
 				const targetPlayer = get_player(sender.name);
@@ -347,11 +352,11 @@ class Merchant extends combineItems {
 					y = targetPlayer.y;
 				}
 
-				if (this.distance(character, { x, y }) > 400) {
-					await smart_move({ x, y }).catch(() => { });
-				} else {
-					await xmove(x, y).catch(() => { });
-				}
+				await smart_move({ x, y }).catch((e) => {
+					if (e && e.reason === "unable") {
+						this.setBusy(false);
+					}
+				});
 
 				if (this.distance(character, { x, y }) <= 200) {
 					set_message(`Arrived at group`);
@@ -374,7 +379,12 @@ class Merchant extends combineItems {
 				await sleep(2000);
 
 				// Move to map/location
-				await smart_move({ to: map, x: x, y: y }).catch((e) => stop());
+				await smart_move({ to: map, x: x, y: y }).catch((e) => {
+					stop();
+					if (e && e.reason === "unable") {
+						this.setBusy(false);
+					}
+				});
 
 				const target = get_player(sender.name);
 
@@ -563,7 +573,7 @@ class Merchant extends combineItems {
 	}
 
 	async processDeliveries() {
-		if (this.mining || this.fishing || this.deliveryList.length === 0) { return; }
+		if (this.checkIfDoingSOmething() || this.deliveryList.length === 0) { return; }
 
 		const HP_PER_DELIVERY = 3000;
 		const MP_PER_DELIVERY = 3000;
@@ -580,7 +590,7 @@ class Merchant extends combineItems {
 			}
 		}
 
-		const SAFE_BUFFER = 500;
+		const SAFE_BUFFER = 200;
 		const currentHp = countItem(HP_POTION);
 		const currentMp = countItem(MP_POTION);
 
@@ -887,7 +897,7 @@ class Merchant extends combineItems {
 				break;
 			}
 
-			await sleep(6000);
+			await sleep(7000);
 
 			// Re‑find slot
 			itemSlot = this.getItemSlot(currentKey);
@@ -998,21 +1008,22 @@ class Merchant extends combineItems {
 				this.equipBroom();
 				set_message("Finished Fishing");
 			}
+
 			return;
 		}
 
 		if (this.busy || this.mining) return;
 
+		this.equipBroom();
 		this.fishing = true;
 		while (!is_on_cooldown("fishing")) {
-			if (parent.distance(character, this.fishingLocation) > 2) {
-				this.equipBroom();
-				await smart_move(this.fishingLocation).catch((e) => stop());
+			if (parent.distance(character, this.fishingLocation) > 5) {
+				await smart_move(this.fishingLocation);
 			} else {
 				if (!character.c.fishing) {
 					potionUse();
 					equip(rodIdx);
-					await sleep(100);
+					await sleep(500);
 
 					use_skill("fishing");
 				}
@@ -1042,9 +1053,10 @@ class Merchant extends combineItems {
 		if (this.busy || this.fishing) { return; }
 
 		this.mining = true;
+		this.equipBroom();
+
 		while (!is_on_cooldown("mining")) {
-			if (parent.distance(character, this.miningLocation) > 2) {
-				this.equipBroom();
+			if (parent.distance(character, this.miningLocation) > 5) {
 				await smart_move(this.miningLocation).catch((e) => stop());
 			} else {
 				if (!character.c.mining) {

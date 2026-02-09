@@ -378,7 +378,7 @@ class BaseClass extends TargetLogic {
 
         setInterval(() => this.handleHolidayBuffs(), 45 * 1000);
         if (this.eventsEnabled) { setInterval(() => this.handleEvents(), 15 * 1000); }
-        setInterval(() => this.sendWhitelistedItemsToMerchant(), 3 * 1000);
+        setInterval(() => this.sendWhitelistedItemsToMerchant(), 2 * 1000);
         setInterval(() => this.askForLuck(), 20 * 1000);
         setInterval(() => this.callMerchant(), 20 * 1000);
         setInterval(() => parent.socket.emit("send_updates", {}), 21 * 1000); // Clear ghost entities
@@ -642,7 +642,7 @@ class BaseClass extends TargetLogic {
         if (!this.sendItems) { return; }
 
         const merchant = get_player(this.merchantName);
-        if (!merchant || parent.distance(character, merchant) > 400) { return; }
+        if (!merchant || this.distance(character, merchant) > 400) { return; }
 
         const onlyTier1 = [
             "firebow", "fireblade", "firestaff", "glolipop", "wand", "sparkstaff", "wbook0"
