@@ -93,6 +93,7 @@ class TargetLogic {
             .find(mon => mon);
 
         if (target && !target.s.fullguardx && !target.s.fullguard) {
+            if (target.name == 'Dragold' && !get_player('Jhlpriest')) { return null; }
             change_target(target);
 
             return target;

@@ -107,8 +107,6 @@ class Merchant extends combineItems {
 		scaleUI(0.8);
 
 		// setInterval(snowball, 4200);
-		// setInterval(recoverOutOfCombat, 1000);
-		// setInterval(async () => await this.upgradeAllByName("firestaff", 8, 1), 1500);
 		// setTimeout(async () => {
 		// 	await this.buyBasicUpgrade();
 		// 	setTimeout(async () => { await this.buyBasicUpgrade(); }, 2000);
@@ -283,6 +281,7 @@ class Merchant extends combineItems {
 
 			} catch (e) {
 				console.error("Main Loop Crash:", e);
+				this.setBusy(false);
 			}
 		}
 	}
@@ -1120,3 +1119,6 @@ const myChar = new Merchant();
 
 // Start the main bot loop
 myChar.run().catch(err => console.error("Bot crashed:", err));
+
+// setInterval(recoverOutOfCombat, 1000);
+// setInterval(async () => await myChar.upgradeAllByName("firestaff", 8, 1), 1500);

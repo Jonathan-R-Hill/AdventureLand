@@ -234,7 +234,7 @@ async function mainLoop() {
             let activeEvent = parent.S.snowman?.live || parent.S.icegolem?.live || parent.S.dragold?.live;
 
             if (!target || target.dead) {
-                target = myChar.pullThree && get_player(healer) && !activeEvent ? myChar.targetLogicTank3() : myChar.targetLogicTank();
+                target = myChar.pullThree && get_player(healer) && myChar.distance(character, get_player(healer)) < 200 && !activeEvent ? myChar.targetLogicTank3() : myChar.targetLogicTank();
             }
 
             if (target) {
