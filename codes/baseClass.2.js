@@ -342,6 +342,7 @@ class BaseClass extends TargetLogic {
         this.surgeLastUsed = 0;
 
         this.gettingBuff = false;
+        this.lastMerchantInteractionCheck = 0;
 
         this.validTargets = [`bigbird`];
         this.bosses = ["dragold", "phoenix", "pinkgoo", "grinch", "fvampire", "mvampire", "greenjr", "jr", "snowman", "icegolem",];
@@ -379,15 +380,23 @@ class BaseClass extends TargetLogic {
 
         setInterval(() => this.handleHolidayBuffs(), 45 * 1000);
         if (this.eventsEnabled) { setInterval(() => this.handleEvents(), 15 * 1000); }
-        setInterval(() => this.sendWhitelistedItemsToMerchant(), 2 * 1000);
-        setInterval(() => this.askForLuck(), 20 * 1000);
-        setInterval(() => this.callMerchant(), 20 * 1000);
         setInterval(() => parent.socket.emit("send_updates", {}), 21 * 1000); // Clear ghost entities
-        setInterval(() => this.stuckCheck(), 40 * 1000);
+        setInterval(() => this.stuckCheck(), 35 * 1000);
 
         startSharedTasks();
 
         // scaleUI(0.80);
+    }
+
+    merchantInteractions() {
+        if (Date.now() - 3000 < this.lastMerchantInteractionCheck) { return; }
+        sendGoldToMerchant();
+        checkPotions();
+        this.askForLuck();
+        this.callMerchant();
+        this.sendWhitelistedItemsToMerchant()
+
+        this.lastMerchantInteractionCheck = Date.now();
     }
 
     // Events

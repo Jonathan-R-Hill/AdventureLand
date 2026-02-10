@@ -54,6 +54,8 @@ setInterval(async function () {
 		myChar.lastFarmCheck = now;
 	}
 
+	myChar.merchantInteractions();
+
 	potionUse();
 	loot();
 

@@ -78,6 +78,8 @@ async function mainLoop() {
                 continue;
             }
 
+            myChar.merchantInteractions();
+
             // Farm Check
             const now = Date.now();
             if (now - myChar.lastFarmCheck > 5000 && !myChar.gettingBuff && myChar.validTargets[0] != "") {

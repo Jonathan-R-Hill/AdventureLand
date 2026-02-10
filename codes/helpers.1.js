@@ -17,11 +17,6 @@ function startSharedTasks() {
         }
     });
 
-    if (character.name != "Jhlmerch") {
-        setInterval(sendGoldToMerchant, 3 * 1000);
-        setInterval(checkPotions, 9 * 1000);
-    }
-
     setInterval(() => {
         if (character.afk && !is_paused())
             pause();
@@ -287,6 +282,26 @@ function getInventoryUsage() {
     }
 
     return { used, total: character.items.length };
+}
+
+function isEquipped(itemName, level, slotName = null) {
+    if (slotName) {
+        const equipped = character.slots[slotName];
+        return (
+            equipped &&
+            equipped.name === itemName &&
+            equipped.level === level
+        );
+    } else {
+        for (const slot in character.slots) {
+            const equipped = character.slots[slot];
+            if (equipped && equipped.name === itemName && equipped.level === level) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }
 
 // ----- Holiday Buffs ----- //

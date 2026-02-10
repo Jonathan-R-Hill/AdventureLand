@@ -49,6 +49,8 @@ async function mainLoop() {
 				continue;
 			}
 
+			myChar.merchantInteractions();
+
 			potionUse();
 			loot();
 

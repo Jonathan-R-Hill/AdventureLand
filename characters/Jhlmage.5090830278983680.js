@@ -122,6 +122,7 @@ class MyChar extends BaseClass {
 
 const myChar = new MyChar(character.name);
 
+let now = 0;
 async function mainLoop() {
 	while (true) {
 		try {
@@ -130,7 +131,9 @@ async function mainLoop() {
 				continue;
 			}
 
-			const now = Date.now();
+			myChar.merchantInteractions();
+
+			now = Date.now();
 
 			if (now - myChar.lastSnowmanCheck > 2000) {
 				myChar.snowmanPort();

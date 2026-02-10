@@ -137,21 +137,21 @@ async function startCharacter(charName: string, config: any) {
 
 			let lastTime = 0;
 
-			window.requestAnimationFrame = (callback) => {
-				const currTime = new Date().getTime();
-				const timeToCall = Math.max(0, 150 - (currTime - lastTime)); // 100ms = 10 FPS
+			// window.requestAnimationFrame = (callback) => {
+			// 	const currTime = new Date().getTime();
+			// 	const timeToCall = Math.max(0, 150 - (currTime - lastTime)); // 100ms = 10 FPS
 
-				const id = window.setTimeout(() => {
-					callback(performance.now());
-				}, timeToCall);
+			// 	const id = window.setTimeout(() => {
+			// 		callback(performance.now());
+			// 	}, timeToCall);
 
-				lastTime = currTime + timeToCall;
-				return id;
-			};
+			// 	lastTime = currTime + timeToCall;
+			// 	return id;
+			// };
 
-			window.cancelAnimationFrame = (id) => {
-				clearTimeout(id);
-			};
+			// window.cancelAnimationFrame = (id) => {
+			// 	clearTimeout(id);
+			// };
 		});
 
 		console.log(`[${charName}] Navigating to Adventure Land...`);
@@ -229,35 +229,35 @@ async function startCharacter(charName: string, config: any) {
 				if (frame) {
 					const success = await frame.evaluate(() => {
 						// @ts-ignore
-						if (!window.PIXI || !window.PIXI.ticker) return false;
+						// if (!window.PIXI || !window.PIXI.ticker) return false;
 
 						// @ts-ignore
 						parent.no_html = true;
 						// @ts-ignore
 						parent.no_graphics = true;
 
-						// @ts-ignore
-						if (window.PIXI.ticker.shared) window.PIXI.ticker.shared.stop();
-						// @ts-ignore
-						if (window.PIXI.ticker.system) window.PIXI.ticker.system.stop();
+						// // @ts-ignore
+						// if (window.PIXI.ticker.shared) window.PIXI.ticker.shared.stop();
+						// // @ts-ignore
+						// if (window.PIXI.ticker.system) window.PIXI.ticker.system.stop();
 
 						const canvas = document.querySelector("canvas");
 						if (canvas) canvas.style.display = "none";
 
-						// @ts-ignore
-						if (window.gc && performance.memory.usedJSHeapSize > 600_000_000) {
-							window.gc();
-						}
+						// // @ts-ignore
+						// if (window.gc && performance.memory.usedJSHeapSize > 600_000_000) {
+						// 	window.gc();
+						// }
 
-						// @ts-ignore
-						if (window.socket) {
-							// @ts-ignore
-							window.socket.onmessage = () => {};
-							// @ts-ignore
-							window.socket.onclose = () => {};
-							// @ts-ignore
-							window.socket.onerror = () => {};
-						}
+						// // @ts-ignore
+						// if (window.socket) {
+						// 	// @ts-ignore
+						// 	// window.socket.onmessage = () => {}; // This is required do not re-enable
+						// 	// @ts-ignore
+						// 	window.socket.onclose = () => {};
+						// 	// @ts-ignore
+						// 	window.socket.onerror = () => {};
+						// }
 
 						return true;
 					});

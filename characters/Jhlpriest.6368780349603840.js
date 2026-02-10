@@ -130,6 +130,8 @@ class MyChar extends BaseClass {
                     continue;
                 }
 
+                this.merchantInteractions();
+
                 potionUse();
                 loot();
 

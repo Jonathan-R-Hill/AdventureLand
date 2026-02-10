@@ -86,11 +86,11 @@ class Merchant extends combineItems {
 
 		setInterval(() => {
 			console.log(`busy: ${this.busy}, fishing: ${this.fishing}, mining: ${this.mining}`);
-			const now = Date.now();
-			if (now - this.lastRun.resetFlags > 8 * 60 * 1000) {
-				this.lastRun.resetFlags = now;
-				this.resetFlags();
-			}
+			// const now = Date.now();
+			// if (now - this.lastRun.resetFlags > 8 * 60 * 1000) {
+			// 	this.lastRun.resetFlags = now;
+			// 	this.resetFlags();
+			// }
 		}, 5000);
 		setInterval(exportCharacterData, 8 * 1000);
 		setInterval(useSkillJacko, 1200);
@@ -122,6 +122,7 @@ class Merchant extends combineItems {
 		});
 
 		character.on("cm", async (sender, data) => {
+			if (this.fishing || this.mining) { return; }
 			await this.handleCM(sender, data);
 		});
 
@@ -1015,15 +1016,21 @@ class Merchant extends combineItems {
 
 		this.equipBroom();
 		this.fishing = true;
-		while (!is_on_cooldown("fishing")) {
-			if (parent.distance(character, this.fishingLocation) > 5) {
+
+		while (true) {
+			if (is_on_cooldown("fishing") && !character.c.fishing) { break; }
+
+			if (parent.distance(character, this.fishingLocation) > 5 && !character.c.fishing) {
 				await smart_move(this.fishingLocation);
 			} else {
+				if (!isEquipped('rod', 4, 'mainhand') && !isEquipped('rod', 3, 'mainhand')) {
+					equip(rodIdx);
+				}
+
 				if (!character.c.fishing) {
 					potionUse();
-					equip(rodIdx);
-					await sleep(500);
 
+					await sleep(400);
 					use_skill("fishing");
 				}
 			}
@@ -1032,12 +1039,13 @@ class Merchant extends combineItems {
 		}
 
 		this.fishing = false;
+		await sleep(50);
 		this.equipBroom();
 	}
 
 	async goMining() {
-		const pickaxeItemId = "pickaxe";
-		const pickIdx = locate_item(pickaxeItemId);
+		const pickaxeName = "pickaxe";
+		const pickIdx = locate_item(pickaxeName);
 
 		if (pickIdx === -1 || is_on_cooldown("mining")) {
 			if (this.mining) {
@@ -1045,24 +1053,29 @@ class Merchant extends combineItems {
 				this.equipBroom();
 				set_message("Finished Mining");
 			}
-
 			return;
 		}
 
-		if (this.busy || this.fishing) { return; }
+		if (this.busy || this.fishing) return;
 
-		this.mining = true;
 		this.equipBroom();
+		this.mining = true;
 
-		while (!is_on_cooldown("mining")) {
-			if (parent.distance(character, this.miningLocation) > 5) {
-				await smart_move(this.miningLocation).catch((e) => stop());
-			} else {
+		while (true) {
+			if (is_on_cooldown("mining") && !character.c.mining) break;
+
+			if (parent.distance(character, this.miningLocation) > 5 && !character.c.mining) {
+				await smart_move(this.miningLocation);
+			}
+			else {
+				if (!isEquipped("pickaxe", 4, "mainhand") && !isEquipped("pickaxe", 3, "mainhand")) {
+					equip(pickIdx);
+				}
+
 				if (!character.c.mining) {
 					potionUse();
-					equip(pickIdx);
 
-					await sleep(100);
+					await sleep(400);
 					use_skill("mining");
 				}
 			}
@@ -1071,8 +1084,10 @@ class Merchant extends combineItems {
 		}
 
 		this.mining = false;
+		await sleep(50);
 		this.equipBroom();
 	}
+
 
 	healAndBuff() {
 		reviveSelf();
@@ -1118,7 +1133,9 @@ class Merchant extends combineItems {
 const myChar = new Merchant();
 
 // Start the main bot loop
-myChar.run().catch(err => console.error("Bot crashed:", err));
+(async () => {
+	await myChar.run().catch(err => console.error("Bot crashed:", err));
+})();
 
 // setInterval(recoverOutOfCombat, 1000);
 // setInterval(async () => await myChar.upgradeAllByName("firestaff", 8, 1), 1500);
