@@ -229,17 +229,17 @@ async function startCharacter(charName: string, config: any) {
 				if (frame) {
 					const success = await frame.evaluate(() => {
 						// @ts-ignore
-						// if (!window.PIXI || !window.PIXI.ticker) return false;
+						if (!window.PIXI || !window.PIXI.ticker) return false;
 
 						// @ts-ignore
 						parent.no_html = true;
 						// @ts-ignore
 						parent.no_graphics = true;
 
-						// // @ts-ignore
-						// if (window.PIXI.ticker.shared) window.PIXI.ticker.shared.stop();
-						// // @ts-ignore
-						// if (window.PIXI.ticker.system) window.PIXI.ticker.system.stop();
+						// @ts-ignore
+						if (window.PIXI.ticker.shared) window.PIXI.ticker.shared.stop();
+						// @ts-ignore
+						if (window.PIXI.ticker.system) window.PIXI.ticker.system.stop();
 
 						const canvas = document.querySelector("canvas");
 						if (canvas) canvas.style.display = "none";
@@ -249,15 +249,15 @@ async function startCharacter(charName: string, config: any) {
 						// 	window.gc();
 						// }
 
-						// // @ts-ignore
-						// if (window.socket) {
-						// 	// @ts-ignore
-						// 	// window.socket.onmessage = () => {}; // This is required do not re-enable
-						// 	// @ts-ignore
-						// 	window.socket.onclose = () => {};
-						// 	// @ts-ignore
-						// 	window.socket.onerror = () => {};
-						// }
+						// @ts-ignore
+						if (window.socket) {
+							// @ts-ignore
+							// window.socket.onmessage = () => {}; // This is required do not re-enable
+							// @ts-ignore
+							window.socket.onclose = () => {};
+							// @ts-ignore
+							window.socket.onerror = () => {};
+						}
 
 						return true;
 					});

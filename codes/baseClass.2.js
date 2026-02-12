@@ -338,13 +338,15 @@ class BaseClass extends TargetLogic {
         this.followLeader = true;
         this.fightTogeather = false;
 
+        this.farmMobs = [`bigbird`]
+
         this.surge = false;
         this.surgeLastUsed = 0;
 
         this.gettingBuff = false;
         this.lastMerchantInteractionCheck = 0;
 
-        this.validTargets = [`bigbird`];
+        this.validTargets = this.farmMobs;
         this.bosses = ["dragold", "phoenix", "pinkgoo", "grinch", "fvampire", "mvampire", "greenjr", "jr", "snowman", "icegolem",];
 
         this.lastTarget = "";
@@ -380,7 +382,10 @@ class BaseClass extends TargetLogic {
 
         setInterval(() => this.handleHolidayBuffs(), 45 * 1000);
         if (this.eventsEnabled) { setInterval(() => this.handleEvents(), 15 * 1000); }
-        setInterval(() => parent.socket.emit("send_updates", {}), 21 * 1000); // Clear ghost entities
+        setInterval(() => {
+            parent.socket.emit("send_updates", {});
+            if (character.map == 'jail') { parent.socket.emit('leave'); }
+        }, 21 * 1000); // Clear ghost entities & escape jail
         setInterval(() => this.stuckCheck(), 35 * 1000);
 
         startSharedTasks();
@@ -389,9 +394,12 @@ class BaseClass extends TargetLogic {
     }
 
     merchantInteractions() {
-        if (Date.now() - 3000 < this.lastMerchantInteractionCheck) { return; }
+        if (Date.now() - 3500 < this.lastMerchantInteractionCheck) { return; }
+        console.log(`Merchant logic ran`);
+
         sendGoldToMerchant();
         checkPotions();
+
         this.askForLuck();
         this.callMerchant();
         this.sendWhitelistedItemsToMerchant()
@@ -468,11 +476,10 @@ class BaseClass extends TargetLogic {
         }
         else {
             if (this.lastTarget != "") {
-                this.validTargets = this.lastTarget;
+                this.validTargets = this.farmMobs;
 
                 this.lastTarget = "";
             }
-
         }
     }
 
@@ -632,7 +639,7 @@ class BaseClass extends TargetLogic {
         const remaining = mluckBuff?.ms || 0;
 
         if (!mluckBuff || remaining < 160000) {
-            send_cm("Jhlmerch", `need_luck ${character.x},${character.y},${character.map}`);
+            send_cm("Jhlmerch", `need_luck ${character.real_x},${character.real_y},${character.map}`);
             set_message("Requesting MLuck from merchant...");
         }
     }
@@ -644,7 +651,7 @@ class BaseClass extends TargetLogic {
         }
 
         if (used >= 20) {
-            send_cm("Jhlmerch", `need_luck ${character.x},${character.y},${character.map}`);
+            send_cm("Jhlmerch", `come_to_me ${character.real_x},${character.real_y},${character.map}`);
         }
     }
 
@@ -721,12 +728,15 @@ class BaseClass extends TargetLogic {
 
     // Movement checks
     stuckCheck() {
-        if (character.rip || this.gettingBuff || character.cc > 0) return;
+        if (character.rip || this.gettingBuff || character.cc >= 190) { return; }
 
         // Don't run stuck check if we are doing dynamic events
         const eventMobs = ["icegolem", "grinch"];
+        const target = this.bosses
+            .map(mtype => this.getClosestMonsterByType(mtype))
+            .find(mon => mon);
         const currentTarget = this.validTargets[0];
-        if (eventMobs.includes(currentTarget)) return;
+        if (eventMobs.includes(currentTarget) || target) { return; }
 
         // Check distance to intended farm spot
         const farm = mobData.find(m => m.travel === currentTarget);

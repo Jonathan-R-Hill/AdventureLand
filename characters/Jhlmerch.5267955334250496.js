@@ -85,7 +85,7 @@ class Merchant extends combineItems {
 		};
 
 		setInterval(() => {
-			console.log(`busy: ${this.busy}, fishing: ${this.fishing}, mining: ${this.mining}`);
+			console.log(`busy: ${this.busy}, fishing: ${this.fishing}, mining: ${this.mining}, smart moving: ${smart.moving}`);
 			// const now = Date.now();
 			// if (now - this.lastRun.resetFlags > 8 * 60 * 1000) {
 			// 	this.lastRun.resetFlags = now;
@@ -168,17 +168,18 @@ class Merchant extends combineItems {
 					this.setBusy(false);
 				}
 
-				if (now - this.lastRun.resetFlags > 8 * 60 * 1000) {
+				if (now - this.lastRun.resetFlags > 10 * 60 * 1000) {
 					this.lastRun.resetFlags = now;
 					this.resetFlags();
 				}
 
-				if (this.checkIfDoingSOmething()) {
-					if (now - this.lastRun.healBuff > 300) {
-						this.lastRun.healBuff = now;
-						this.healAndBuff();
-					}
+				if (now - this.lastRun.healBuff > 300) {
+					this.lastRun.healBuff = now;
+					this.healAndBuff();
+				}
 
+				if (this.checkIfDoingSOmething()) {
+					await sleep(100);
 					continue;
 				}
 
@@ -211,10 +212,12 @@ class Merchant extends combineItems {
 						"intearring", "strearring", "dexearring", "strring", "intring", "dexring",
 						"wbook0", "dexamulet", "stramulet", "intamulet", "intbelt", "strbelt", "dexbelt",
 					];
+
 					const levels = [0, 1, 2];
 					for (const item of upgrades) {
 						await this.autoCombineItems(item, levels);
 					}
+
 					await this.bankItems();
 				}
 
@@ -298,7 +301,7 @@ class Merchant extends combineItems {
 	async handleCM(sender, payload) {
 		if (!sender.name.startsWith("Jhl")) return;
 
-		this.equipBroom();
+		if (!this.fishing && !this.mining) { this.equipBroom(); }
 
 		const [command, data] = sender.message.split(" ");
 
@@ -329,40 +332,32 @@ class Merchant extends combineItems {
 				if (this.checkIfDoingSOmething()) return;
 
 				const [xStr, yStr, map] = data.split(",");
-				let x = Number(xStr);
-				let y = Number(yStr);
+				let strX = Number(xStr);
+				let strY = Number(yStr);
 
 				this.setBusy(true);
 
 				send_cm("Jhlmage", "portMe Jhlmerch");
-				await sleep(2000);
-
-				if (map && character.map !== map) {
-					await smart_move({ to: map }).catch((e) => {
-						stop();
-						if (e && e.reason === "unable") {
-							this.setBusy(false);
-						}
-					});
-				}
+				await sleep(4000);
 
 				const targetPlayer = get_player(sender.name);
 				if (targetPlayer) {
-					x = targetPlayer.x;
-					y = targetPlayer.y;
+					strX = targetPlayer.x;
+					strY = targetPlayer.y;
 				}
 
-				await smart_move({ x, y }).catch((e) => {
-					if (e && e.reason === "unable") {
-						this.setBusy(false);
-					}
-				});
-
-				if (this.distance(character, { x, y }) <= 200) {
-					set_message(`Arrived at group`);
+				try {
+					await Promise.race([
+						smart_move({ x: strX, y: strY, map: map }),
+						new Promise((_, reject) => setTimeout(() => reject(new Error("Move Timeout")), 40_000))
+					]);
+				} catch (e) {
+					console.log("Move failed or timed out:", e);
 				}
 
 				this.setBusy(false);
+				set_message(`Come to me complete`);
+
 				break;
 			}
 
@@ -396,6 +391,8 @@ class Merchant extends combineItems {
 				}
 
 				this.setBusy(false);
+
+				set_message(`buffed luck`);
 				break;
 			}
 
@@ -650,10 +647,16 @@ class Merchant extends combineItems {
 				}
 			}
 
-			if (request.type == 'need_Mpots') { this.sendPotionsTo(request.name, HP_POTION, MP_POTION, 0, 3000); }
-			else if (request.type == 'need_Hpots') { this.sendPotionsTo(request.name, HP_POTION, MP_POTION, 3000, 0); }
-
-			this.deliveryList.shift();
+			try {
+				if (request.type == 'need_Mpots') { this.sendPotionsTo(request.name, HP_POTION, MP_POTION, 0, 3000); }
+				else if (request.type == 'need_Hpots') { this.sendPotionsTo(request.name, HP_POTION, MP_POTION, 3000, 0); }
+			}
+			catch (e) {
+				console.log(`Error delivering ${request.type}`);
+			}
+			finally {
+				this.deliveryList.shift();
+			}
 
 			if (this.deliveryList.length > 0) { await sleep(800); }
 		}
@@ -746,8 +749,8 @@ class Merchant extends combineItems {
 			}
 		}
 
-		if (character.gold > 200000) {
-			bank_deposit(character.gold - 200000)
+		if (character.gold > 2_000_000) {
+			bank_deposit(character.gold - 2_000_000)
 		}
 
 		this.setBusy(false);
@@ -890,6 +893,8 @@ class Merchant extends combineItems {
 			this.busyStartTime = Date.now();
 
 			try {
+				use_skill('massexchange');
+				await sleep(10);
 				exchange(itemSlot);
 			}
 			catch (e) {
@@ -897,7 +902,7 @@ class Merchant extends combineItems {
 				break;
 			}
 
-			await sleep(7000);
+			await sleep(5000);
 
 			// Re‑find slot
 			itemSlot = this.getItemSlot(currentKey);
@@ -965,7 +970,7 @@ class Merchant extends combineItems {
 			if (
 				!is_on_cooldown("mluck") &&
 				distance(character, member) < G.skills.mluck.range &&
-				(!hasBuff || remaining < 2600000)
+				(!hasBuff || remaining < 2000000)
 			) {
 				use_skill("mluck", member);
 				console.log(`Casting mluck on ${member.name}`);
@@ -1002,7 +1007,7 @@ class Merchant extends combineItems {
 		const fishingRodName = "rod";
 		const rodIdx = locate_item(fishingRodName);
 
-		if (rodIdx === -1 || is_on_cooldown("fishing")) {
+		if ((rodIdx === -1 && character.slots.mainhand?.name !== fishingRodName) || is_on_cooldown("fishing")) {
 			if (this.fishing) {
 				this.fishing = false;
 				this.equipBroom();
@@ -1016,6 +1021,7 @@ class Merchant extends combineItems {
 
 		this.equipBroom();
 		this.fishing = true;
+		await sleep(300);
 
 		while (true) {
 			if (is_on_cooldown("fishing") && !character.c.fishing) { break; }
@@ -1047,7 +1053,7 @@ class Merchant extends combineItems {
 		const pickaxeName = "pickaxe";
 		const pickIdx = locate_item(pickaxeName);
 
-		if (pickIdx === -1 || is_on_cooldown("mining")) {
+		if ((pickIdx === -1 && character.slots.mainhand?.name !== pickaxeName) || is_on_cooldown("mining")) {
 			if (this.mining) {
 				this.mining = false;
 				this.equipBroom();
@@ -1060,6 +1066,8 @@ class Merchant extends combineItems {
 
 		this.equipBroom();
 		this.mining = true;
+
+		await sleep(300);
 
 		while (true) {
 			if (is_on_cooldown("mining") && !character.c.mining) break;
@@ -1088,7 +1096,6 @@ class Merchant extends combineItems {
 		this.equipBroom();
 	}
 
-
 	healAndBuff() {
 		reviveSelf();
 		manageParty();
@@ -1103,9 +1110,16 @@ class Merchant extends combineItems {
 	}
 
 	resetFlags() {
+		console.log("🚩 Resetting Flags and Queue...");
 		this.setBusy(false);
 		this.mining = false;
 		this.fishing = false;
+
+		this.deliveryList = [];
+
+		this.lastRun.returnHome = 0;
+
+		stop();
 	}
 
 	removeWeapons() {
@@ -1133,9 +1147,11 @@ class Merchant extends combineItems {
 const myChar = new Merchant();
 
 // Start the main bot loop
-(async () => {
-	await myChar.run().catch(err => console.error("Bot crashed:", err));
-})();
+// (async () => {
+// 	await myChar.run()//.catch(err => console.error("Bot crashed:", err));
+// })();
+
+myChar.run()
 
 // setInterval(recoverOutOfCombat, 1000);
-// setInterval(async () => await myChar.upgradeAllByName("firestaff", 8, 1), 1500);
+// setInterval(async () => await myChar.upgradeAllByName("firestaff", 7, 1), 1500);
