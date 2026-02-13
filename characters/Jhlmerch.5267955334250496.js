@@ -28,7 +28,7 @@ const bankWhitelist = [
 	// Keyes
 	"spiderkey", "frozenkey",
 	// Weapons & Armor
-	"handofmidas", "mcape", "sweaterhs", "firestaff", "pmace", "lmace", //"firebow","mshield", "ornamentstaff",
+	"handofmidas", "mcape", "sweaterhs", "firestaff", "pmace", "lmace", "horsecapeg", //"firebow","mshield", "ornamentstaff",
 	// Upgrades
 	"lostearring", "intearring", "strearring", "dexearring",
 	"wbook0", "dexamulet", "stramulet", "intamulet", "candy1",
@@ -43,7 +43,7 @@ const bankWhitelist = [
 	// Mats
 	"spores", "beewings", "whiteegg", "spidersilk", "cscale", "rattail", "crabclaw", "bfur", "feather0", "gslime", "smush",
 	"snakeoil", "ascale", "snakefang", "vitscroll", "essenceoffire", "essenceoffrost", "carrot", "snowball", "frogt", "ink",
-	"sstinger", "btusk", "bwing", "forscroll", "electronics", "dstones", "pleather", "cshell",
+	"sstinger", "btusk", "bwing", "forscroll", "electronics", "dstones", "pleather", "cshell", "emptyheart",
 	// Misc
 	"offeringp", "offering", "funtoken", "cryptkey", "poison", "essenceofether", "greenenvelope",
 	"x0", "x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x9",
@@ -277,7 +277,7 @@ class Merchant extends combineItems {
 				if (now - this.lastRun.sellCheck > 10 * 1000) {
 					this.lastRun.sellCheck = now;
 					const { used } = this.getInventoryUsage();
-					if (used >= 18) {
+					if (used >= 21) {
 						await this.sellItems();
 						await this.bankItems();
 					}
@@ -829,6 +829,7 @@ class Merchant extends combineItems {
 				{ item: "ornament", min: 20, x: 30.92, y: -381.1, map: "main" },
 				{ item: "seashell", min: 20, x: -1496, y: 580, map: "main" },
 				{ item: "candypop", min: 10, x: 30.92, y: -381.1, map: "main" },
+				{ item: "goldenegg", min: 1, x: 30.92, y: -381.1, map: "main" }
 			];
 		}
 		else {
@@ -837,6 +838,7 @@ class Merchant extends combineItems {
 				{ item: "gem1", min: 1, x: 30.92, y: -381.1, map: "main" },
 				{ item: "seashell", min: 20, x: -1496, y: 580, map: "main" },
 				{ item: "candypop", min: 10, x: 30.92, y: -381.1, map: "main" },
+				{ item: "goldenegg", min: 1, x: 30.92, y: -381.1, map: "main" }
 			]
 		}
 
@@ -917,7 +919,7 @@ class Merchant extends combineItems {
 				break;
 			}
 
-			await sleep(5000);
+			await sleep(4000);
 
 			// Re‑find slot
 			itemSlot = this.getItemSlot(currentKey);
@@ -1169,4 +1171,5 @@ const myChar = new Merchant();
 myChar.run()
 
 // setInterval(recoverOutOfCombat, 1000);
+// setInterval(async () => await myChar.upgradeAllByName("lmace", 7, 2), 1500);
 // setInterval(async () => await myChar.upgradeAllByName("firestaff", 7, 1), 1500);

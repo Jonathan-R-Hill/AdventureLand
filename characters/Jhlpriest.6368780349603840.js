@@ -119,7 +119,7 @@ class MyChar extends BaseClass {
 
     weaponLogic(target) {
         // this.equipItem("harbringer", 7, "mainhand");
-        this.equipItem("firestaff", 8, "mainhand");
+        this.equipItem("lmace", 7, "mainhand");
     }
 
     async mainLoop() {

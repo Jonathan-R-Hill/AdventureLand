@@ -93,7 +93,9 @@ class TargetLogic {
             .find(mon => mon);
 
         if (target && !target.s.fullguardx && !target.s.fullguard) {
-            if (target.name == 'Dragold' && !get_player('Jhlpriest')) { return null; }
+            if (target.name == 'Dragold' && this.distance(character, get_player('Jhlpriest') > 300)) { return null; }
+            if (target.dead) { return null; }
+
             change_target(target);
 
             return target;
@@ -154,7 +156,7 @@ class TargetLogic {
             }
         }
 
-        if (target) {
+        if (target && !target.dead) {
             change_target(target);
             return target;
         }
@@ -232,6 +234,7 @@ class TargetLogic {
             return null;
         }
 
+        if (target.dead) { return null; }
         return target;
     }
 
@@ -262,7 +265,7 @@ class TargetLogic {
     targetLogicTank3() {
         if (!this.attackMode || character.rip || smart.moving) return null;
 
-        if (this.eventsEnabled && (parent.S.snowman || parent.S.icegolem)) {
+        if (this.eventsEnabled && (parent.S.snowman?.live || parent.S.icegolem?.live || parent.S.dragold?.live)) {
             return this.targetLogicTank();
         }
 
@@ -297,7 +300,7 @@ class TargetLogic {
             target = this.findTargetNotAttackingMe();
         }
 
-        if (target) {
+        if (target && !target.dead) {
             return target;
         }
 
@@ -362,9 +365,9 @@ class BaseClass extends TargetLogic {
             "snakefang", "vitscroll", "offeringp", "offering", "essenceoffrost", "carrot", "snowball", "candy1", "frogt", "ink",
             "sstinger", "candycane", "ornament", "mistletoe", "frozenkey", "funtoken", "leather", "btusk", "bwing",
             "x0", "x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x9", "electronics", "cocoon", "goldenegg",
-            "intbelt", "strbelt", "dexbelt", "dstones", "poison", "pleather", "cshell", "pmace", "lmace", "armorbox",
+            "intbelt", "strbelt", "dexbelt", "dstones", "poison", "pleather", "cshell", "pmace", "armorbox",
             "handofmidas", "mcape", "sweaterhs", "cryptkey", "forscroll", "gemfragment", "candypop", "essenceofether", "essenceoffire",
-            "greenenvelope",
+            "greenenvelope", "emptyheart",
             // Upgrade
             "ringsj", "intbelt", "intearring", "strearring", "dexearring", "dexamulet", "stramulet", "intamulet", "wbookhs",
             // Sell
@@ -381,12 +384,12 @@ class BaseClass extends TargetLogic {
         });
 
         setInterval(() => this.handleHolidayBuffs(), 45 * 1000);
-        if (this.eventsEnabled) { setInterval(() => this.handleEvents(), 15 * 1000); }
+        if (this.eventsEnabled) { setInterval(() => this.handleEvents(), 12 * 1000); }
         setInterval(() => {
             parent.socket.emit("send_updates", {});
             if (character.map == 'jail') { parent.socket.emit('leave'); }
         }, 21 * 1000); // Clear ghost entities & escape jail
-        setInterval(() => this.stuckCheck(), 35 * 1000);
+        setInterval(() => this.stuckCheck(), 50 * 1000);
 
         startSharedTasks();
 
@@ -436,7 +439,7 @@ class BaseClass extends TargetLogic {
                     await smart_move({ map: "cave", x: 1115.5, y: -747.5 }).catch((e) => stop());
                 }
             }
-            else if (this.getClosestMonsterByName('Dragold') && this.distance(character, this.getClosestMonsterByName('Dragold')) > 400) {
+            else if (this.getClosestMonsterByName('Dragold') && this.distance(character, this.getClosestMonsterByName('Dragold')) > 300) {
                 await smart_move({ map: "cave", x: 1115.5, y: -747.5 }).catch((e) => stop());
             }
         }
@@ -662,7 +665,7 @@ class BaseClass extends TargetLogic {
         if (!merchant || this.distance(character, merchant) > 400) { return; }
 
         const onlyTier1 = [
-            "firebow", "fireblade", "firestaff", "glolipop", "wand", "sparkstaff", "wbook0"
+            "firebow", "fireblade", "firestaff", "glolipop", "wand", "sparkstaff", "wbook0", "lmace", "horsecapeg",
         ];
 
         for (let i = 0; i < character.items.length; i++) {

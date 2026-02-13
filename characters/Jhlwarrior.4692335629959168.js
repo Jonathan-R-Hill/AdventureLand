@@ -18,7 +18,7 @@ class MyChar extends BaseClass {
     radius = 35;
 
     async equipMainHandWeap() {
-        if (character.q.equip) { return; }
+        if (character.q.equip || smart.moving) { return; }
 
         const attackers = this.getMobsAttackingMe();
 
@@ -127,15 +127,13 @@ class MyChar extends BaseClass {
     }
 
     async circleModeAttack(target) {
-        if (smart.moving) { return; }
-
         if (is_on_cooldown("attack")) { return; }
 
         if (!this.is_in_range(target, "attack")) {
             target = get_nearest_monster();
             change_target(target);
         }
-        else if (!is_on_cooldown("attack")) {
+        else {
             set_message("Attacking");
 
             target = get_nearest_monster();
@@ -182,7 +180,7 @@ class MyChar extends BaseClass {
             circleTargets(attackers, this.circleX, this.circleY, this.radius);
             this.circleModeAttack(target);
         }
-        else if ((this.pullThree && attackers.length >= 3 && attackers[0].mtype == this.validTargets[0]) || attackers.length >= 3) {
+        else if ((this.pullThree && attackers.length >= 3 && attackers[0].mtype == this.validTargets[0] && get_player('Jhlpriest')) || attackers.length >= 3) {
             circleTargets(attackers);
             this.circleModeAttack(target);
         }
@@ -233,7 +231,7 @@ async function mainLoop() {
                     get_nearest_monster({ target: "Jhlmage" }) || get_nearest_monster({ target: "Jhlpally" });
             }
 
-            let activeEvent = parent.S.snowman?.live || parent.S.icegolem?.live || parent.S.dragold?.live;
+            let activeEvent = parent.S.snowman?.live || parent.S.icegolem?.live || parent.S.dragold?.live || parent.S.pinkgoo?.live;
 
             if (!target || target.dead) {
                 target = myChar.pullThree && get_player(healer) && myChar.distance(character, get_player(healer)) < 200 && !activeEvent ? myChar.targetLogicTank3() : myChar.targetLogicTank();
