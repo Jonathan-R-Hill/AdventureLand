@@ -152,7 +152,7 @@ class Merchant extends combineItems {
 	async run() {
 		while (true) {
 			try {
-				await sleep(250);
+				await sleep(350);
 
 				const now = Date.now();
 
@@ -162,7 +162,7 @@ class Merchant extends combineItems {
 					continue;
 				}
 
-				if (this.busy && this.busyStartTime > 0 && (now - this.busyStartTime > 90 * 1000)) {
+				if (this.busy && this.busyStartTime > 0 && (now - this.busyStartTime > 60 * 1000)) {
 					console.log("⚠️ Busy timeout triggered! Resetting flags.");
 					set_message("Busy Timeout");
 					this.setBusy(false);
@@ -332,26 +332,30 @@ class Merchant extends combineItems {
 				if (this.checkIfDoingSOmething()) return;
 
 				const [xStr, yStr, map] = data.split(",");
-				let strX = Number(xStr);
-				let strY = Number(yStr);
+				let numX = Number(xStr);
+				let numY = Number(yStr);
 
 				this.setBusy(true);
 
 				send_cm("Jhlmage", "portMe Jhlmerch");
 				await sleep(4000);
 
+				stop();
+				await sleep(400);
+
 				const targetPlayer = get_player(sender.name);
 				if (targetPlayer) {
-					strX = targetPlayer.x;
-					strY = targetPlayer.y;
+					numX = targetPlayer.x;
+					numY = targetPlayer.y;
 				}
 
 				try {
 					await Promise.race([
-						smart_move({ x: strX, y: strY, map: map }),
+						smart_move({ x: numX, y: numY, map: map }),
 						new Promise((_, reject) => setTimeout(() => reject(new Error("Move Timeout")), 40_000))
 					]);
 				} catch (e) {
+					stop();
 					console.log("Move failed or timed out:", e);
 				}
 
@@ -365,21 +369,26 @@ class Merchant extends combineItems {
 				if (this.checkIfDoingSOmething()) return;
 
 				const [xStr, yStr, map] = data.split(",");
-				let x = Number(xStr);
-				let y = Number(yStr);
+				let numX = Number(xStr);
+				let numY = Number(yStr);
 
 				this.setBusy(true);
 
 				send_cm("Jhlmage", "portMe Jhlmerch");
-				await sleep(2000);
+				await sleep(4000);
 
-				// Move to map/location
-				await smart_move({ to: map, x: x, y: y }).catch((e) => {
+				stop();
+				await sleep(400);
+
+				try {
+					await Promise.race([
+						smart_move({ x: numX, y: numY, map: map }),
+						new Promise((_, reject) => setTimeout(() => reject(new Error("Move Timeout")), 40_000))
+					]);
+				} catch (e) {
 					stop();
-					if (e && e.reason === "unable") {
-						this.setBusy(false);
-					}
-				});
+					console.log("Move failed or timed out:", e);
+				}
 
 				const target = get_player(sender.name);
 
@@ -608,8 +617,8 @@ class Merchant extends combineItems {
 		game_log(`Commuting to ${firstReq.name}...`);
 
 		// Port Logic
-		if (distance(character, { x: firstReq.x, y: firstReq.y, map: firstReq.map }) > 400) {
-			if (firstReq.map !== "bank" && !get_player('Jhlmage')) {
+		if (!get_player('Jhlmage')) {
+			if (character.map !== "bank") {
 				send_cm("Jhlmage", "portMe Jhlmerch");
 				for (let i = 0; i < 24; i++) {
 					if (get_player('Jhlmage')) break;
@@ -620,8 +629,9 @@ class Merchant extends combineItems {
 			}
 
 			try {
-				await smart_move({ to: firstReq.map, x: firstReq.x, y: firstReq.y }).catch((e) => stop());
+				await smart_move({ to: firstReq.map, x: firstReq.x, y: firstReq.y });
 			} catch (e) {
+				stop();
 				console.log("Move error: " + e);
 			}
 		}
@@ -639,12 +649,14 @@ class Merchant extends combineItems {
 			const request = this.deliveryList[0];
 			const targetPlayer = get_player(request.name);
 
-			if (targetPlayer) {
-				if (distance(character, targetPlayer) > 400) {
-					try { await smart_move({ x: targetPlayer.x, y: targetPlayer.y }); } catch (e) { }
-				} else if (distance(character, targetPlayer) > 50) {
-					try { await xmove(targetPlayer.x, targetPlayer.y); } catch (e) { }
-				}
+			try {
+				await Promise.race([
+					smart_move({ x: targetPlayer.x, y: targetPlayer.y }),
+					new Promise((_, reject) => setTimeout(() => reject(new Error("Delivery Move Timeout")), 20_000))
+				]);
+			} catch (e) {
+				stop();
+				console.log("Delivery move timed out/failed, trying to deliver anyway...");
 			}
 
 			try {
@@ -652,6 +664,7 @@ class Merchant extends combineItems {
 				else if (request.type == 'need_Hpots') { this.sendPotionsTo(request.name, HP_POTION, MP_POTION, 3000, 0); }
 			}
 			catch (e) {
+				stop();
 				console.log(`Error delivering ${request.type}`);
 			}
 			finally {
@@ -666,15 +679,17 @@ class Merchant extends combineItems {
 
 	async sendPotionsTo(name, hpPotion, mpPotion, hpAmount = 2000, mpAmount = 2000) {
 		let player = get_player(name);
-		const start = Date.now();
 
-		while ((!player || parent.distance(character, player) > 400) && Date.now() - start < 5000) {
+		for (let i = 0; i < 20; i++) {
+			if (player) break;
 			await sleep(250);
 			player = get_player(name);
 		}
 
 		if (!player || parent.distance(character, player) > 400) {
 			game_log(`❌ Could not deliver potions to ${name}`);
+			stop();
+
 			return;
 		}
 
