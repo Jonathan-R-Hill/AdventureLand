@@ -1,6 +1,6 @@
 
-const TILE = 23;
-const FF_RANGE = 42;       // tiles around player
+const TILE = 20;
+const FF_RANGE = 45;       // tiles around player
 const FF_REPLAN_CD = 800; // ms
 const FF_GOAL_EPS = 2;
 const MAX_ITER = 5000;

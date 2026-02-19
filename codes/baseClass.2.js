@@ -352,7 +352,6 @@ class BaseClass extends TargetLogic {
         this.validTargets = this.farmMobs;
         this.bosses = ["dragold", "phoenix", "pinkgoo", "grinch", "fvampire", "mvampire", "greenjr", "jr", "snowman", "icegolem",];
 
-        this.lastTarget = "";
         this.lastEvent = null;
 
         this.tank = "Jhlwarrior";
@@ -418,19 +417,13 @@ class BaseClass extends TargetLogic {
             use_skill(`town`)
         }
 
-        if (parent.S.snowman && parent.S.snowman.live) {
+        if (parent.S.snowman?.live) {
             this.lastEvent = 'snowman';
-            if (this.lastTarget == "") {
-                this.lastTarget = this.validTargets;
-            }
-
             this.validTargets = ['arcticbee'];
+
         }
-        else if (parent.S.dragold && parent.S.dragold.live) {
+        else if (parent.S.dragold?.live) {
             this.lastEvent = 'dragold'
-            if (this.lastTarget == "") {
-                this.lastTarget = this.validTargets;
-            }
 
             this.validTargets = ['dragold'];
 
@@ -447,14 +440,9 @@ class BaseClass extends TargetLogic {
             this.lastEvent = 'icegolem';
             if (!get_nearest_monster({ type: 'icegolem' })) { join('icegolem'); }
 
-            if (this.lastTarget == "") {
-                this.lastTarget = this.validTargets;
-            }
         }
         else if (parent.S.wabbit && parent.S.wabbit.live) {
             this.lastEvent = "wabbit";
-            if (this.lastTarget == "") this.lastTarget = this.validTargets;
-
             this.validTargets = ['wabbit'];
 
             if (!this.getClosestMonsterByType('wabbit')) {
@@ -463,7 +451,6 @@ class BaseClass extends TargetLogic {
         }
         else if (parent.S.pinkgoo && parent.S.pinkgoo.live) {
             this.lastEvent = "pinkgoo";
-            if (this.lastTarget == "") this.lastTarget = this.validTargets;
             this.validTargets = ['pinkgoo'];
 
             if (!this.getClosestMonsterByType('pinkgoo')) {
@@ -478,11 +465,7 @@ class BaseClass extends TargetLogic {
             }
         }
         else {
-            if (this.lastTarget != "") {
-                this.validTargets = this.farmMobs;
-
-                this.lastTarget = "";
-            }
+            this.validTargets = this.farmMobs;
         }
     }
 
@@ -840,6 +823,7 @@ class BaseClass extends TargetLogic {
                 this.lastEvent = null;
             }
             else if (farm) {
+                if (smart.moving && !is_moving(character)) { stop(); }
                 if (farm.map && farm.x !== undefined && farm.y !== undefined) {
                     await smart_move({ map: farm.map, x: farm.x, y: farm.y }).catch((e) => stop());
                 }
@@ -898,6 +882,7 @@ class BaseClass extends TargetLogic {
 
     // ATTTACKING
     async attack(target) {
+        if (smart.moving && !is_moving(character)) { stop(); }
         if (smart.moving) { return; }
 
         if (!this.is_in_range(target, "attack")) {

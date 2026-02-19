@@ -1168,8 +1168,10 @@ const myChar = new Merchant();
 // 	await myChar.run()//.catch(err => console.error("Bot crashed:", err));
 // })();
 
-myChar.run()
+myChar.run();
 
+// myChar.busy = true;
 // setInterval(recoverOutOfCombat, 1000);
 // setInterval(async () => await myChar.upgradeAllByName("lmace", 7, 2), 1500);
 // setInterval(async () => await myChar.upgradeAllByName("firestaff", 7, 1), 1500);
+// setInterval(async () => await myChar.upgradeAllByName("horsecapeg", 6, 2), 1500);

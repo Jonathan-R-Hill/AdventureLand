@@ -2,17 +2,6 @@ import puppeteer from "puppeteer";
 import fs from "fs/promises";
 import path from "path";
 
-// TODO: Add toggle wep animations off
-/*
-	selectors:
-	CONF - #toprightcorner > div:nth-child(15)
-	performance - body > div.modal.hideinbackground > div > div:nth-child(6)
-	wep anim - body > div:nth-child(36) > div > div.mt4.blockbutton.naoff
-	wep anim txt (ensure its off if not off click to toggle)- body > div:nth-child(36) > div > div.mt4.blockbutton.naon > span
-	pre-cache - body > div:nth-child(36) > div > div.mt4.blockbutton.faston
-	pre-cache-txt  - body > div:nth-child(36) > div > div.mt4.blockbutton.faston > span
-*/
-
 const characters: string[] = [`Jhlpriest`, `Jhlwarrior`, `Jhlmage`, `Jhlmerch`];
 const region: string = `EU/II/`;
 
@@ -263,9 +252,9 @@ async function startCharacter(charName: string, config: any) {
 
 						// Force Cleanup
 						// @ts-ignore
-						if (window.gc && performance.memory.usedJSHeapSize > 600_000_000) {
-							window.gc();
-						}
+						// if (window.gc && performance.memory.usedJSHeapSize > 600_000_000) {
+						// 	window.gc();
+						// }
 
 						// @ts-ignore
 						if (window.socket) {
@@ -345,9 +334,8 @@ async function startCharacter(charName: string, config: any) {
 						if (gl) gl.innerHTML = "";
 						if (cl) cl.innerHTML = "";
 
-						// Optional: Clear PIXI texture cache if it exists
 						// @ts-ignore
-						if (window.PIXI && window.PIXI.utils) window.PIXI.utils.clearTextureCache();
+						// if (window.PIXI && window.PIXI.utils) window.PIXI.utils.clearTextureCache();
 					})
 					.catch(() => {});
 			}
