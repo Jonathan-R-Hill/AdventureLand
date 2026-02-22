@@ -84,13 +84,13 @@ class Merchant extends combineItems {
 			holidayExchange: 0,
 		};
 
+		this.autoUpgradeList = [
+			{ item: "firestaff", targetLevel: 6, itemLevel: 1 },
+			{ item: "horsecapeg", targetLevel: 4, itemLevel: 2 },
+		];
+
 		setInterval(() => {
 			console.log(`busy: ${this.busy}, fishing: ${this.fishing}, mining: ${this.mining}, smart moving: ${smart.moving}`);
-			// const now = Date.now();
-			// if (now - this.lastRun.resetFlags > 8 * 60 * 1000) {
-			// 	this.lastRun.resetFlags = now;
-			// 	this.resetFlags();
-			// }
 		}, 5000);
 		setInterval(exportCharacterData, 8 * 1000);
 		setInterval(useSkillJacko, 1200);
@@ -141,7 +141,7 @@ class Merchant extends combineItems {
 		await this.buyAndUpgrade("shoes", 7);
 		await this.buyAndUpgrade("helmet", 7);
 		await this.buyAndUpgrade("pants", 7);
-		// await this.buyAndUpgrade("coat", 7);
+		await this.buyAndUpgrade("coat", 7);
 		await this.buyAndUpgrade("mace", 7);
 	}
 
@@ -253,6 +253,19 @@ class Merchant extends combineItems {
 				if (now - this.lastRun.dismantle > 200 * 1000) {
 					this.lastRun.dismantle = now;
 					await this.dismantleFireWeapons();
+				}
+
+				// Auto Upgrade wep/armor
+				if (now - this.lastRun.autoUpgrade > 15 * 60 * 1000) {
+					this.lastRun.autoUpgrade = now;
+					if (this.autoUpgradeList && this.autoUpgradeList.length > 0 && !this.busy) {
+						this.setBusy(true);
+						try {
+							await this.upgradeAllByList(this.autoUpgradeList);
+						} catch (e) {
+							console.log('Auto-upgrade failed:', e);
+						}
+					}
 				}
 
 				// Inventory Manage
@@ -973,6 +986,79 @@ class Merchant extends combineItems {
 		}
 	}
 
+	async upgradeAllByList(list) {
+		if (!Array.isArray(list) || list.length === 0) {
+			return;
+		}
+
+		this.setBusy(true);
+
+		if (character.map !== "bank") {
+			try {
+				await smart_move({ to: "bank" });
+			} catch (e) {
+				console.log("Move to bank failed: " + e);
+				stop();
+
+				this.setBusy(false);
+
+				return;
+			}
+		}
+
+		for (const entry of list) {
+			const itemName = entry.item || entry.name;
+			const targetLevel = entry.targetLevel || 5;
+			const grade = entry.itemLevel ?? 0;
+
+			if (!itemName || targetLevel <= 0) continue;
+
+			// Collect any matching items from bank first
+			if (character.bank) {
+				const slotsToRetrieve = [];
+				for (const packName in character.bank) {
+					const pack = character.bank[packName];
+					if (!pack) continue;
+					for (let i = 0; i < pack.length; i++) {
+						const bankItem = pack[i];
+						if (bankItem && bankItem.name === itemName) {
+							slotsToRetrieve.push({ location: "bank", pack: packName, slot: i });
+						}
+					}
+				}
+
+				if (slotsToRetrieve.length > 0) {
+					await this.collectItems(slotsToRetrieve);
+					await sleep(500);
+				}
+			}
+
+			await smart_move({ to: "potions" }).catch((e) => stop());
+
+			while (true) {
+				// find any slot for this item below target
+				const slots = this.findAllItemSlotsByName(itemName);
+
+				let need = false;
+				for (const s of slots) {
+					const it = character.items[s];
+					if (it && ((it.level || 0) < targetLevel)) {
+						need = true;
+						break;
+					}
+				}
+
+				if (!need) break;
+
+				await this.upgradeAllByName(itemName, targetLevel, grade);
+				await sleep(1500);
+			}
+		}
+
+		await this.bankItems();
+
+		this.setBusy(false);
+	}
 
 	buffPartyWithMLuck() {
 		for (const id in parent.party) {
