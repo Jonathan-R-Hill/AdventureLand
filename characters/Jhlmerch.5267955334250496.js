@@ -162,7 +162,7 @@ class Merchant extends combineItems {
 					continue;
 				}
 
-				if (this.busy && this.busyStartTime > 0 && (now - this.busyStartTime > 60 * 1000)) {
+				if (this.busy && this.busyStartTime > 0 && (now - this.busyStartTime > 75 * 1000)) {
 					console.log("⚠️ Busy timeout triggered! Resetting flags.");
 					set_message("Busy Timeout");
 					this.setBusy(false);
@@ -213,7 +213,7 @@ class Merchant extends combineItems {
 						"wbook0", "dexamulet", "stramulet", "intamulet", "intbelt", "strbelt", "dexbelt",
 					];
 
-					const levels = [0, 1, 2];
+					const levels = [0, 1, 2, 3];
 					for (const item of upgrades) {
 						await this.autoCombineItems(item, levels);
 					}
@@ -984,80 +984,6 @@ class Merchant extends combineItems {
 			this.setBusy(false);
 			this.resetFlags();
 		}
-	}
-
-	async upgradeAllByList(list) {
-		if (!Array.isArray(list) || list.length === 0) {
-			return;
-		}
-
-		this.setBusy(true);
-
-		if (character.map !== "bank") {
-			try {
-				await smart_move({ to: "bank" });
-			} catch (e) {
-				console.log("Move to bank failed: " + e);
-				stop();
-
-				this.setBusy(false);
-
-				return;
-			}
-		}
-
-		for (const entry of list) {
-			const itemName = entry.item || entry.name;
-			const targetLevel = entry.targetLevel || 5;
-			const grade = entry.itemLevel ?? 0;
-
-			if (!itemName || targetLevel <= 0) continue;
-
-			// Collect any matching items from bank first
-			if (character.bank) {
-				const slotsToRetrieve = [];
-				for (const packName in character.bank) {
-					const pack = character.bank[packName];
-					if (!pack) continue;
-					for (let i = 0; i < pack.length; i++) {
-						const bankItem = pack[i];
-						if (bankItem && bankItem.name === itemName) {
-							slotsToRetrieve.push({ location: "bank", pack: packName, slot: i });
-						}
-					}
-				}
-
-				if (slotsToRetrieve.length > 0) {
-					await this.collectItems(slotsToRetrieve);
-					await sleep(500);
-				}
-			}
-
-			await smart_move({ to: "potions" }).catch((e) => stop());
-
-			while (true) {
-				// find any slot for this item below target
-				const slots = this.findAllItemSlotsByName(itemName);
-
-				let need = false;
-				for (const s of slots) {
-					const it = character.items[s];
-					if (it && ((it.level || 0) < targetLevel)) {
-						need = true;
-						break;
-					}
-				}
-
-				if (!need) break;
-
-				await this.upgradeAllByName(itemName, targetLevel, grade);
-				await sleep(1500);
-			}
-		}
-
-		await this.bankItems();
-
-		this.setBusy(false);
 	}
 
 	buffPartyWithMLuck() {

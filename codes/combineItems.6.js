@@ -120,7 +120,10 @@ class combineItems {
             return;
         }
 
-        if (["intearring", "strearring", "dexearring"].includes(itemName) && chosenLevel >= 2) { useBetterScroll = true; }
+        if (["intearring", "strearring", "dexearring",
+            "dexbelt", "strbelt", "intbelt",
+            "dexamulet", "stramulet", "intamulet",
+        ].includes(itemName) && chosenLevel >= 2) { useBetterScroll = true; }
         await sleep(30);
 
         await smart_move({ to: "scrolls" });
@@ -267,7 +270,7 @@ class combineItems {
     }
 
     async upgradeItemToLevel(itemSlot, targetLevel, grade) {
-        if (character.q.upgrade) { return; }
+        if (character.q?.upgrade) { return; }
 
         const item = character.items[itemSlot];
         if (!item) return;
@@ -328,6 +331,129 @@ class combineItems {
 
         // Upgrade that one item
         await this.upgradeItemToLevel(chosenSlot, targetLevel, grade);
+    }
+
+    async upgradeAllByList(list) {
+        if (!Array.isArray(list) || list.length === 0) {
+            return;
+        }
+
+        this.setBusy(true);
+
+        // Move to bank first so we can inspect/withdraw items
+        if (character.map !== "bank") {
+            try {
+                await smart_move({ to: "bank" });
+            } catch (e) {
+                console.log("Move to bank failed: " + e);
+
+                stop();
+                this.setBusy(false);
+
+                return;
+            }
+        }
+
+        // Count total items in bank we'll attempt to retrieve so we can ensure inventory space
+        let totalBankMatches = 0;
+        if (character.bank) {
+            for (const entry of list) {
+                const itemName = entry.item || entry.name;
+                const targetLevel = entry.targetLevel || 5;
+                if (!itemName) continue;
+
+                for (const packName in character.bank) {
+                    const pack = character.bank[packName];
+                    if (!pack) continue;
+                    for (let i = 0; i < pack.length; i++) {
+                        const bankItem = pack[i];
+                        if (bankItem && bankItem.name === itemName && ((bankItem.level || 0) < targetLevel)) {
+                            totalBankMatches++;
+                        }
+                    }
+                }
+            }
+        }
+
+        const usage = this.getInventoryUsage();
+        const freeSlots = usage.total - usage.used;
+        if (totalBankMatches > 0 && freeSlots < totalBankMatches) {
+            console.log(`Not enough inventory space to withdraw ${totalBankMatches} item(s) from bank (free: ${freeSlots})`);
+            this.setBusy(false);
+            return;
+        }
+
+        // For each requested upgrade entry, retrieve from bank and attempt upgrades
+        for (const entry of list) {
+            const itemName = entry.item || entry.name;
+            const targetLevel = entry.targetLevel || 5;
+            const grade = entry.itemLevel ?? 0;
+
+            if (!itemName || targetLevel <= 0) continue;
+
+            // Collect any matching items from bank first (only items below target level)
+            if (character.bank) {
+                const slotsToRetrieve = [];
+                for (const packName in character.bank) {
+                    const pack = character.bank[packName];
+                    if (!pack) continue;
+                    for (let i = 0; i < pack.length; i++) {
+                        const bankItem = pack[i];
+                        if (bankItem && bankItem.name === itemName && ((bankItem.level || 0) < targetLevel)) {
+                            slotsToRetrieve.push({ location: "bank", pack: packName, slot: i });
+                        }
+                    }
+                }
+
+                if (slotsToRetrieve.length > 0) {
+                    await this.collectItems(slotsToRetrieve);
+                    await sleep(500);
+                }
+            }
+
+            await smart_move({ to: "potions" }).catch((e) => stop());
+
+            while (true) {
+                // find any slot for this item below target
+                const slots = this.findAllItemSlotsByName(itemName);
+
+                let need = false;
+                for (const s of slots) {
+                    const it = character.items[s];
+                    if (it && ((it.level || 0) < targetLevel)) {
+                        need = true;
+                        break;
+                    }
+                }
+
+                if (!need) break;
+
+                // Record progress count before attempting
+                const beforeCount = slots.filter(s => {
+                    const it = character.items[s];
+                    return it && ((it.level || 0) < targetLevel);
+                }).length;
+
+                if (!character.q?.upgrade) {
+                    try {
+                        await this.upgradeAllByName(itemName, targetLevel, grade);
+                    } catch (e) {
+                        console.log(`Upgrade failed for ${itemName}:`, e);
+
+                        stop();
+                        this.setBusy(false);
+
+                        return;
+                    }
+                }
+
+                await sleep(1500);
+            }
+        }
+
+        await this.bankItems();
+
+        this.setBusy(false);
     }
 
 }

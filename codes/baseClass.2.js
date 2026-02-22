@@ -383,12 +383,26 @@ class BaseClass extends TargetLogic {
         });
 
         setInterval(() => this.handleHolidayBuffs(), 45 * 1000);
+        setInterval(() => {
+            console.log(`ran elixir check`);
+            if (['Jhlwarrior', 'Jhlpally'].includes(character.name)) {
+                this.checkElixirBuff(`elixirstr1`);
+            }
+            else if (['Jhlpriest', 'Jhlmage'].includes(character.name)) {
+                this.checkElixirBuff(`elixirint1`);
+            }
+            else if (['Jhlranger', 'Jhlrogue'].includes(character.name)) {
+                this.checkElixirBuff(`elixirdex1`);
+            }
+        }, 60 * 1000);
+
         if (this.eventsEnabled) { setInterval(() => this.handleEvents(), 12 * 1000); }
+
         setInterval(() => {
             parent.socket.emit("send_updates", {});
             if (character.map == 'jail') { parent.socket.emit('leave'); }
         }, 21 * 1000); // Clear ghost entities & escape jail
-        setInterval(() => this.stuckCheck(), 50 * 1000);
+        setInterval(() => this.stuckCheck(), 60 * 1000);
 
         startSharedTasks();
 
@@ -397,7 +411,6 @@ class BaseClass extends TargetLogic {
 
     merchantInteractions() {
         if (Date.now() - 3500 < this.lastMerchantInteractionCheck) { return; }
-        console.log(`Merchant logic ran`);
 
         sendGoldToMerchant();
         checkPotions();
@@ -702,6 +715,44 @@ class BaseClass extends TargetLogic {
                     return true;
                 }
             }
+
+            return false;
+        }
+    }
+
+    async checkElixirBuff(potionName) {
+        try {
+            const elixir = character.slots && character.slots.elixir;
+
+            if (elixir && elixir.name) {
+                // Already have an elixir equipped
+                return false;
+            }
+
+            // Find the potion in inventory
+            let invSlot = -1;
+            for (let i = 0; i < character.items.length; i++) {
+                const it = character.items[i];
+                if (it && it.name === potionName) {
+                    invSlot = i;
+
+                    break;
+                }
+            }
+
+            console.log(`Checking for ${potionName} in inventory... Found at slot: ${invSlot}`);
+
+            if (invSlot === -1) {
+                return false;
+            }
+
+            consume(invSlot);
+            await sleep(250);
+
+            return true;
+        }
+        catch (err) {
+            console.log("checkElixirBuff error:", err);
 
             return false;
         }
