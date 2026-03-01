@@ -1,0 +1,179 @@
+load_code("baseClass");
+load_code("helpers");
+
+graphicsLimiter();
+
+// test
+
+class MyChar extends BaseClass {
+	lastFarmCheck = 0;
+	lastSnowmanCheck = 0;
+	cburstpull = false;
+
+	skillCBurst() {
+		const USE_ABOVE_MANA = 3000;
+		if (character.mp > USE_ABOVE_MANA && !is_on_cooldown("cburst") && this.cburstpull) {
+			let targets = [];
+			let totalCost = 0;
+			for (let id in parent.entities) {
+				let entity = parent.entities[id];
+				if (entity.type === "monster" && entity.target !== this.tank && is_in_range(entity, "cburst")) {
+					targets.push(entity);
+					totalCost += 80;
+				}
+				if (totalCost >= USE_ABOVE_MANA - 80) { break; }
+			}
+			if (targets.length > 0) {
+				use_skill("cburst", targets);
+			}
+		}
+	}
+
+	skillPort(char) {
+		const USE_ABOVE_MANA = 1100;
+		if (is_on_cooldown("magiport") || character.mp <= USE_ABOVE_MANA) { return; }
+		use_skill("magiport", char);
+	}
+
+	skillEnergize() {
+		if (is_on_cooldown("energize")) { return; }
+		const priest = get_player("Jhlpriest");
+		const war = get_player("Jhlwarrior");
+
+		if (character.mp < 1200) { return; }
+
+		if (priest && priest.mp <= 600 && !is_on_cooldown("energize")) {
+			use_skill("energize", priest);
+			return;
+		}
+
+		if (war && war.mp <= 200 && !is_on_cooldown("energize")) {
+			use_skill("energize", war); // Corrected to target war
+			return;
+		}
+
+		use_skill("energize", `Jhlmage`);
+	}
+
+	skillBlink(x, y) {
+		if (is_on_cooldown(`blink`) || character.mp < 1800) { return; }
+
+		use_skill(`blink`, [x, y]);
+	}
+
+	snowmanPort() {
+		if (!parent.S.snowman?.live) { return; }
+		const snowman = get_nearest_monster({ type: "snowman" });
+
+		if (!snowman || distance(character, snowman) >= 900) {
+			return;
+		}
+
+		if (!get_player("Jhlpriest")) {
+			this.skillPort("Jhlpriest");
+		}
+		if (!get_player("Jhlranger")) {
+			this.skillPort("Jhlranger");
+		}
+		if (!get_player("Jhlwarrior")) {
+			this.skillPort("Jhlranger");
+		}
+	}
+
+	async weaponLogic(target) {
+		if (target == null) {
+			this.equipItem("firestaff", 8, "mainhand");
+			this.equipItem("wbook0", 4, "offhand");
+
+			await sleep(20);
+
+			return;
+		}
+
+		let targets = [];
+		for (let id in parent.entities) {
+			let entity = parent.entities[id]; // this.myCharacters.includes(entity.target)
+			if ((entity.target === "Jhlwarrior" || entity.target === "trololol")
+				&& entity.type === "monster" && this.is_in_range(entity)) {
+				targets.push(entity);
+			}
+		}
+
+		if ((target.name == 'Snowman' || target.name == 'Love Goo') && !target.s.fullguardx) {
+			this.equipItem("wand", 7, "mainhand");
+			this.equipItem("wbook0", 4, "offhand");
+		}
+		else if (getInventoryUsage().used + 2 == 42 && this.isEquipped('wbook0', 4, 'offhand')) {
+			this.equipItem("firestaff", 9, "mainhand");
+			this.equipItem("wbook0", 4, "offhand");
+		}
+		else if (targets.length >= 3 && getInventoryUsage().used + 1 < 42) {
+			if (this.isEquipped("sparkstaff", 7)) { return; }
+
+			this.removeWeapons();
+			this.equipItem("sparkstaff", 7, "mainhand");
+		}
+		else {
+			this.equipItem("firestaff", 9, "mainhand");
+			this.equipItem("wbook0", 4, "offhand");
+		}
+
+		await sleep(20);
+	}
+}
+
+const myChar = new MyChar(character.name);
+
+let now = 0;
+async function mainLoop() {
+	while (true) {
+		try {
+			if (myChar.gettingBuff || character.cc >= 190) {
+				await sleep(100);
+				continue;
+			}
+
+			myChar.merchantInteractions();
+
+			now = Date.now();
+
+			if (now - myChar.lastSnowmanCheck > 2000) {
+				myChar.snowmanPort();
+				myChar.lastSnowmanCheck = now;
+			}
+
+			// Periodic Farm Check
+			if (now - myChar.lastFarmCheck > 5000 && !myChar.gettingBuff && myChar.validTargets[0] != "") {
+				myChar.checkNearbyFarmMob();
+				myChar.lastFarmCheck = now;
+			}
+
+			potionUse()
+			loot();
+
+			// Combat Logic
+			const target = myChar.targetLogicNonTank();
+			if (target) {
+				if (myChar.kite) { myChar.kiteTarget(); }
+				myChar.moveAwayFromWarrior();
+
+				myChar.skillEnergize();
+				await myChar.useTemporalSurge(2000);
+
+				await myChar.weaponLogic(target);
+
+				myChar.attack(target);
+			} else {
+				set_message("No Target");
+			}
+
+		} catch (e) {
+			console.error("Mage Loop Error:", e);
+		}
+
+		let delay = ((1 / character.frequency) * 1000) / 6;
+		await sleep(delay);
+	}
+}
+
+mainLoop();
