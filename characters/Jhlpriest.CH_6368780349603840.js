@@ -129,7 +129,7 @@ class MyChar extends BaseClass {
             this.equipItem("firestaff", 8, "mainhand");
         }
         else {
-            this.equipItem("lmace", 7, "mainhand");
+            this.equipItem("lmace", 8, "mainhand");
         }
     }
 
@@ -195,5 +195,5 @@ class MyChar extends BaseClass {
 
 const myChar = new MyChar(character.name);
 
-// setInterval(() => manageActiveChars(myChar.eventsEnabled), 7000);
+setInterval(() => manageActiveChars(myChar.eventsEnabled), 7000);
 myChar.mainLoop();

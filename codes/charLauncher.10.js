@@ -1,24 +1,32 @@
 // ----- Config ----- //
 let MAIN_PARTY = {
     "Jhlwarrior": { slot: "Jhlwarrior", active: true },
-    "Jhlmage": { slot: "Jhlmage", active: false },
-    "Jhlmerch": { slot: "Jhlmerch", active: true },
-    "Jhlranger": { slot: "Jhlranger", active: true },
+    "Jhlmage": { slot: "Jhlmage", active: true },
+    // "Jhlmerch": { slot: "Jhlmerch", active: true },
+    "Jhlranger": { slot: "Jhlranger", active: false },
     "Jhlrogue": { slot: "Jhlrogue", active: false },
 };
 
 let SNOWMAN_PARTY = {
+    "Jhlwarrior": { slot: "Jhlwarrior", active: true },
+    "Jhlmage": { slot: "Jhlmage", active: true },
+    // "Jhlmerch": { slot: "Jhlmerch", active: true },
+    "Jhlranger": { slot: "Jhlranger", active: false },
+    "Jhlrogue": { slot: "Jhlrogue", active: false },
+};
+
+let ROGUE_BUFF_PARTY = {
     "Jhlwarrior": { slot: "Jhlwarrior", active: false },
     "Jhlmage": { slot: "Jhlmage", active: true },
-    "Jhlmerch": { slot: "Jhlmerch", active: true },
-    "Jhlranger": { slot: "Jhlranger", active: true },
-    "Jhlrogue": { slot: "Jhlrogue", active: false },
+    // "Jhlmerch": { slot: "Jhlmerch", active: true },
+    "Jhlranger": { slot: "Jhlranger", active: false },
+    "Jhlrogue": { slot: "Jhlrogue", active: true },
 };
 
 let isManaging = false;
 
 async function manageActiveChars(eventsEnabled) {
-    if (isManaging) return;
+    if (isManaging) { return; }
     isManaging = true;
 
     try {

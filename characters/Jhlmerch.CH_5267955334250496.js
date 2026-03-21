@@ -85,8 +85,9 @@ class Merchant extends combineItems {
 		};
 
 		this.autoUpgradeList = [
-			{ item: "firestaff", targetLevel: 6, itemLevel: 1 },
-			{ item: "horsecapeg", targetLevel: 4, itemLevel: 2 },
+			{ item: "firestaff", targetLevel: 7, itemLevel: 1 },
+			{ item: "horsecapeg", targetLevel: 5, itemLevel: 2 },
+			{ item: "mcape", targetLevel: 5, itemLevel: 1 },
 		];
 
 		setInterval(() => {
@@ -1182,9 +1183,9 @@ const myChar = new Merchant();
 
 myChar.run();
 
-//myChar.busy = true;
-//setInterval(recoverOutOfCombat, 1000);
+// myChar.busy = true;
+// setInterval(recoverOutOfCombat, 1000);
 // setInterval(async () => await myChar.upgradeAllByName("lmace", 5, 2), 1500);
-// setInterval(async () => await myChar.upgradeAllByName("firestaff", 7, 1), 1500);
+// setInterval(async () => await myChar.upgradeAllByName("firestaff", 8, 1), 1500);
 // setInterval(async () => await myChar.upgradeAllByName("horsecapeg", 6, 2), 1500);
 // setInterval(async () => await myChar.upgradeAllByName("wingedboots", 8, 0), 1500);

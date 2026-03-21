@@ -13,6 +13,10 @@ class MyChar extends BaseClass {
     lastTaunt = 0;
     aoeTaunt = true;
 
+    farmMobs = [`crab`, `squigtoad`, `squig`];
+    validTargets = this.farmMobs;
+
+
     circleX = 476;
     circleY = -717;
     radius = 35;
@@ -69,7 +73,7 @@ class MyChar extends BaseClass {
     skillAoeTaunt() {
         const now = Date.now();
 
-        if (!get_player(`Jhlpriest`)) { return; }
+        if (!get_player(`Jhlpriest`) && this.distance(character, get_player(`Jhlpriest`)) < 150) { return; }
         if (now - this.lastTaunt < 8000 || !this.getClosestMonsterByType(this.validTargets[0])) { return; }
         const farmMob = this.getClosestMonsterByType(this.validTargets[0]);
 
@@ -234,7 +238,7 @@ async function mainLoop() {
             let activeEvent = parent.S.snowman?.live || parent.S.icegolem?.live || parent.S.dragold?.live || parent.S.pinkgoo?.live;
 
             if (!target || target.dead) {
-                target = myChar.pullThree && get_player(healer) && myChar.distance(character, get_player(healer)) < 200 && !activeEvent ? myChar.targetLogicTank3() : myChar.targetLogicTank();
+                target = myChar.pullThree && get_player(healer) && myChar.distance(character, get_player(healer)) < 100 && !activeEvent ? myChar.targetLogicTank3() : myChar.targetLogicTank();
             }
 
             if (target) {

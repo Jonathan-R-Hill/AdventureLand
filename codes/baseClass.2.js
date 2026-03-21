@@ -338,10 +338,10 @@ class BaseClass extends TargetLogic {
 
         this.kite = false;
         this.attackMode = true;
-        this.followLeader = true;
+        this.followLeader = false;
         this.fightTogeather = false;
 
-        this.farmMobs = [`bigbird`]
+        this.farmMobs = [`squigtoad`, `squig`];
 
         this.surge = false;
         this.surgeLastUsed = 0;
@@ -373,7 +373,7 @@ class BaseClass extends TargetLogic {
             "hpbelt", "hpamulet", "shoes", "coat", "pants", "strring", "intring", "vitring", "dexring",
             "wattire", "wshoes", "wcap", "cclaw", "mushroomstaff", "wbreeches", "slimestaff", "stinger",
             "vitearring", "wgloves", "quiver", "xmace", "xbow", "iceskates", "gcape", "swifty", "lspores",
-            "shield", "hbow", "cupid",
+            "shield", "hbow", "cupid", "solitaire",
         ];
 
         this.returningToGroup = false;
