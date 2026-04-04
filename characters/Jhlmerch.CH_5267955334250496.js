@@ -25,6 +25,8 @@ const bankWhitelist = [
 	// Exchangables
 	"seashell", "gem0", "gem1", "monstertoken", "gemfragment", "armorbox", "weaponbox",
 	"ornament", "mistletoe", "candycane", "leather", "goldenegg",
+	// Easter
+	"egg0", "egg1", "egg2", "egg3", "egg4", "egg5", "egg6", "egg7", "egg8", "egg9",
 	// Keyes
 	"spiderkey", "frozenkey",
 	// Weapons & Armor

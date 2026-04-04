@@ -367,6 +367,8 @@ class BaseClass extends TargetLogic {
             "intbelt", "strbelt", "dexbelt", "dstones", "poison", "pleather", "cshell", "pmace", "armorbox",
             "handofmidas", "mcape", "sweaterhs", "cryptkey", "forscroll", "gemfragment", "candypop", "essenceofether", "essenceoffire",
             "greenenvelope", "emptyheart",
+            // Easter
+            "egg0", "egg1", "egg2", "egg3", "egg4", "egg5", "egg6", "egg7", "egg8", "egg9",
             // Upgrade
             "ringsj", "intbelt", "intearring", "strearring", "dexearring", "dexamulet", "stramulet", "intamulet", "wbookhs",
             // Sell
@@ -459,7 +461,7 @@ class BaseClass extends TargetLogic {
             this.validTargets = ['wabbit'];
 
             if (!this.getClosestMonsterByType('wabbit')) {
-                await smart_move('wabbit').catch((e) => stop());
+                await smart_move({ x: parent.S.wabbit.x, y: parent.S.wabbit.y, map: parent.S.wabbit.map }).catch((e) => stop());
             }
         }
         else if (parent.S.pinkgoo && parent.S.pinkgoo.live) {

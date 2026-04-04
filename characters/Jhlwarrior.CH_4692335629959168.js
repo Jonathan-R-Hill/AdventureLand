@@ -11,7 +11,7 @@ class MyChar extends BaseClass {
 
     lastFarmCheck = 0;
     lastTaunt = 0;
-    aoeTaunt = true;
+    aoeTaunt = false;
 
     farmMobs = [`crab`, `squigtoad`, `squig`];
     validTargets = this.farmMobs;
