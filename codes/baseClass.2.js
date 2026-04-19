@@ -366,7 +366,7 @@ class BaseClass extends TargetLogic {
             "x0", "x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x9", "electronics", "cocoon", "goldenegg",
             "intbelt", "strbelt", "dexbelt", "dstones", "poison", "pleather", "cshell", "pmace", "armorbox",
             "handofmidas", "mcape", "sweaterhs", "cryptkey", "forscroll", "gemfragment", "candypop", "essenceofether", "essenceoffire",
-            "greenenvelope", "emptyheart",
+            "greenenvelope", "emptyheart", "candy0", "candy1", "candy2", "candy3", "candy4", "candy5", "candy6", "candy7", "candy8", "candy9",
             // Easter
             "egg0", "egg1", "egg2", "egg3", "egg4", "egg5", "egg6", "egg7", "egg8", "egg9",
             // Upgrade

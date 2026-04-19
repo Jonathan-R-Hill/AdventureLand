@@ -27,6 +27,8 @@ const bankWhitelist = [
 	"ornament", "mistletoe", "candycane", "leather", "goldenegg",
 	// Easter
 	"egg0", "egg1", "egg2", "egg3", "egg4", "egg5", "egg6", "egg7", "egg8", "egg9",
+	// Halloween
+	"candy0", "candy1", "candy2", "candy3", "candy4", "candy5", "candy6", "candy7", "candy8", "candy9",
 	// Keyes
 	"spiderkey", "frozenkey",
 	// Weapons & Armor
